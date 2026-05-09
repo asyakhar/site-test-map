@@ -280,6 +280,12 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
   return null
 }
 
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+})
 export default function AccessibleYakutiaMap() {
   const [objects, setObjects] = useState<MapObject[]>([])
   const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
@@ -289,7 +295,7 @@ export default function AccessibleYakutiaMap() {
 
   // Load data
   useEffect(() => {
-    fetch("./data/objects.json")
+    fetch("/site-test-map/data/objects.json")
       .then((res) => res.json())
       .then((data) => setObjects(data))
       .catch((err) => console.error("Error loading data:", err))
