@@ -107,14 +107,14 @@ export default function HomePage() {
     localStorage.setItem("preferredLayers", JSON.stringify(selectedLayers));
     localStorage.setItem("preferredNeeds", JSON.stringify(selectedNeeds));
     setShowModal(false);
-router.push(`${BASE_PATH}/map`);
+router.push("/map");
   };
 
   const handleShowAll = () => {
     localStorage.removeItem("preferredLayers");
     localStorage.removeItem("preferredNeeds");
     setShowModal(false);
-router.push(`${BASE_PATH}/map`);
+router.push("/map");
   };
 
   return (
