@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Compass, Heart, MapPin, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useRouter } from "next/navigation"; 
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,7 @@ const functionalNeeds: FunctionalNeed[] = [
 import { Eye, Ear, Users, Utensils } from "lucide-react";
 
 export default function HomePage() {
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
@@ -104,14 +106,14 @@ export default function HomePage() {
     localStorage.setItem("preferredLayers", JSON.stringify(selectedLayers));
     localStorage.setItem("preferredNeeds", JSON.stringify(selectedNeeds));
     setShowModal(false);
-    window.location.href = "/map";
+router.push("/map");
   };
 
   const handleShowAll = () => {
     localStorage.removeItem("preferredLayers");
     localStorage.removeItem("preferredNeeds");
     setShowModal(false);
-    window.location.href = "/map";
+router.push("/map");
   };
 
   return (
