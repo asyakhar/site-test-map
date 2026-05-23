@@ -4,6 +4,7 @@ const nextConfig = {
   images: {
     unoptimized: true,  // GitHub Pages не поддерживает оптимизацию изображений Next.js
   },
+  basePath: '/site-test-map',
   trailingSlash: true,  // Рекомендуется для GitHub Pages
   typescript: {
     ignoreBuildErrors: true,
