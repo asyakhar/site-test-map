@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-
+const BASE_PATH = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
 type FunctionalNeed = {
   id: string;
   icon: any;
@@ -84,6 +84,7 @@ export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
+  
 
   const scrollToAbout = () => {
     setShowAbout(true);
@@ -106,14 +107,14 @@ export default function HomePage() {
     localStorage.setItem("preferredLayers", JSON.stringify(selectedLayers));
     localStorage.setItem("preferredNeeds", JSON.stringify(selectedNeeds));
     setShowModal(false);
-router.push("/map");
+router.push(`${BASE_PATH}/map`);
   };
 
   const handleShowAll = () => {
     localStorage.removeItem("preferredLayers");
     localStorage.removeItem("preferredNeeds");
     setShowModal(false);
-router.push("/map");
+router.push(`${BASE_PATH}/map`);
   };
 
   return (
