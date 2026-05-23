@@ -490,7 +490,7 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
               <Popup maxWidth={320} className="custom-popup">
                 <div className="p-0 overflow-hidden rounded-xl border-0 shadow-xl bg-white">
                   <div className="relative h-40">
-                    <img src={`https://picsum.photos/seed/${obj.id}/320/160`} alt={obj.name} className="w-full h-full object-cover" />
+                  <img src="/img/priroda-yakutii.jpg" alt={obj.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <Badge className="mb-2 text-white border-0 shadow-sm" style={{ backgroundColor: getMarkerColor(obj) }}>

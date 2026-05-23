@@ -223,10 +223,10 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
       <div className="relative h-64 md:h-96">
         <img
-          src={`https://picsum.photos/seed/${place.id}/1200/400`}
-          alt={place.name}
-          className="w-full h-full object-cover"
-        />
+  src="/img/priroda-yakutii.jpg"
+  alt={place.name}
+  className="w-full h-full object-cover"
+/>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <Badge 
