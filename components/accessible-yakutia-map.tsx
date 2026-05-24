@@ -200,7 +200,7 @@ function getCategoryMarkerIcon(category: string, color: string) {
   
   return L.divIcon({
     className: "custom-marker-wrapper",
-    html: `<div style="width: 36px; height: 36px; background: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 2px solid white;">
+    html: `<div style="width: 36px; height: 36px; background: #1f6fc5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 2px solid white;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>
     </div>`,
     iconSize: [36, 36],
@@ -355,6 +355,8 @@ function SidebarContent({
 }
 
 export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakutiaMapProps) {
+
+const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const router = useRouter();
   const [objects, setObjects] = useState<MapObject[]>([])
   const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
@@ -490,7 +492,11 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
               <Popup maxWidth={320} className="custom-popup">
                 <div className="p-0 overflow-hidden rounded-xl border-0 shadow-xl bg-white">
                   <div className="relative h-40">
-                  <img src="/img/priroda-yakutii.jpg" alt={obj.name} className="w-full h-full object-cover" />
+                  <img 
+  src={`${basePath}/img/priroda-yakutii.jpg`} 
+  alt={obj.name} 
+  className="w-full h-full object-cover" 
+/>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <Badge className="mb-2 text-white border-0 shadow-sm" style={{ backgroundColor: getMarkerColor(obj) }}>

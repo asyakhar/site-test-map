@@ -119,6 +119,7 @@ const FEATURE_NAMES: Record<string, string> = {
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
   const [loading, setLoading] = useState(true);
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
 
   useEffect(() => {
     const basePath = process.env.NODE_ENV === 'production' 
@@ -222,8 +223,8 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       </header>
 
       <div className="relative h-64 md:h-96">
-        <img
-  src="/img/priroda-yakutii.jpg"
+       <img
+  src={`${basePath}/img/priroda-yakutii.jpg`}
   alt={place.name}
   className="w-full h-full object-cover"
 />
