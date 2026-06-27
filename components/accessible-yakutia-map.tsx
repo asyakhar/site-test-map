@@ -492,11 +492,16 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
               <Popup maxWidth={320} className="custom-popup">
                 <div className="p-0 overflow-hidden rounded-xl border-0 shadow-xl bg-white">
                   <div className="relative h-40">
-                  <img 
-  src={`${basePath}/img/priroda-yakutii.jpg`} 
-  alt={obj.name} 
-  className="w-full h-full object-cover" 
-/>
+    <img 
+    src={obj.photos && obj.photos.length > 0 
+      ? obj.photos[0] 
+      : `${basePath}/img/placeholder.jpg`}
+    alt={obj.name} 
+    className="w-full h-full object-cover"
+    onError={(e) => {
+      e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+    }}
+  />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <Badge className="mb-2 text-white border-0 shadow-sm" style={{ backgroundColor: getMarkerColor(obj) }}>

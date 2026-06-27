@@ -223,11 +223,17 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       </header>
 
       <div className="relative h-64 md:h-96">
-       <img
-  src={`${basePath}/img/priroda-yakutii.jpg`}
-  alt={place.name}
-  className="w-full h-full object-cover"
-/>
+   <img
+    src={place.photos && place.photos.length > 0 
+      ? place.photos[0] 
+      : `${basePath}/img/placeholder.jpg`}
+    alt={place.name}
+    className="w-full h-full object-cover"
+    onError={(e) => {
+      // Если ссылка битая, тоже показываем заглушку
+      e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+    }}
+  />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <Badge 
