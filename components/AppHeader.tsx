@@ -106,12 +106,12 @@ export default function Header({ onOpenFilters }: HeaderProps) {
       {/* Граница */}
       <div className={`border-b ${highContrast ? 'border-white/30' : 'border-[var(--color-card-border)]'}`} />
       
-      {/* SVG узор как фон */}
+{/* SVG узор как фон */}
 <div 
   className="w-full bg-repeat-x"
   style={{ 
-    backgroundImage: "url('${basePath}/img/uzor.svg')",
-    backgroundSize: "auto 30px", // УВЕЛИЧЕННАЯ высота
+    backgroundImage: `url("${basePath}/img/uzor.svg")`,
+    backgroundSize: "auto 30px",
     backgroundPosition: "bottom center",
     height: "30px",
     opacity: highContrast ? 0.3 : 0.7,
