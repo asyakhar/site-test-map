@@ -69,9 +69,7 @@ export default function Header({ onOpenFilters }: HeaderProps) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <button onClick={handleOpenFilters} className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
-            Настроить фильтры
-          </button>
+          
           <Link href="/advice" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
             Практические советы
           </Link>
@@ -122,9 +120,7 @@ export default function Header({ onOpenFilters }: HeaderProps) {
       {/* Мобильное меню */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-[var(--color-bg-primary)] border-b border-[var(--color-card-border)] shadow-lg py-4 px-4 flex flex-col gap-4 z-20">
-          <button onClick={handleOpenFilters} className="text-left py-2 text-lg font-bold text-[var(--color-text-primary)]">
-            Настроить фильтры
-          </button>
+         
           <Link href="/advice" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
             Практические советы
           </Link>

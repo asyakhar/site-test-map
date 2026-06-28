@@ -1,148 +1,128 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Mountain, Snowflake, Sun, Wind, MapPin } from "lucide-react";
+import { Mountain, Snowflake, Sun, Wind, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import PageWrapper from "@/components/PageWrapper";
 
 export default function YakutiaPage() {
   return (
-    <div className="min-h-screen bg-[#F7F3E8] text-[#2C3E50]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-[#1B3A5C] hover:opacity-80 transition-opacity">
-            <ArrowLeft className="size-6" />
-            <span>На главную</span>
-          </Link>
-          <h1 className="text-lg md:text-xl font-semibold text-[#1B3A5C]">О Якутии</h1>
-          <div className="w-10" /> {/* Spacer for centering */}
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1548860287-3f22b4e1d6d4?auto=format&fit=crop&q=80&w=1920')" }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1B3A5C]/70 to-[#1B3A5C]/90" />
-        </div>
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">Республика Саха (Якутия)</h1>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            Самый крупный регион России, край вечной мерзлоты, алмазов и уникальной культуры.
-          </p>
-        </div>
-      </section>
-
-      {/* Content */}
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
+    <PageWrapper>
+      <article className="max-w-4xl mx-auto">
         
-        {/* Intro */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6 text-[#1B3A5C]">Добро пожаловать в край контрастов</h2>
-          <p className="text-lg leading-relaxed mb-4">
-            Якутия — это место, где зима длится 7-8 месяцев, а температура опускается до -60°C, но лето может быть жарким (+30°C). 
-            Это родина мамонтов, крупнейшая алмазная провинция мира и дом для коренных народов Севера, сохраняющих свои традиции тысячелетиями.
+        {/* Заголовок */}
+        <h1 
+          className="font-sangha font-bold text-center mb-10 text-[var(--color-green-dark)]"
+          style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+        >
+          О Якутии
+        </h1>
+
+        {/* Твой текст (без изменений) */}
+        <div 
+          className="space-y-6 text-[var(--color-text-secondary)] leading-relaxed text-justify" 
+          style={{ fontSize: 'clamp(1rem, 1.5vw, 1.25rem)' }}
+        >
+          <p>
+            Республика Саха (Якутия) - самый крупный регион России. Она расположена на северо-востоке страны и занимает площадь более 3 миллионов квадратных километров - это примерно пятая часть всей России. По территории Якутию можно сравнить с целой Индией, при этом население здесь чуть больше миллиона человек. Такое соотношение создаёт уникальную ситуацию: на огромных пространствах сохранилась нетронутая природа, а плотность населения остаётся одной из самых низких в стране.
           </p>
-          <p className="text-lg leading-relaxed">
-            Для туристов с ограниченными возможностями здоровья Якутия может быть непростым, но невероятно интересным направлением. 
-            Мы собрали информацию, чтобы сделать ваше путешествие максимально комфортным.
+          <p>
+            Природа поражает своим разнообразием. Здесь есть всё: бескрайняя тайга, горные хребты, тундра и арктическое побережье. По территории республики протекают крупнейшие реки - Лена, Вилюй и Алдан, а из недр добывают алмазы, золото, уголь и другие полезные ископаемые. Климат региона резко континентальный, с огромными перепадами температур: зимой морозы могут достигать -50°C и ниже, а летом воздух прогревается до +30°C и выше. Это край, где вечная мерзлота покрывает большую часть территории, а продолжительность дня меняется от нескольких часов зимой до почти круглосуточного света летом.
+          </p>
+          <p>
+            Якутия  - это не только уникальная природа, но и богатейшая культура. Коренное население - якуты (саха) - веками сохраняли свой язык, традиции, эпос и ремёсла. Здесь почитают природу и духов предков, проводят национальные праздники и передают из поколения в поколение искусство резьбы по кости, ювелирного дела и горлового пения. Одновременно с этим в республике развиваются наука, образование и современное искусство, что делает Якутию регионом с живой и динамичной культурной жизнью.
+          </p>
+          <p>
+            В последние годы республика активно развивает туристическую сферу. Строятся новые гостиницы, обновляются дороги и транспортная инфраструктура, появляются туристические кластеры и национальные парки. Всё больше людей приезжают сюда, чтобы увидеть северное сияние, сплавиться по рекам, побывать в горах или познакомиться с бытом и культурой коренных народов. Особое внимание уделяется созданию доступной среды. Разрабатываются маршруты с учётом потребностей маломобильных граждан, внедряются адаптированные экскурсии, а в туристической сфере всё чаще учитываются принципы инклюзивности.
+          </p>
+          <p>
+            Это место, где суровые природные условия сочетаются с тёплым гостеприимством. Сюда приезжают не за курортным комфортом, а за настоящими впечатлениями: за ощущением бескрайнего пространства, за чистым воздухом и за редким чувством единения с природой. Это регион, который остаётся в памяти надолго и открывает Россию с совершенно другой, малоизвестной стороны. Якутия готова принимать гостей и показывает, что путешествие по северным территориям может быть комфортным и доступным для самого разного круга людей.
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <Card className="p-6 bg-white border-0 shadow-md">
+        {/* Сетка особенностей (обновленный дизайн) */}
+        <div className="grid md:grid-cols-2 gap-6 mt-16 mb-12">
+          <Card className="p-6 bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="size-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+              <div className="size-12 rounded-full bg-[#E8F0FE] flex items-center justify-center text-[#4A72B2]">
                 <Snowflake className="size-6" />
               </div>
-              <h3 className="text-xl font-bold">Климат</h3>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Климат</h3>
             </div>
-            <p className="text-[#2C3E50]/80">
-              Резко континентальный климат. Зимой обязательна многослойная одежда из натуральных материалов и меха. 
-              Летом много комаров и мошки — нужны репелленты и закрытая одежда.
+            <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
+              Резко континентальный. Зимой обязательна многослойная одежда. 
+              Летом могут потребоваться репелленты и закрытая одежда для поездок на природу.
             </p>
           </Card>
 
-          <Card className="p-6 bg-white border-0 shadow-md">
+          <Card className="p-6 bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="size-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+              <div className="size-12 rounded-full bg-[#FFF4E5] flex items-center justify-center text-[#E38920]">
                 <Sun className="size-6" />
               </div>
-              <h3 className="text-xl font-bold">Полярный день</h3>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Световой день</h3>
             </div>
-            <p className="text-[#2C3E50]/80">
-              В северных районах (за полярным кругом) летом солнце не заходит сутками. 
-              Это может влиять на сон и самочувствие, поэтому возьмите маску для сна.
+            <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
+              В северных районах летом солнце не заходит сутками (белые ночи). 
+              Это может влиять на сон, рекомендуем брать с собой маску для сна.
             </p>
           </Card>
 
-          <Card className="p-6 bg-white border-0 shadow-md">
+          <Card className="p-6 bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="size-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+              <div className="size-12 rounded-full bg-[#EAF2ED] flex items-center justify-center text-[var(--color-green-medium)]">
                 <Mountain className="size-6" />
               </div>
-              <h3 className="text-xl font-bold">Природа</h3>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Природа</h3>
             </div>
-            <p className="text-[#2C3E50]/80">
-              Ленские столбы, горы Бырранга, множество рек и озер. 
-              Многие природные объекты труднодоступны, требуют подготовки и сопровождения.
+            <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
+              Многие природные объекты труднодоступны и требуют подготовки. 
+              Мы отмечаем на карте места, куда можно добраться с комфортом.
             </p>
           </Card>
 
-          <Card className="p-6 bg-white border-0 shadow-md">
+          <Card className="p-6 bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="size-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+              <div className="size-12 rounded-full bg-[#F3EBE1] flex items-center justify-center text-[var(--color-brown-medium)]">
                 <Wind className="size-6" />
               </div>
-              <h3 className="text-xl font-bold">Традиции</h3>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Традиции</h3>
             </div>
-            <p className="text-[#2C3E50]/80">
-              Уважайте местные обычаи. Не шумите в тайге, не мусорьте. 
-              Якутский народ известен своим гостеприимством и бережным отношением к природе.
+            <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
+              Якутский народ известен своим гостеприимством и глубоким уважением к природе. 
+              Соблюдение местных обычаев сделает ваше путешествие приятнее.
             </p>
           </Card>
         </div>
 
-        {/* Safety Block */}
-        <Card className="p-8 bg-amber-50 border-amber-200 border-2 mb-12">
-          <h3 className="text-2xl font-bold text-amber-900 mb-4 flex items-center gap-2">
+        {/* Блок безопасности */}
+        <Card className="p-8 bg-[var(--color-accent-light)]/20 border-[var(--color-accent-light)] border-2 mb-12 rounded-xl">
+          <h3 className="text-2xl font-bold text-[var(--color-accent-dark)] mb-4 flex items-center gap-3">
             <MapPin className="size-6" />
             Важно для туристов с ОВЗ
           </h3>
-          <ul className="space-y-3 text-amber-900/90 list-disc list-inside">
+          <ul className="space-y-3 text-[var(--color-brown-dark)] list-disc list-inside text-sm md:text-base">
             <li>
-              <strong>Медицина:</strong> В Якутске есть хорошие клиники, но в отдаленных районах медицинская помощь может быть затруднена. 
-              Возьмите запас необходимых лекарств.
+              <strong>Медицина:</strong> В Якутске есть отличные клиники, но в отдаленных районах помощь может быть затруднена. Всегда берите запас лекарств.
             </li>
             <li>
-              <strong>Транспорт:</strong> Внутрирегиональные перелеты часто зависят от погоды. 
-              Закладывайте дополнительное время на дорогу.
+              <strong>Транспорт:</strong> Локальная логистика часто зависит от погоды. Закладывайте резервное время.
             </li>
             <li>
-              <strong>Доступность:</strong> Только крупные объекты в Якутске полностью адаптированы. 
-              Используйте наши фильтры, чтобы найти подходящие места.
+              <strong>Доступность:</strong> Используйте фильтры на нашей карте, чтобы найти проверенные адаптированные объекты.
             </li>
           </ul>
         </Card>
 
-        <div className="text-center">
-          <Button asChild size="lg" className="bg-[#4ECDC4] hover:bg-[#3DBDB5] text-white px-8 py-6 text-lg rounded-xl">
+        {/* Кнопка перехода */}
+        <div className="text-center pb-8">
+          <Button asChild size="lg" className="bg-accent-custom hover:bg-[var(--color-accent-hover)] text-white px-10 py-7 text-lg rounded-xl font-bold shadow-md transition-transform hover:scale-105">
             <Link href="/map">Перейти к карте объектов</Link>
           </Button>
         </div>
 
-      </main>
-
-      {/* Footer Simple */}
-      <footer className="bg-[#1B3A5C] text-white py-8 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm opacity-80">© 2026 Доступная Якутия</p>
-        </div>
-      </footer>
-    </div>
+      </article>
+    </PageWrapper>
   );
 }
