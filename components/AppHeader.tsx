@@ -110,7 +110,7 @@ export default function Header({ onOpenFilters }: HeaderProps) {
 <div 
   className="w-full bg-repeat-x"
   style={{ 
-    backgroundImage: "url('/img/uzor.svg')",
+    backgroundImage: "url('${basePath}/img/uzor.svg')",
     backgroundSize: "auto 30px", // УВЕЛИЧЕННАЯ высота
     backgroundPosition: "bottom center",
     height: "30px",
