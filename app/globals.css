@@ -3,80 +3,130 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
 :root {
-  --background: oklch(0.98 0.005 240);
-  --foreground: oklch(0.15 0.02 240);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 240);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 240);
-  --primary: oklch(0.55 0.2 240);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.95 0.01 240);
-  --secondary-foreground: oklch(0.25 0.02 240);
-  --muted: oklch(0.94 0.01 240);
-  --muted-foreground: oklch(0.45 0.02 240);
-  --accent: oklch(0.92 0.02 200);
-  --accent-foreground: oklch(0.25 0.02 240);
+  /* === ОСНОВНЫЕ ЦВЕТА === */
+  --color-bg-primary: #F8F6F1;
+  --color-bg-secondary: #EDEBE5;
+  --color-bg-white: #FFFFFF;
+  
+  /* === ЦВЕТА ТЕКСТА === */
+  --color-text-primary: #353535;
+  --color-text-secondary: #5A4E3C;
+  --color-text-white: #FFFFFF;
+  
+  /* === АКЦЕНТНЫЙ ЦВЕТ (ОРАНЖЕВЫЙ) === */
+  --color-accent: #E38920;
+  --color-accent-hover: #CC7A1D;
+  --color-accent-light: #F5D6A8;
+  --color-accent-dark: #B86A18;
+  
+  /* === ЗЕЛЕНЫЙ ЦВЕТ ДЛЯ ЗАГОЛОВКОВ === */
+  --color-green-dark: #384E41;
+  --color-green-medium: #4A6B52;
+  --color-green-light: #6B8F73;
+  
+  /* === КОРИЧНЕВЫЙ ЦВЕТ === */
+  --color-brown-dark: #5A4E3C;
+  --color-brown-medium: #8B7A66;
+  --color-brown-light: #C4B5A0;
+  
+  /* === ЦВЕТА ДЛЯ ХЕДЕРА === */
+  --color-header-title: #384E41;
+  
+  /* === ЦВЕТА ДЛЯ КАРТОЧЕК === */
+  --color-card-bg: #FFFFFF;
+  --color-card-border: #E8E6E0;
+  --color-card-shadow: rgba(56, 78, 65, 0.1);
+  
+  /* === ФОНОВОЕ ИЗОБРАЖЕНИЕ === */
+  --bg-hero-image: url('/img/background_photo.png');
+
+  /* === СТАНДАРТНЫЕ ПЕРЕМЕННЫЕ === */
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-card-bg);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-primary);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-text-white);
+  --secondary: var(--color-green-medium);
+  --secondary-foreground: var(--color-text-white);
+  --muted: var(--color-bg-secondary);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-text-white);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.01 240);
-  --input: oklch(0.92 0.01 240);
-  --ring: oklch(0.55 0.2 240);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --border: var(--color-card-border);
+  --input: var(--color-card-border);
+  --ring: var(--color-accent);
   --radius: 0.75rem;
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.15 0.02 240);
-  --sidebar-primary: oklch(0.55 0.2 240);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.95 0.02 200);
-  --sidebar-accent-foreground: oklch(0.25 0.02 240);
-  --sidebar-border: oklch(0.92 0.01 240);
-  --sidebar-ring: oklch(0.55 0.2 240);
+  --sidebar: var(--color-bg-primary);
+  --sidebar-foreground: var(--color-text-primary);
+  --sidebar-primary: var(--color-accent);
+  --sidebar-primary-foreground: var(--color-text-white);
+  --sidebar-accent: var(--color-bg-secondary);
+  --sidebar-accent-foreground: var(--color-text-primary);
+  --sidebar-border: var(--color-card-border);
+  --sidebar-ring: var(--color-accent);
 }
 
 .dark {
-  --background: oklch(0.14 0.01 240);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.18 0.01 240);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.18 0.01 240);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --primary: oklch(0.65 0.18 240);
-  --primary-foreground: oklch(0.14 0.01 240);
-  --secondary: oklch(0.25 0.015 240);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.25 0.015 240);
-  --muted-foreground: oklch(0.65 0.01 240);
-  --accent: oklch(0.28 0.02 200);
-  --accent-foreground: oklch(0.96 0.005 240);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.28 0.015 240);
-  --input: oklch(0.25 0.015 240);
-  --ring: oklch(0.65 0.18 240);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.16 0.01 240);
-  --sidebar-foreground: oklch(0.96 0.005 240);
-  --sidebar-primary: oklch(0.65 0.18 240);
-  --sidebar-primary-foreground: oklch(0.96 0.005 240);
-  --sidebar-accent: oklch(0.28 0.02 200);
-  --sidebar-accent-foreground: oklch(0.96 0.005 240);
-  --sidebar-border: oklch(0.28 0.015 240);
-  --sidebar-ring: oklch(0.65 0.18 240);
+  /* Темная тема */
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #2a2a2a;
+  --color-text-primary: #e5e5e5;
+  --color-text-secondary: #b5a890;
+  --color-accent: #E38920;
+  --color-accent-hover: #CC7A1D;
+  --color-green-dark: #5A7A6A;
+  
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-bg-primary);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-primary);
+  --popover-foreground: var(--color-text-primary);
+  --border: #333333;
+  --sidebar: var(--color-bg-primary);
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  /* === ПОДКЛЮЧАЕМ CSS-ПЕРЕМЕННЫЕ В TAILWIND === */
+  --color-bg-primary: var(--color-bg-primary);
+  --color-bg-secondary: var(--color-bg-secondary);
+  
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-white: var(--color-text-white);
+  
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-light: var(--color-accent-light);
+  --color-accent-dark: var(--color-accent-dark);
+  
+  --color-green-dark: var(--color-green-dark);
+  --color-green-medium: var(--color-green-medium);
+  --color-green-light: var(--color-green-light);
+  
+  --color-brown-dark: var(--color-brown-dark);
+  --color-brown-medium: var(--color-brown-medium);
+  --color-brown-light: var(--color-brown-light);
+  
+  --color-header-title: var(--color-header-title);
+  --color-card-bg: var(--color-card-bg);
+  --color-card-border: var(--color-card-border);
+  
+  --bg-hero-image: var(--bg-hero-image);
+
+  /* === ШРИФТЫ === */
+  --font-sans: var(--font-gilroy), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), 'Geist Mono', 'Geist Mono Fallback';
+  --font-sangha: var(--font-sangha), ui-sans-serif, system-ui, sans-serif;
+  
+  /* === СТАНДАРТНЫЕ ПЕРЕМЕННЫЕ === */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -96,11 +146,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -116,10 +161,39 @@
 }
 
 @layer base {
+
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
   }
+  
+  .font-sangha {
+    font-family: var(--font-sangha), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Классы для новых цветов */
+  .text-green-dark {
+    color: var(--color-green-dark);
+  }
+  .text-brown-dark {
+    color: var(--color-brown-dark);
+  }
+  .text-brown-medium {
+    color: var(--color-brown-medium);
+  }
+  .bg-accent-custom {
+    background-color: var(--color-accent);
+  }
+  .bg-accent-custom:hover {
+    background-color: var(--color-accent-hover);
+  }
+  .border-accent-custom {
+    border-color: var(--color-accent);
+  }
+  .text-accent-custom {
+    color: var(--color-accent);
+  }
+ 
 }
