@@ -59,9 +59,9 @@ const categories: Category[] = [
 
 // Заглушки для карусели объектов
 const sampleObjects = [
-  { id: 1, name: "Музей мамонта", category: "Музей", img: "/img/priroda-yakutii.jpg" },
-  { id: 2, name: "Царство вечной мерзлоты", category: "Развлечения", img: "/img/priroda-yakutii.jpg" },
-  { id: 3, name: "Ленские столбы", category: "Природа", img: "/img/priroda-yakutii.jpg" },
+  { id: 1, name: "Музей мамонта", category: "Музей", img: "/img/placeholder.jpg" },
+  { id: 2, name: "Царство вечной мерзлоты", category: "Развлечения", img: "/img/placeholder.jpg" },
+  { id: 3, name: "Ленские столбы", category: "Природа", img: "/img/placeholder.jpg" },
 ];
 
 // Заглушки для событий
