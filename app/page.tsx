@@ -39,7 +39,7 @@ type Category = {
   label: string;
   color: string;
 };
-
+const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
 const categories: Category[] = [
   { id: "mobility", icon: Accessibility, label: "Проблемы с передвижением", color: "#457B9D" },
   { id: "vision", icon: Eye, label: "Нарушения зрения", color: "#FF6B6B" },
@@ -56,9 +56,9 @@ const categories: Category[] = [
 
 // Заглушки для карусели объектов
 const sampleObjects = [
-  { id: 1, name: "Музей мамонта", category: "Музей", img: "/img/placeholder.jpg" },
-  { id: 2, name: "Царство вечной мерзлоты", category: "Развлечения", img: "/img/placeholder.jpg" },
-  { id: 3, name: "Ленские столбы", category: "Природа", img: "/img/placeholder.jpg" },
+  { id: 1, name: "Музей мамонта", category: "Музей", img: `${basePath}/img/placeholder.jpg` },
+  { id: 2, name: "Царство вечной мерзлоты", category: "Развлечения", img: `${basePath}/img/placeholder.jpg` },
+  { id: 3, name: "Ленские столбы", category: "Природа", img: `${basePath}/img/placeholder.jpg` },
 ];
 
 // Заглушки для событий
@@ -70,7 +70,7 @@ const sampleEvents = [
 export default function HomePage() {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
-
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       
@@ -81,13 +81,13 @@ export default function HomePage() {
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
         {/* Фоновое изображение */}
         <div 
-          className="absolute inset-0 bg-cover bg-center z-0"
-          style={{
-            backgroundImage: `url('/img/background_photo.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
+  className="absolute inset-0 bg-cover bg-center z-0"
+  style={{
+    backgroundImage: `url('${basePath}/img/background_photo.png')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  }}
+>
           {/* Затемнение — теплое бежевое */}
           <div 
             className="absolute inset-0"
@@ -108,15 +108,15 @@ export default function HomePage() {
               className="flex-1 flex justify-center lg:justify-start w-full overflow-visible"
             >
               <div className="w-full max-w-[400px] lg:max-w-none flex justify-center items-center p-2">
-                <img 
-                  src="/img/cut_map.png" 
-                  alt="Якутия" 
-                  className="max-w-full h-auto object-contain 
-                             [-webkit-mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
-                             [mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
-                             lg:[-webkit-mask-image:none] lg:[mask-image:none] 
-                             scale-100 lg:scale-110 origin-center"
-                />
+              <img 
+  src={`${basePath}/img/cut_map.png`} 
+  alt="Якутия" 
+  className="max-w-full h-auto object-contain 
+             [-webkit-mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
+             [mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
+             lg:[-webkit-mask-image:none] lg:[mask-image:none] 
+             scale-100 lg:scale-110 origin-center"
+/>
               </div>
             </motion.div>
 

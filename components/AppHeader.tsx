@@ -11,10 +11,11 @@ interface HeaderProps {
 }
 
 export default function Header({ onOpenFilters }: HeaderProps) {
+    
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
-
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
   useEffect(() => {
     if (document.documentElement.classList.contains('high-contrast')) {
       setHighContrast(true);
@@ -51,11 +52,11 @@ export default function Header({ onOpenFilters }: HeaderProps) {
       {/* Основная часть хедера */}
       <div className="container mx-auto px-4 h-16 flex items-center justify-between relative z-10">
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img 
-            src="/img/logo_homus.png" 
-            alt="Логотип Доступная Якутия" 
-            className="h-10 w-auto object-contain"
-          />
+        <img 
+  src={`${basePath}/img/logo_homus.png`} 
+  alt="Логотип Доступная Якутия" 
+  className="h-10 w-auto object-contain"
+/>
           <span 
             className={`${highContrast ? 'text-white' : 'text-[var(--color-header-title)]'} font-sangha`}
             style={{
