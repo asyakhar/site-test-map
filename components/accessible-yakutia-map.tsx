@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { Button } from "@/components/ui/button"
@@ -26,8 +26,7 @@ import {
   Users,
   Sparkles,
   Hospital,
-  ChevronDown,
-  ChevronUp,
+  Clock,
   Building2,
   Hotel,
   UtensilsCrossed,
@@ -45,6 +44,7 @@ import {
   GraduationCap,
   Menu,
   Search,
+  List,
 } from "lucide-react"
 
 // Types
@@ -53,13 +53,20 @@ interface MapObject {
   name: string
   category: string
   layers: string[]
-  coordinates: [number, number]
-  properties: Record<string, boolean>
+  coordinates: [number, number] | null
+  address?: string
+  workingHours?: string
   description: string
+  accessibility: Record<string, string>
+  contraindications?: string
+  tickets?: string
+  benefits?: string
+  notes?: string
   photos: string[]
   contacts: {
     phone?: string
     website?: string
+    yandexMap?: string
   }
 }
 
@@ -133,49 +140,19 @@ const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2 }> 
   education: { name: "Образование", icon: GraduationCap },
 }
 
-const FEATURE_NAMES: Record<string, string> = {
-  ramp: "Пандус", wide_doors: "Широкие двери", accessible_wc: "Доступный туалет",
-  elevator: "Лифт", handrail: "Поручни", low_curbs: "Низкие бордюры",
-  braille: "Шрифт Брайля", audio_description: "Аудиоописание", tactile_exhibits: "Тактильные экспонаты",
-  induction_loop: "Индукционная петля", visual_display: "Визуальные табло",
-  sign_language_staff: "Персонал со знанием ЖЯ", sign_language_guide: "Экскурсовод с ЖЯ",
-  visual_menu: "Визуальное меню", text_chat: "Текстовый чат", diabetic_menu: "Диабетическое меню",
-  gluten_free: "Безглютеновое меню", exact_ingredients: "Точный состав блюд",
-  adapted_national: "Адаптированные блюда", near_medical: "Рядом с медучреждением",
-  cardio_diet: "Кардио-диета", quiet_zone: "Тихая зона", sensory_friendly: "Сенсорно-дружественная",
-  pictogram_nav: "Пиктограммы", quiet_hours: "Тихие часы", air_quality_good: "Чистый воздух",
-  air_purifier: "Очиститель воздуха", clean_zone: "Чистая зона", changing_table: "Пеленальный столик",
-  kids_menu: "Детское меню", mother_child_room: "Комната матери", accessible_play: "Игровая зона",
-  pediatrician: "Педиатр рядом", staff_assist: "Помощь персонала", low_frontdesk: "Низкая стойка",
-  thermal_spring: "Термальный источник", mud_therapy: "Грязелечение", diagnostic_center: "Диагностика",
-  ethno_herbs: "Травничество", ethno_rituals: "Ритуалы исцеления", ethno_bonesetter: "Костоправ",
-  ethno_banya: "Якутская баня",
-}
-
-const ACCESSIBILITY_FILTERS = [
-  { id: "ramp", name: "Пандус", group: "mobility" },
-  { id: "wide_doors", name: "Широкие двери", group: "mobility" },
-  { id: "accessible_wc", name: "Доступный туалет", group: "mobility" },
-  { id: "elevator", name: "Лифт", group: "mobility" },
-  { id: "handrail", name: "Поручни", group: "mobility" },
-  { id: "braille", name: "Шрифт Брайля", group: "vision" },
-  { id: "audio_description", name: "Аудиоописание", group: "vision" },
-  { id: "tactile_exhibits", name: "Тактильные экспонаты", group: "vision" },
-  { id: "induction_loop", name: "Индукционная петля", group: "hearing" },
-  { id: "visual_display", name: "Визуальные табло", group: "hearing" },
-  { id: "sign_language_staff", name: "Персонал со знанием ЖЯ", group: "deaf_mute" },
-  { id: "visual_menu", name: "Визуальное меню", group: "deaf_mute" },
-  { id: "diabetic_menu", name: "Диабетическое меню", group: "dietary" },
-  { id: "gluten_free", name: "Безглютеновое меню", group: "dietary" },
-  { id: "cardio_diet", name: "Кардио-диета", group: "cardiovascular" },
-  { id: "near_medical", name: "Рядом с медучреждением", group: "cardiovascular" },
-  { id: "quiet_zone", name: "Тихая зона", group: "mental" },
-  { id: "sensory_friendly", name: "Сенсорно-дружественная", group: "mental" },
-  { id: "air_quality_good", name: "Чистый воздух", group: "respiratory" },
-  { id: "air_purifier", name: "Очиститель воздуха", group: "respiratory" },
-  { id: "changing_table", name: "Пеленальный столик", group: "family" },
-  { id: "kids_menu", name: "Детское меню", group: "family" },
-  { id: "mother_child_room", name: "Комната матери", group: "family" },
+// Метаданные категорий доступности (ключи совпадают с id слоёв/фильтров)
+const ACCESS_META: { id: string; name: string; icon: typeof Building2 }[] = [
+  { id: "mobility", name: "Передвижение", icon: Accessibility },
+  { id: "vision_impaired", name: "Для незрячих и слабовидящих", icon: Eye },
+  { id: "hearing_impaired", name: "Для слабослышащих", icon: Ear },
+  { id: "deaf_mute", name: "Для глухонемых", icon: Ear },
+  { id: "dietary", name: "Питание", icon: Utensils },
+  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart },
+  { id: "respiratory", name: "Дыхательная система", icon: Wind },
+  { id: "mental", name: "Ментальные особенности", icon: Brain },
+  { id: "family", name: "Семьи с детьми", icon: Users },
+  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles },
+  { id: "health", name: "Отдых с пользой для здоровья", icon: Hospital },
 ]
 
 function getCategoryMarkerIcon(category: string, color: string) {
@@ -212,8 +189,11 @@ function getCategoryMarkerIcon(category: string, color: string) {
 function MapBoundsController({ objects }: { objects: MapObject[] }) {
   const map = useMap()
   useEffect(() => {
-    if (objects.length > 0) {
-      const bounds = L.latLngBounds(objects.map(obj => obj.coordinates))
+    const coords = objects
+      .map((obj) => obj.coordinates)
+      .filter((c): c is [number, number] => Array.isArray(c))
+    if (coords.length > 0) {
+      const bounds = L.latLngBounds(coords)
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
     }
   }, [objects, map])
@@ -230,29 +210,21 @@ L.Icon.Default.mergeOptions({
 // Вспомогательный компонент для сайдбара, чтобы избежать проблем с фокусом
 interface SidebarContentProps {
   activeLayers: string[]
-  activeFilters: string[]
   searchQuery: string
   filteredObjectsCount: number
   toggleLayer: (id: string) => void
-  toggleFilter: (id: string) => void
   resetFilters: () => void
   setSearchQuery: (query: string) => void
-  expandedSection: "categories" | "accessibility" | null
-  setExpandedSection: (section: "categories" | "accessibility" | null) => void
   onClose?: () => void
 }
 
 function SidebarContent({
   activeLayers,
-  activeFilters,
   searchQuery,
   filteredObjectsCount,
   toggleLayer,
-  toggleFilter,
   resetFilters,
   setSearchQuery,
-  expandedSection,
-  setExpandedSection,
   onClose,
 }: SidebarContentProps) {
   return (
@@ -291,56 +263,25 @@ function SidebarContent({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Категории */}
+        {/* Категории доступности */}
         <div className="space-y-2">
-          <button
-            onClick={() => setExpandedSection(expandedSection === "categories" ? null : "categories")}
-            className="flex w-full items-center justify-between text-left font-bold text-[#2C3E50] hover:text-[#4ECDC4] transition-colors"
-          >
-            <span>Категории</span>
-            {expandedSection === "categories" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-          {expandedSection === "categories" && (
-            <div className="space-y-1">
-              {CATEGORY_FILTERS.map((filter) => {
-                const IconComponent = filter.icon
-                const isActive = activeLayers.includes(filter.id)
-                return (
-                  <label key={filter.id} className={`flex cursor-pointer items-center gap-3 rounded-lg p-2.5 transition-all border ${isActive ? "bg-[#4ECDC4]/10 border-[#4ECDC4]" : "bg-white border-gray-200 hover:border-[#4ECDC4]/50"}`}>
-                    <Checkbox checked={isActive} onCheckedChange={() => toggleLayer(filter.id)} className="data-[state=checked]:bg-[#4ECDC4] data-[state=checked]:border-[#4ECDC4]" />
-                    <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${FILTER_COLORS[filter.id]}20` }}>
-                      <IconComponent className="size-4" style={{ color: FILTER_COLORS[filter.id] }} />
-                    </div>
-                    <span className="text-sm font-medium text-[#2C3E50]">{filter.name}</span>
-                  </label>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Удобства */}
-        <div className="space-y-2 pt-2 border-t border-gray-100">
-          <button
-            onClick={() => setExpandedSection(expandedSection === "accessibility" ? null : "accessibility")}
-            className="flex w-full items-center justify-between text-left font-bold text-[#2C3E50] hover:text-[#4ECDC4] transition-colors"
-          >
-            <span>Удобства</span>
-            {expandedSection === "accessibility" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-          {expandedSection === "accessibility" && (
-            <div className="grid grid-cols-1 gap-2">
-              {ACCESSIBILITY_FILTERS.map((filter) => {
-                const isActive = activeFilters.includes(filter.id)
-                return (
-                  <label key={filter.id} className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition-all ${isActive ? "bg-gray-100" : "hover:bg-gray-50"}`}>
-                    <Checkbox checked={isActive} onCheckedChange={() => toggleFilter(filter.id)} className="data-[state=checked]:bg-[#4ECDC4] data-[state=checked]:border-[#4ECDC4]" />
-                    <span className="text-sm text-[#2C3E50]">{filter.name}</span>
-                  </label>
-                )
-              })}
-            </div>
-          )}
+          <p className="font-bold text-[#2C3E50]">Кому подходит</p>
+          <p className="text-xs text-gray-500 -mt-1 mb-1">Показать места с информацией для выбранных групп</p>
+          <div className="space-y-1">
+            {CATEGORY_FILTERS.map((filter) => {
+              const IconComponent = filter.icon
+              const isActive = activeLayers.includes(filter.id)
+              return (
+                <label key={filter.id} className={`flex cursor-pointer items-center gap-3 rounded-lg p-2.5 transition-all border ${isActive ? "bg-[#4ECDC4]/10 border-[#4ECDC4]" : "bg-white border-gray-200 hover:border-[#4ECDC4]/50"}`}>
+                  <Checkbox checked={isActive} onCheckedChange={() => toggleLayer(filter.id)} className="data-[state=checked]:bg-[#4ECDC4] data-[state=checked]:border-[#4ECDC4]" />
+                  <div className="size-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${FILTER_COLORS[filter.id]}20` }}>
+                    <IconComponent className="size-4" style={{ color: FILTER_COLORS[filter.id] }} />
+                  </div>
+                  <span className="text-sm font-medium text-[#2C3E50]">{filter.name}</span>
+                </label>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -360,9 +301,8 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const router = useRouter();
   const [objects, setObjects] = useState<MapObject[]>([])
   const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
-  const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [expandedSection, setExpandedSection] = useState<"categories" | "accessibility" | null>("categories")
+  const [placesListOpen, setPlacesListOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
@@ -377,33 +317,24 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     setActiveLayers((prev) => prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id])
   }, [])
 
-  const toggleFilter = useCallback((id: string) => {
-    setActiveFilters((prev) => prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id])
-  }, [])
-
   const resetFilters = useCallback(() => {
     setActiveLayers(["inclusive"])
-    setActiveFilters([])
     setSearchQuery("")
   }, [])
 
   const filteredObjects = objects.filter((obj) => {
+    // Показываем на карте только объекты с координатами
+    if (!obj.coordinates) return false
+
     // 1. Поиск
-    const matchesSearch = searchQuery.trim() === "" || 
+    const matchesSearch = searchQuery.trim() === "" ||
       obj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       obj.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (!matchesSearch) return false;
 
-    // 2. Слои
-    const hasActiveLayer = obj.layers.some((layer) => activeLayers.includes(layer))
-    if (!hasActiveLayer) return false
-
-    // 3. Фильтры
-    if (activeFilters.length > 0) {
-      return activeFilters.every((filter) => obj.properties[filter] === true)
-    }
-    return true
+    // 2. Слои (кому подходит)
+    return obj.layers.some((layer) => activeLayers.includes(layer))
   })
 
   const getMarkerColor = useCallback((obj: MapObject) => {
@@ -413,7 +344,7 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return FILTER_COLORS.inclusive
   }, [activeLayers])
 
-  const activeFilterCount = activeLayers.length + activeFilters.length - 1
+  const activeFilterCount = activeLayers.length - 1
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-[#F7F3E8]">
@@ -425,17 +356,13 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         className={`fixed inset-y-0 right-0 w-full max-w-[320px] z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
         style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
-        <SidebarContent 
+        <SidebarContent
           activeLayers={activeLayers}
-          activeFilters={activeFilters}
           searchQuery={searchQuery}
           filteredObjectsCount={filteredObjects.length}
           toggleLayer={toggleLayer}
-          toggleFilter={toggleFilter}
           resetFilters={resetFilters}
           setSearchQuery={setSearchQuery}
-          expandedSection={expandedSection}
-          setExpandedSection={setExpandedSection}
           onClose={() => setMobileMenuOpen(false)}
         />
       </div>
@@ -470,68 +397,95 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             <p className="text-sm text-white/80">Инклюзивный навигатор</p>
           </div>
         </div>
-        <SidebarContent 
+        <SidebarContent
           activeLayers={activeLayers}
-          activeFilters={activeFilters}
           searchQuery={searchQuery}
           filteredObjectsCount={filteredObjects.length}
           toggleLayer={toggleLayer}
-          toggleFilter={toggleFilter}
           resetFilters={resetFilters}
           setSearchQuery={setSearchQuery}
-          expandedSection={expandedSection}
-          setExpandedSection={setExpandedSection}
         />
       </aside>
 
       <main className="relative flex-1 pt-[64px] lg:pt-0 bg-[#F7F3E8]">
-        <MapContainer center={CONFIG.mapCenter} zoom={CONFIG.defaultZoom} minZoom={CONFIG.minZoom} maxZoom={CONFIG.maxZoom} className="h-full w-full z-0" zoomControl={true}>
+        <MapContainer attributionControl={false} center={CONFIG.mapCenter} zoom={CONFIG.defaultZoom} minZoom={CONFIG.minZoom} maxZoom={CONFIG.maxZoom} className="h-full w-full z-0" zoomControl={true}>
+          <AttributionControl prefix={false} />
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {filteredObjects.map((obj) => (
-            <Marker key={obj.id} position={obj.coordinates} icon={getCategoryMarkerIcon(obj.category, getMarkerColor(obj))}>
-              <Popup maxWidth={320} className="custom-popup">
-                <div className="p-0 overflow-hidden rounded-xl border-0 shadow-xl bg-white">
-                  <div className="relative h-40">
-    <img 
-    src={obj.photos && obj.photos.length > 0 
-      ? obj.photos[0] 
-      : `${basePath}/img/placeholder.jpg`}
-    alt={obj.name} 
-    className="w-full h-full object-cover"
-    onError={(e) => {
-      e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-    }}
-  />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <Badge className="mb-2 text-white border-0 shadow-sm" style={{ backgroundColor: getMarkerColor(obj) }}>
+            <Marker key={obj.id} position={obj.coordinates!} icon={getCategoryMarkerIcon(obj.category, getMarkerColor(obj))}>
+              <Popup maxWidth={480} minWidth={260} className="custom-popup">
+                <div className="flex flex-col sm:flex-row overflow-hidden rounded-xl border-0 bg-white sm:w-[460px]">
+                  {/* Фото: сверху на мобильном, слева на десктопе */}
+                  <div className="relative h-36 sm:h-auto sm:w-40 sm:flex-shrink-0">
+                    <img
+                      src={obj.photos && obj.photos.length > 0
+                        ? obj.photos[0]
+                        : `${basePath}/img/placeholder.jpg`}
+                      alt={obj.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+                      }}
+                    />
+                  </div>
+
+                  {/* Контент */}
+                  <div className="p-4 space-y-2.5 sm:flex-1 sm:min-w-0">
+                    <div>
+                      <Badge className="mb-1.5 text-white border-0 shadow-sm" style={{ backgroundColor: getMarkerColor(obj) }}>
                         {CATEGORY_CONFIG[obj.category]?.name || obj.category}
                       </Badge>
-                      <h3 className="text-lg font-bold text-white drop-shadow-md leading-tight">{obj.name}</h3>
+                      <h3 className="text-base font-bold text-[#2C3E50] leading-tight">{obj.name}</h3>
                     </div>
-                  </div>
-                  <div className="p-4 space-y-4">
-                    <p className="text-sm text-[#2C3E50]/80 leading-relaxed line-clamp-3">{obj.description}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {Object.entries(obj.properties).filter(([, value]) => value === true).slice(0, 4).map(([key]) => (
-                        <Badge key={key} variant="secondary" className="text-xs font-normal bg-[#4ECDC4]/10 text-[#1B3A5C] border-[#4ECDC4]/30">
-                          {FEATURE_NAMES[key] || key}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
+
+                    {obj.address && (
+                      <div className="flex items-start gap-2 text-sm text-[#2C3E50]/80">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-[#4ECDC4]" />
+                        <span>{obj.address}</span>
+                      </div>
+                    )}
+                    {obj.workingHours && (
+                      <div className="flex items-start gap-2 text-sm text-[#2C3E50]/80">
+                        <Clock className="h-4 w-4 mt-0.5 flex-shrink-0 text-[#4ECDC4]" />
+                        <span className="line-clamp-2 whitespace-pre-line">{obj.workingHours}</span>
+                      </div>
+                    )}
+
+                    {(() => {
+                      const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+                      if (groups.length === 0) return null
+                      return (
+                        <div className="flex flex-wrap gap-1.5">
+                          {groups.map((m) => {
+                            const Icon = m.icon
+                            return (
+                              <span
+                                key={m.id}
+                                title={m.name}
+                                className="flex items-center justify-center size-7 rounded-full"
+                                style={{ backgroundColor: `${FILTER_COLORS[m.id]}20` }}
+                              >
+                                <Icon className="size-4" style={{ color: FILTER_COLORS[m.id] }} />
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )
+                    })()}
+
+                    <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100">
                       {obj.contacts.phone && (
-                        <a href={`tel:${obj.contacts.phone}`} className="flex items-center gap-2 text-sm text-[#1B3A5C] hover:text-[#4ECDC4] transition-colors font-medium">
-                          <Phone className="h-4 w-4" /> {obj.contacts.phone}
+                        <a href={`tel:${obj.contacts.phone.replace(/[^\d+]/g, '')}`} className="flex items-center gap-2 text-sm text-[#1B3A5C] hover:text-[#4ECDC4] transition-colors font-medium">
+                          <Phone className="h-4 w-4 flex-shrink-0" /> <span className="line-clamp-1">{obj.contacts.phone}</span>
                         </a>
                       )}
                       {obj.contacts.website && (
                         <a href={obj.contacts.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-[#1B3A5C] hover:text-[#4ECDC4] transition-colors font-medium">
-                          <Globe className="h-4 w-4" /> Перейти на сайт
+                          <Globe className="h-4 w-4 flex-shrink-0" /> Перейти на сайт
                         </a>
                       )}
                       {onPlaceSelect && (
-                        <Button className="w-full mt-2 bg-[#4ECDC4] hover:bg-[#3DBDB5] text-white rounded-lg" onClick={() => onPlaceSelect(obj.id)}>
+                        <Button className="w-full mt-1 bg-[#4ECDC4] hover:bg-[#3DBDB5] text-white rounded-lg" onClick={() => onPlaceSelect(obj.id)}>
                           Подробнее
                         </Button>
                       )}
@@ -543,7 +497,85 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
           ))}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
         </MapContainer>
-        
+
+        {/* Кнопка «Список мест» (десктоп) */}
+        <button
+          onClick={() => setPlacesListOpen((v) => !v)}
+          className="absolute top-4 right-4 z-[1000] hidden lg:flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-[#1B3A5C] shadow-lg hover:bg-gray-50 transition-colors"
+        >
+          <List className="h-4 w-4 text-[#4ECDC4]" />
+          Список мест
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#4ECDC4] px-1.5 text-xs font-bold text-white">{filteredObjects.length}</span>
+        </button>
+
+        {/* Правая панель со списком мест (десктоп) */}
+        <div
+          className={`absolute inset-y-0 right-0 z-[1001] hidden w-96 max-w-[90%] transform flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:flex ${placesListOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        >
+          <div className="flex items-center justify-between border-b border-gray-200 bg-[#1B3A5C] px-5 py-4 text-white">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4ECDC4]">
+                <List className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="font-bold">Все места</h2>
+                <p className="text-xs text-white/80">Найдено: {filteredObjects.length}</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setPlacesListOpen(false)} className="text-white hover:bg-white/20">
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {filteredObjects.length === 0 && (
+              <p className="p-6 text-center text-sm text-gray-500">Ничего не найдено. Измените фильтры или запрос.</p>
+            )}
+            {filteredObjects.map((obj) => {
+              const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
+              const color = getMarkerColor(obj)
+              const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+              return (
+                <button
+                  key={obj.id}
+                  onClick={() => onPlaceSelect?.(obj.id)}
+                  className="flex w-full items-start gap-3 border-b border-gray-100 p-3 text-left transition-colors hover:bg-[#4ECDC4]/5"
+                >
+                  <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}20` }}>
+                    <CatIcon className="size-5" style={{ color }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-[#2C3E50] leading-snug">{obj.name}</div>
+                    {obj.address && (
+                      <div className="mt-0.5 flex items-start gap-1 text-xs text-gray-500">
+                        <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                        <span className="line-clamp-1">{obj.address}</span>
+                      </div>
+                    )}
+                    {groups.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {groups.map((m) => {
+                          const Icon = m.icon
+                          return (
+                            <span
+                              key={m.id}
+                              title={m.name}
+                              className="flex size-5 items-center justify-center rounded-full"
+                              style={{ backgroundColor: `${FILTER_COLORS[m.id]}20` }}
+                            >
+                              <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none">
           <Badge variant="secondary" className="px-4 py-2 text-sm font-medium shadow-lg bg-white/90 backdrop-blur-md border border-gray-200 text-[#1B3A5C]">
             <MapPin className="h-4 w-4 mr-2 text-[#4ECDC4]" /> {filteredObjects.length} мест
