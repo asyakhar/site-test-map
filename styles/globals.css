@@ -128,3 +128,14 @@
   width: 100%;
   z-index: 1;
 }
+
+/* Попапы карты: карточка занимает попап целиком, без внутренних отступов Leaflet */
+.custom-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+.custom-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
