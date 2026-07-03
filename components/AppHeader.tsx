@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, Menu, X } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Eye, Menu, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -13,9 +13,11 @@ interface HeaderProps {
 export default function Header({ onOpenFilters }: HeaderProps) {
     
   const router = useRouter();
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+  
   useEffect(() => {
     if (document.documentElement.classList.contains('high-contrast')) {
       setHighContrast(true);
@@ -33,6 +35,28 @@ export default function Header({ onOpenFilters }: HeaderProps) {
     }
   };
 
+  const handleScrollToAbout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    if (pathname === '/') {
+      const element = document.getElementById('about');
+      if (element) {
+        const headerHeight = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      sessionStorage.setItem('scrollToAbout', 'true');
+      router.push('/');
+    }
+  };
+
   const handleOpenFilters = () => {
     if (onOpenFilters) {
       onOpenFilters();
@@ -42,6 +66,11 @@ export default function Header({ onOpenFilters }: HeaderProps) {
     setIsMobileMenuOpen(false);
   };
 
+  const handleGoToMap = () => {
+    setIsMobileMenuOpen(false);
+    router.push('/map');
+  };
+
   return (
     <header className={`sticky top-0 z-50 transition-colors relative ${
       highContrast 
@@ -49,14 +78,13 @@ export default function Header({ onOpenFilters }: HeaderProps) {
         : 'bg-[var(--color-bg-primary)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-bg-primary)]/60'
     }`}>
       
-      {/* Основная часть хедера */}
       <div className="container mx-auto px-4 h-16 flex items-center justify-between relative z-10">
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <img 
-  src={`${basePath}/img/logo_homus.png`} 
-  alt="Логотип Доступная Якутия" 
-  className="h-10 w-auto object-contain"
-/>
+          <img 
+            src={`${basePath}/img/logo_homus.png`} 
+            alt="Логотип Доступная Якутия" 
+            className="h-10 w-auto object-contain"
+          />
           <span 
             className={`${highContrast ? 'text-white' : 'text-[var(--color-header-title)]'} font-sangha`}
             style={{
@@ -69,16 +97,28 @@ export default function Header({ onOpenFilters }: HeaderProps) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          
           <Link href="/advice" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
             Практические советы
           </Link>
           <Link href="/yakutia" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
             О Якутии
           </Link>
-          <a href="#about" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
+          <button 
+            onClick={handleScrollToAbout} 
+            className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)] cursor-pointer"
+          >
             О проекте
-          </a>
+          </button>
+          
+          {/* ✅ "Перейти на карту" - как обычный текст, но темно-оранжевый */}
+          <button 
+            onClick={handleGoToMap}
+            className={`text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold text-[var(--color-accent-dark)] hover:text-[var(--color-accent-hover)] transition-colors cursor-pointer ${
+              highContrast ? 'text-white hover:text-gray-300' : ''
+            }`}
+          >
+            Перейти на карту
+          </button>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -101,41 +141,45 @@ export default function Header({ onOpenFilters }: HeaderProps) {
         </div>
       </div>
 
-      {/* Граница */}
       <div className={`border-b ${highContrast ? 'border-white/30' : 'border-[var(--color-card-border)]'}`} />
       
-{/* SVG узор как фон */}
-<div 
-  className="w-full bg-repeat-x"
-  style={{ 
-    backgroundImage: `url("${basePath}/img/uzor.svg")`,
-    backgroundSize: "auto 30px",
-    backgroundPosition: "bottom center",
-    height: "30px",
-    opacity: highContrast ? 0.3 : 0.7,
-    filter: highContrast ? 'invert(1)' : 'none',
-  }}
-/>
+      <div 
+        className="w-full bg-repeat-x"
+        style={{ 
+          backgroundImage: `url("${basePath}/img/uzor.svg")`,
+          backgroundSize: "auto 30px",
+          backgroundPosition: "bottom center",
+          height: "30px",
+          opacity: highContrast ? 0.3 : 0.7,
+          filter: highContrast ? 'invert(1)' : 'none',
+        }}
+      />
 
       {/* Мобильное меню */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-[var(--color-bg-primary)] border-b border-[var(--color-card-border)] shadow-lg py-4 px-4 flex flex-col gap-4 z-20">
-         
           <Link href="/advice" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
             Практические советы
           </Link>
           <Link href="/yakutia" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
             О Якутии
           </Link>
-          <a href="#about" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
+          <button 
+            onClick={handleScrollToAbout}
+            className="py-2 text-lg font-bold text-[var(--color-text-primary)] text-left"
+          >
             О проекте
-          </a>
-          <Button 
-            className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-white)] mt-2 font-bold py-6 text-lg"
-            onClick={() => { router.push('/map'); setIsMobileMenuOpen(false); }}
+          </button>
+          
+          {/* ✅ "Перейти на карту" в мобильном меню - темно-оранжевый */}
+          <button 
+            onClick={handleGoToMap}
+            className={`py-2 text-lg font-bold text-[var(--color-accent-dark)] text-left hover:text-[var(--color-accent-hover)] transition-colors ${
+              highContrast ? 'text-white hover:text-gray-300' : ''
+            }`}
           >
             Перейти на карту
-          </Button>
+          </button>
         </div>
       )}
     </header>

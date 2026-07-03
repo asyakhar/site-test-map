@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { 
@@ -65,6 +65,63 @@ export default function HomePage() {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+  
+  // ✅ ДОБАВЛЯЕМ ЭТОТ useEffect ДЛЯ ОБРАБОТКИ ЯКОРЯ
+  useEffect(() => {
+    // Проверяем флаг в sessionStorage (устанавливается в Header при клике на "О проекте")
+    const shouldScrollToAbout = sessionStorage.getItem('scrollToAbout');
+    
+    if (shouldScrollToAbout === 'true') {
+      // Удаляем флаг, чтобы не скроллить при обновлении страницы
+      sessionStorage.removeItem('scrollToAbout');
+      
+      // Функция скролла
+      const scrollToAbout = () => {
+        const element = document.getElementById('about');
+        if (element) {
+          const headerHeight = 80;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      };
+      
+      // Проверяем, есть ли элемент уже в DOM
+      if (document.getElementById('about')) {
+        // Если есть - скроллим сразу
+        setTimeout(scrollToAbout, 100);
+      } else {
+        // Если нет - ждем появления с MutationObserver
+        const observer = new MutationObserver(() => {
+          if (document.getElementById('about')) {
+            observer.disconnect();
+            scrollToAbout();
+          }
+        });
+        
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+        
+        // Таймаут на всякий случай (если элемент так и не появился)
+        const timeout = setTimeout(() => {
+          observer.disconnect();
+          scrollToAbout();
+        }, 3000);
+        
+        return () => {
+          observer.disconnect();
+          clearTimeout(timeout);
+        };
+      }
+    }
+  }, []);// Пустой массив зависимостей — запускается только один раз при монтировании
+
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       
@@ -75,13 +132,13 @@ export default function HomePage() {
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
         {/* Фоновое изображение */}
         <div 
-  className="absolute inset-0 bg-cover bg-center z-0"
-  style={{
-    backgroundImage: `url('${basePath}/img/background_photo.png')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  }}
->
+          className="absolute inset-0 bg-cover bg-center z-0"
+          style={{
+            backgroundImage: `url('${basePath}/img/background_photo.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
           {/* Затемнение — теплое бежевое */}
           <div 
             className="absolute inset-0"
@@ -102,15 +159,15 @@ export default function HomePage() {
               className="flex-1 flex justify-center lg:justify-start w-full overflow-visible"
             >
               <div className="w-full max-w-[400px] lg:max-w-none flex justify-center items-center p-2">
-              <img 
-  src={`${basePath}/img/cut_map.png`} 
-  alt="Якутия" 
-  className="max-w-full h-auto object-contain 
-             [-webkit-mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
-             [mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
-             lg:[-webkit-mask-image:none] lg:[mask-image:none] 
-             scale-100 lg:scale-110 origin-center"
-/>
+                <img 
+                  src={`${basePath}/img/cut_map.png`} 
+                  alt="Якутия" 
+                  className="max-w-full h-auto object-contain 
+                             [-webkit-mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
+                             [mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
+                             lg:[-webkit-mask-image:none] lg:[mask-image:none] 
+                             scale-100 lg:scale-125 origin-center"
+                />
               </div>
             </motion.div>
 
