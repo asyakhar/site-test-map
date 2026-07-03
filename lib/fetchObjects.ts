@@ -6,13 +6,22 @@ export interface MapObject {
   name: string;
   category: string;
   layers: string[];
-  coordinates: [number, number];
-  properties: Record<string, boolean>;
+  /** [широта, долгота]; null, если координаты не заданы (не показывается на карте) */
+  coordinates: [number, number] | null;
+  address?: string;
+  workingHours?: string;
   description: string;
+  /** Текст по категориям доступности; ключи совпадают с id слоёв/фильтров */
+  accessibility: Record<string, string>;
+  contraindications?: string;
+  tickets?: string;
+  benefits?: string;
+  notes?: string;
   photos: string[];
   contacts: {
     phone?: string;
     website?: string;
+    yandexMap?: string;
   };
 }
 

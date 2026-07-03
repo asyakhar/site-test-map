@@ -9,11 +9,21 @@ import {
   Phone,
   Globe,
   Navigation,
+  Clock,
+  Ticket as TicketIcon,
+  BadgePercent,
+  AlertTriangle,
+  Info,
   Accessibility,
   Eye,
   Ear,
   Utensils,
-  Check,
+  Heart,
+  Wind,
+  Brain,
+  Users,
+  Sparkles,
+  Hospital,
   Building2,
   Hotel,
   UtensilsCrossed,
@@ -40,13 +50,20 @@ interface MapObject {
   name: string;
   category: string;
   layers: string[];
-  coordinates: [number, number];
-  properties: Record<string, boolean>;
+  coordinates: [number, number] | null;
+  address?: string;
+  workingHours?: string;
   description: string;
+  accessibility: Record<string, string>;
+  contraindications?: string;
+  tickets?: string;
+  benefits?: string;
+  notes?: string;
   photos: string[];
   contacts: {
     phone?: string;
     website?: string;
+    yandexMap?: string;
   };
 }
 
@@ -69,60 +86,28 @@ const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; co
   education: { name: "Образование", icon: GraduationCap, color: "#0284c7" },
 };
 
-// Названия особенностей
-const FEATURE_NAMES: Record<string, string> = {
-  ramp: "Пандус",
-  wide_doors: "Широкие двери",
-  accessible_wc: "Доступный туалет",
-  elevator: "Лифт",
-  handrail: "Поручни",
-  low_curbs: "Низкие бордюры",
-  braille: "Шрифт Брайля",
-  audio_description: "Аудиоописание",
-  tactile_exhibits: "Тактильные экспонаты",
-  induction_loop: "Индукционная петля",
-  visual_display: "Визуальные табло",
-  sign_language_staff: "Персонал со знанием ЖЯ",
-  sign_language_guide: "Экскурсовод с ЖЯ",
-  visual_menu: "Визуальное меню",
-  text_chat: "Текстовый чат",
-  diabetic_menu: "Диабетическое меню",
-  gluten_free: "Безглютеновое меню",
-  exact_ingredients: "Точный состав блюд",
-  adapted_national: "Адаптированные блюда",
-  near_medical: "Рядом с медучреждением",
-  cardio_diet: "Кардио-диета",
-  quiet_zone: "Тихая зона",
-  sensory_friendly: "Сенсорно-дружественная",
-  pictogram_nav: "Пиктограммы",
-  quiet_hours: "Тихие часы",
-  air_quality_good: "Чистый воздух",
-  air_purifier: "Очиститель воздуха",
-  clean_zone: "Чистая зона",
-  changing_table: "Пеленальный столик",
-  kids_menu: "Детское меню",
-  mother_child_room: "Комната матери",
-  accessible_play: "Игровая зона",
-  pediatrician: "Педиатр рядом",
-  staff_assist: "Помощь персонала",
-  low_frontdesk: "Низкая стойка",
-  thermal_spring: "Термальный источник",
-  mud_therapy: "Грязелечение",
-  diagnostic_center: "Диагностика",
-  ethno_herbs: "Травничество",
-  ethno_rituals: "Ритуалы исцеления",
-  ethno_bonesetter: "Костоправ",
-  ethno_banya: "Якутская баня",
-};
+// Категории доступности: заголовок, иконка, цвет (ключи совпадают с id слоёв)
+const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: string }[] = [
+  { id: "mobility", name: "Передвижение", icon: Accessibility, color: "#457B9D" },
+  { id: "vision_impaired", name: "Для незрячих и слабовидящих", icon: Eye, color: "#FF6B6B" },
+  { id: "hearing_impaired", name: "Для слабослышащих", icon: Ear, color: "#FFA07A" },
+  { id: "deaf_mute", name: "Для глухонемых", icon: Ear, color: "#DDA15E" },
+  { id: "dietary", name: "Питание", icon: Utensils, color: "#2AA98B" },
+  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart, color: "#E63946" },
+  { id: "respiratory", name: "Дыхательная система", icon: Wind, color: "#1D3557" },
+  { id: "mental", name: "Ментальные особенности", icon: Brain, color: "#7C9EC0" },
+  { id: "family", name: "Семьи с детьми", icon: Users, color: "#E0A400" },
+  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles, color: "#8B5A3C" },
+  { id: "health", name: "Отдых с пользой для здоровья", icon: Hospital, color: "#52B788" },
+];
 
-// ✅ КОМПОНЕНТ ПРИНИМАЕТ id КАК ПРОП
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
   const [loading, setLoading] = useState(true);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
 
   useEffect(() => {
-    const basePath = process.env.NODE_ENV === 'production' 
+    const basePath = process.env.NODE_ENV === 'production'
       ? '/site-test-map'
       : ''
 
@@ -171,28 +156,13 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   const categoryConfig = CATEGORY_CONFIG[place.category] || CATEGORY_CONFIG.museum;
   const CategoryIcon = categoryConfig.icon;
 
-  const availableFeatures = Object.entries(place.properties)
-    .filter(([, value]) => value === true)
-    .map(([key]) => ({ key, name: FEATURE_NAMES[key] || key }));
+  // Категории доступности, для которых есть текст (в порядке ACCESS_META)
+  const accessSections = ACCESS_META.filter((m) => place.accessibility && place.accessibility[m.id]);
 
-  const mobilityFeatures = availableFeatures.filter(f => 
-    ["ramp", "wide_doors", "accessible_wc", "elevator", "handrail", "low_curbs", "staff_assist", "low_frontdesk"].includes(f.key)
-  );
-  const visionFeatures = availableFeatures.filter(f => 
-    ["braille", "audio_description", "tactile_exhibits"].includes(f.key)
-  );
-  const hearingFeatures = availableFeatures.filter(f => 
-    ["induction_loop", "visual_display", "sign_language_staff", "sign_language_guide", "visual_menu", "text_chat"].includes(f.key)
-  );
-  const dietaryFeatures = availableFeatures.filter(f => 
-    ["diabetic_menu", "gluten_free", "exact_ingredients", "adapted_national", "cardio_diet", "kids_menu"].includes(f.key)
-  );
-  const healthFeatures = availableFeatures.filter(f => 
-    ["near_medical", "quiet_zone", "air_quality_good", "air_purifier", "clean_zone", "thermal_spring", "mud_therapy", "diagnostic_center", "ethno_herbs", "ethno_rituals", "ethno_bonesetter", "ethno_banya"].includes(f.key)
-  );
-  const familyFeatures = availableFeatures.filter(f => 
-    ["changing_table", "mother_child_room", "accessible_play", "pediatrician"].includes(f.key)
-  );
+  const phoneHref = place.contacts.phone ? place.contacts.phone.replace(/[^\d+]/g, '') : '';
+  const routeUrl = place.coordinates
+    ? `https://yandex.ru/maps/?rtext=~${place.coordinates[0]}%2C${place.coordinates[1]}&rtt=auto`
+    : place.contacts.yandexMap;
 
   return (
     <div className="min-h-screen bg-[#F7F3E8]">
@@ -207,9 +177,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           <h1 className="text-lg md:text-xl text-[#2C3E50] font-semibold flex-1 text-center px-4 line-clamp-1">
             {place.name}
           </h1>
-          <Button 
-            variant="ghost" 
-            className="gap-2 text-[#2C3E50]" 
+          <Button
+            variant="ghost"
+            className="gap-2 text-[#2C3E50]"
             onClick={() => {
               if (navigator.share) {
                 navigator.share({ title: place.name, url: window.location.href })
@@ -223,20 +193,19 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       </header>
 
       <div className="relative h-64 md:h-96">
-   <img
-    src={place.photos && place.photos.length > 0 
-      ? place.photos[0] 
-      : `${basePath}/img/placeholder.jpg`}
-    alt={place.name}
-    className="w-full h-full object-cover"
-    onError={(e) => {
-      // Если ссылка битая, тоже показываем заглушку
-      e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-    }}
-  />
+        <img
+          src={place.photos && place.photos.length > 0
+            ? place.photos[0]
+            : `${basePath}/img/placeholder.jpg`}
+          alt={place.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
-          <Badge 
+          <Badge
             className="mb-2 text-white border-white/30 px-3 py-1 text-sm"
             style={{ backgroundColor: categoryConfig.color }}
           >
@@ -249,125 +218,102 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#2C3E50] mb-3">{place.name}</h1>
-          <p className="text-[#2C3E50]/80 leading-relaxed">{place.description}</p>
-        </div>
 
-        <Card className="mb-6 p-6 bg-white border-0 shadow-md">
-          <h2 className="text-xl font-semibold text-[#2C3E50] mb-4 flex items-center gap-2">
-            <Accessibility className="size-5 text-[#4ECDC4]" />
-            Доступная среда
-          </h2>
-          
-          <div className="space-y-4">
-            {mobilityFeatures.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Для маломобильных посетителей</h3>
-                <div className="flex flex-wrap gap-2">
-                  {mobilityFeatures.map(f => (
-                    <Badge key={f.key} className="bg-green-100 text-green-800 border-green-200">
-                      <Check className="size-3 mr-1" />
-                      {f.name}
-                    </Badge>
-                  ))}
-                </div>
+          {/* Адрес и часы работы */}
+          <div className="flex flex-col gap-2 mb-4">
+            {place.address && (
+              <div className="flex items-start gap-2 text-[#2C3E50]/80">
+                <MapPin className="size-5 flex-shrink-0 text-[#4ECDC4] mt-0.5" />
+                <span>{place.address}</span>
               </div>
             )}
-
-            {visionFeatures.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-1">
-                  <Eye className="size-3" /> Для слабовидящих
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {visionFeatures.map(f => (
-                    <Badge key={f.key} className="bg-purple-100 text-purple-800 border-purple-200">
-                      <Check className="size-3 mr-1" />
-                      {f.name}
-                    </Badge>
-                  ))}
-                </div>
+            {place.workingHours && (
+              <div className="flex items-start gap-2 text-[#2C3E50]/80">
+                <Clock className="size-5 flex-shrink-0 text-[#4ECDC4] mt-0.5" />
+                <span className="whitespace-pre-line">{place.workingHours}</span>
               </div>
-            )}
-
-            {hearingFeatures.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-1">
-                  <Ear className="size-3" /> Для слабослышащих
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {hearingFeatures.map(f => (
-                    <Badge key={f.key} className="bg-pink-100 text-pink-800 border-pink-200">
-                      <Check className="size-3 mr-1" />
-                      {f.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {dietaryFeatures.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-1">
-                  <Utensils className="size-3" /> Питание
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {dietaryFeatures.map(f => (
-                    <Badge key={f.key} className="bg-orange-100 text-orange-800 border-orange-200">
-                      <Check className="size-3 mr-1" />
-                      {f.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {healthFeatures.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-1">
-                  🏥 Оздоровление
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {healthFeatures.map(f => (
-                    <Badge key={f.key} className="bg-blue-100 text-blue-800 border-blue-200">
-                      <Check className="size-3 mr-1" />
-                      {f.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {familyFeatures.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-1">
-                  👨‍👩‍👧 С семьёй
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {familyFeatures.map(f => (
-                    <Badge key={f.key} className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                      <Check className="size-3 mr-1" />
-                      {f.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {availableFeatures.length === 0 && (
-              <p className="text-gray-500">Информация об особенностях доступности уточняется</p>
             )}
           </div>
+
+          {place.description && (
+            <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.description}</p>
+          )}
+        </div>
+
+        {/* Доступность — текст по категориям */}
+        <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
+          <h2 className="text-xl font-semibold text-[#2C3E50] mb-4 flex items-center gap-2">
+            <Accessibility className="size-5 text-[#4ECDC4]" />
+            Доступность и удобства
+          </h2>
+
+          {accessSections.length > 0 ? (
+            <div className="space-y-5">
+              {accessSections.map((m) => {
+                const Icon = m.icon;
+                return (
+                  <div key={m.id}>
+                    <h3 className="text-sm font-semibold mb-1.5 flex items-center gap-2" style={{ color: m.color }}>
+                      <span className="flex items-center justify-center size-7 rounded-full flex-shrink-0" style={{ backgroundColor: `${m.color}20` }}>
+                        <Icon className="size-4" />
+                      </span>
+                      {m.name}
+                    </h3>
+                    <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line pl-9">
+                      {place.accessibility[m.id]}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-500">Информация об особенностях доступности уточняется</p>
+          )}
         </Card>
 
-        <Card className="mb-6 p-6 bg-white border-0 shadow-md">
+        {/* Противопоказания */}
+        {place.contraindications && (
+          <Card className="mb-6 p-6 gap-2 bg-amber-50 border border-amber-200 shadow-md">
+            <h2 className="text-lg font-semibold text-amber-900 mb-2 flex items-center gap-2">
+              <AlertTriangle className="size-5 text-amber-600" />
+              Противопоказания
+            </h2>
+            <p className="text-amber-900/90 leading-relaxed whitespace-pre-line">{place.contraindications}</p>
+          </Card>
+        )}
+
+        {/* Билеты */}
+        {place.tickets && (
+          <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
+            <h2 className="text-lg font-semibold text-[#2C3E50] mb-2 flex items-center gap-2">
+              <TicketIcon className="size-5 text-[#4ECDC4]" />
+              Билеты
+            </h2>
+            <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.tickets}</p>
+          </Card>
+        )}
+
+        {/* Льготы */}
+        {place.benefits && (
+          <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
+            <h2 className="text-lg font-semibold text-[#2C3E50] mb-2 flex items-center gap-2">
+              <BadgePercent className="size-5 text-[#4ECDC4]" />
+              Льготы
+            </h2>
+            <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.benefits}</p>
+          </Card>
+        )}
+
+        {/* Контакты */}
+        <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
           <h2 className="text-xl font-semibold text-[#2C3E50] mb-4">Контакты</h2>
           <div className="space-y-3">
             {place.contacts.phone && (
-              <a href={`tel:${place.contacts.phone}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center">
+              <a href={`tel:${phoneHref}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center flex-shrink-0">
                   <Phone className="size-5 text-[#1B3A5C]" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm text-gray-500">Телефон</div>
                   <div className="text-[#2C3E50] font-medium">{place.contacts.phone}</div>
                 </div>
@@ -376,37 +322,52 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
             {place.contacts.website && (
               <a href={place.contacts.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center">
+                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center flex-shrink-0">
                   <Globe className="size-5 text-[#1B3A5C]" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm text-gray-500">Сайт</div>
                   <div className="text-[#2C3E50] font-medium truncate">{place.contacts.website}</div>
                 </div>
               </a>
             )}
 
-            <a href={`https://maps.google.com/?q=${place.coordinates[0]},${place.coordinates[1]}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center">
-                <MapPin className="size-5 text-[#1B3A5C]" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Координаты</div>
-                <div className="text-[#2C3E50] font-medium">
-                  {place.coordinates[0].toFixed(4)}°, {place.coordinates[1].toFixed(4)}°
+            {place.contacts.yandexMap && (
+              <a href={place.contacts.yandexMap} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="size-5 text-[#1B3A5C]" />
                 </div>
-              </div>
-            </a>
+                <div className="min-w-0">
+                  <div className="text-sm text-gray-500">Яндекс.Карты</div>
+                  <div className="text-[#2C3E50] font-medium truncate">Открыть карточку места</div>
+                </div>
+              </a>
+            )}
 
-            <Button 
-              className="w-full bg-[#4ECDC4] hover:bg-[#3DBDB5] text-white rounded-lg py-6 gap-2"
-              onClick={() => window.open(`https://maps.google.com/?q=${place.coordinates[0]},${place.coordinates[1]}`)}
-            >
-              <Navigation className="size-5" />
-              Построить маршрут в Google Maps
-            </Button>
+            {routeUrl && (
+              <Button
+                className="w-full bg-[#4ECDC4] hover:bg-[#3DBDB5] text-white rounded-lg py-6 gap-2"
+                onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
+              >
+                <Navigation className="size-5" />
+                Построить маршрут в Яндекс.Картах
+              </Button>
+            )}
           </div>
         </Card>
+
+        {/* Примечания */}
+        {place.notes && (
+          <Card className="mb-6 p-5 gap-2 bg-[#1B3A5C]/5 border-0 shadow-sm">
+            <div className="flex items-start gap-2">
+              <Info className="size-5 text-[#1B3A5C] flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-semibold text-[#1B3A5C] mb-1">Примечания</div>
+                <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.notes}</p>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
       <footer className="bg-[#1B3A5C] text-white py-8 mt-12">
@@ -416,7 +377,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           </p>
           <p className="text-xs opacity-70">
             Информация на сайте носит ознакомительный характер и не является медицинской
-            консультацией. Перед посещением оздоровительных объектов и использованием 
+            консультацией. Перед посещением оздоровительных объектов и использованием
             народной медицины проконсультируйтесь со специалистом.
           </p>
         </div>
