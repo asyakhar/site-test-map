@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/AppHeader";
+import PopularPlaces from "@/components/PopularPlaces";
 
 // Типы для категорий
 type Category = {
@@ -52,13 +53,6 @@ const categories: Category[] = [
   { id: "family", icon: Users, label: "Семьи с детьми", color: "#FFB703" },
   { id: "ethnomedicine", icon: Sparkles, label: "Народная медицина", color: "#8B5A3C" },
   { id: "health", icon: Hospital, label: "Здоровье", color: "#52B788" },
-];
-
-// Заглушки для карусели объектов
-const sampleObjects = [
-  { id: 1, name: "Музей мамонта", category: "Музей", img: `${basePath}/img/placeholder.jpg` },
-  { id: 2, name: "Царство вечной мерзлоты", category: "Развлечения", img: `${basePath}/img/placeholder.jpg` },
-  { id: 3, name: "Ленские столбы", category: "Природа", img: `${basePath}/img/placeholder.jpg` },
 ];
 
 // Заглушки для событий
@@ -219,28 +213,7 @@ export default function HomePage() {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {sampleObjects.map((obj) => (
-              <Card key={obj.id} className="overflow-hidden group cursor-pointer bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700">
-                <div className="relative h-48 md:h-56 overflow-hidden">
-                  <img 
-                    src={obj.img} 
-                    alt={obj.name} 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <Badge className="absolute top-3 right-3 bg-white/90 text-[var(--color-text-primary)] text-sm">
-                    {obj.category}
-                  </Badge>
-                </div>
-                <div className="p-4 md:p-6">
-                  <h3 className="font-bold text-[clamp(1.125rem,2vw,1.25rem)] mb-2 text-[var(--color-text-primary)] dark-contrast:text-white">{obj.name}</h3>
-                  <p className="text-[clamp(0.875rem,1.5vw,1rem)] line-clamp-2 text-[var(--color-text-secondary)] dark-contrast:text-gray-300">
-                    Краткое описание объекта, чтобы заинтересовать пользователя перейти на страницу details.
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <PopularPlaces />
         </div>
       </section>
 
