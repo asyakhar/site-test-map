@@ -298,21 +298,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Блок 6. О проекте */}
-      <section id="about" className="py-20 lg:py-32 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-bold mb-6" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}>О проекте</h2>
-          <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
-            «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
-          </p>
-          
-          <div className="flex flex-wrap justify-center gap-4 md:gap-8 items-center opacity-70 mt-12">
-            <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 1</div>
-            <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 2</div>
-            <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 3</div>
-          </div>
-        </div>
-      </section>
+     {/* Блок 6. О проекте */}
+<section 
+  id="about" 
+  className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 bg-about-pattern relative"
+>
+  <div className="container mx-auto px-4 text-center">
+  
+    <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
+      О проекте
+    </h2>
+    
+    <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+      «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
+    </p>
+    
+  
+  </div>
+</section>
 
       {/* Модальное окно фильтров */}
       <Dialog open={showFilters} onOpenChange={setShowFilters}>

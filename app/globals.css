@@ -195,5 +195,10 @@
   .text-accent-custom {
     color: var(--color-accent);
   }
- 
+  .bg-about-pattern {
+    background-image: url('/img/o_proekte.png');
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: contain; /* Картинка адаптируется под ширину секции */
+  }
 }
