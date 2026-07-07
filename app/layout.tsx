@@ -34,20 +34,7 @@ export const metadata: Metadata = {
   title: 'Доступная Якутия - Инклюзивный навигатор',
   description: 'Интерактивная карта медицинского и доступного туризма Республики Саха (Якутия)',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
+    // Основной фавикон — logo_homus (app/favicon.ico подключается автоматически).
     apple: '/apple-icon.png',
   },
 }

@@ -12,7 +12,6 @@ import {
   Hospital, 
   Accessibility,
   ChevronRight,
-  Calendar,
   Heart,
   Brain,
   Wind
@@ -32,6 +31,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/AppHeader";
 import PopularPlaces from "@/components/PopularPlaces";
+import UpcomingEvents from "@/components/UpcomingEvents";
 
 // Типы для категорий
 type Category = {
@@ -53,12 +53,6 @@ const categories: Category[] = [
   { id: "family", icon: Users, label: "Семьи с детьми", color: "#FFB703" },
   { id: "ethnomedicine", icon: Sparkles, label: "Народная медицина", color: "#8B5A3C" },
   { id: "health", icon: Hospital, label: "Здоровье", color: "#52B788" },
-];
-
-// Заглушки для событий
-const sampleEvents = [
-  { id: 1, title: "Ысыах", date: "21 июня", location: "Урус-Хара" },
-  { id: 2, title: "День города", date: "15 сентября", location: "Центральная площадь" },
 ];
 
 export default function HomePage() {
@@ -260,9 +254,9 @@ export default function HomePage() {
       {/* Блок 4. Карусель с объектами */}
       <section className="py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-8">
-            <h2 className="font-bold text-[var(--color-text-primary)] dark-contrast:text-white"
-                style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
+          <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-2 mb-8">
+            <h2 className="font-sangha"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#E38920' }}>
               Популярные места
             </h2>
             <Link href="/map" className="text-[var(--color-accent)] font-medium hover:underline flex items-center text-[clamp(0.875rem,1.5vw,1rem)]">
@@ -274,27 +268,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Блок 5. Анонсы событий */}
-      <section className="py-16 lg:py-24 bg-[var(--color-bg-primary)]">
-        <div className="container mx-auto px-4">
-          <h2 className="font-bold text-center mb-12 text-[var(--color-text-primary)] dark-contrast:text-white"
-              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
+      {/* Блок 5. Ближайшие события */}
+      <section className="relative py-16 lg:py-24 bg-[var(--color-bg-primary)] overflow-hidden">
+        <img
+          src={`${basePath}/img/events-pattern.png`}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute -top-4 right-0 h-[420px] w-auto opacity-40 dark-contrast:hidden"
+        />
+        <div className="container relative mx-auto px-4">
+          <h2
+            className="font-sangha text-center mb-12"
+            style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#802405' }}
+          >
             Ближайшие события
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {sampleEvents.map((event) => (
-              <Card key={event.id} className="flex items-center p-4 md:p-6 gap-4 hover:shadow-md transition-shadow bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700 dark-contrast:text-white">
-                <div className="size-16 md:size-20 rounded-lg flex flex-col items-center justify-center flex-shrink-0 bg-[var(--color-accent-light)] text-[var(--color-accent-dark)] dark-contrast:bg-white dark-contrast:text-black">
-                  <Calendar className="size-6 md:size-7 mb-1" />
-                  <span className="text-xs md:text-sm font-bold">{event.date.split(' ')[0]}</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-[clamp(1.125rem,2vw,1.25rem)] text-[var(--color-text-primary)] dark-contrast:text-white">{event.title}</h3>
-                  <p className="text-[clamp(0.875rem,1.5vw,1rem)] mt-1 text-[var(--color-text-secondary)] dark-contrast:text-gray-300">{event.date} • {event.location}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <UpcomingEvents />
         </div>
       </section>
 
