@@ -299,23 +299,40 @@ export default function HomePage() {
       </section>
 
      {/* Блок 6. О проекте */}
-<section 
-  id="about" 
-  className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 bg-about-pattern relative"
->
-  <div className="container mx-auto px-4 text-center">
+{(() => {
+  // Объявляем basePath прямо внутри компонента перед рендером
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
   
-    <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
-      О проекте
-    </h2>
-    
-    <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
-      «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
-    </p>
-    
-  
-  </div>
-</section>
+  return (
+    <section 
+      id="about" 
+      className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 relative"
+      style={{
+        backgroundImage: `url('${basePath}/img/o_proekte.png')`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'bottom center',
+        backgroundSize: 'contain'
+      }}
+    >
+      <div className="container mx-auto px-4 text-center">
+        {/* Заголовок без font-bold с фирменным акцентным шрифтом */}
+        <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
+          О проекте
+        </h2>
+        
+        <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+          «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
+        </p>
+        
+        <div className="flex flex-wrap justify-center gap-4 md:gap-8 items-center opacity-70 mt-12 relative z-10">
+          <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 1</div>
+          <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 2</div>
+          <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 3</div>
+        </div>
+      </div>
+    </section>
+  );
+})()}
 
       {/* Модальное окно фильтров */}
       <Dialog open={showFilters} onOpenChange={setShowFilters}>
