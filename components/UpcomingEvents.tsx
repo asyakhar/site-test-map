@@ -73,13 +73,13 @@ export default function UpcomingEvents() {
               <div className="relative aspect-[11/10] overflow-hidden rounded-3xl shadow-md">
                 {/* Фото события (public/img/events/<photo>.jpg); пока файла нет — заглушка */}
                 <img
-                  src={event.photo ? `${basePath}/img/events/${event.photo}.jpg` : `${basePath}/img/placeholder.jpg`}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-                  }}
-                />
+  src={event.photo ? `https://raw.githubusercontent.com/asyakhar/yakutia-images/e0c4feb0ec5f84087a12417ce81037948d9c9561/events/${event.photo}.jpg` : `${basePath}/img/placeholder.jpg`}
+  alt=""
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+  }}
+/>
                 {/* Затемнение фото + градиент снизу для читаемости текста */}
                 <div className="absolute inset-0 bg-black/40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
