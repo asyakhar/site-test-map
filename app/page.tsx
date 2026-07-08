@@ -192,25 +192,50 @@ export default function HomePage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end mt-8">
-                <Button 
-                  size="lg" 
-                  className="bg-accent-custom hover:bg-[var(--color-accent-hover)] text-[var(--color-text-white)] px-8 py-6 md:py-7 rounded-xl shadow-lg font-bold tracking-wide"
-                  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
-                  onClick={() => router.push('/map')}
-                >
-                  <MapPin className="mr-2 size-5" />
-                  Перейти на карту
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="bg-[#9CB6E0] hover:bg-[#708FC0] border-0 text-white px-8 py-6 md:py-7 rounded-xl shadow-lg font-bold tracking-wide"
-                  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
-                  onClick={() => setShowFilters(true)}
-                >
-                  <Sparkles className="mr-2 size-5" />
-                  Подобрать места
-                </Button>
+              {/* Кнопка "Перейти на карту" */}
+<Button 
+  size="lg" 
+  className="
+    bg-accent-custom 
+    hover:bg-[var(--color-accent-hover)] 
+    text-[var(--color-text-white)] 
+    px-8 py-6 md:py-7 
+    rounded-xl shadow-lg 
+    font-bold tracking-wide 
+    border-2 border-transparent
+    hover:border-[var(--color-accent-hover)]
+    min-w-[220px]
+  "
+  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
+  onClick={() => router.push('/map')}
+>
+  <MapPin className="mr-2 size-5" />
+  Перейти на карту
+</Button>
+
+{/* Кнопка "Подобрать места" */}
+<Button 
+  size="lg" 
+  variant="outline" 
+  className="
+    bg-[var(--color-button-primary-bg)] 
+    text-[var(--color-button-primary-text)] 
+    border-2 border-[var(--color-button-primary-border)]
+    hover:bg-[var(--color-button-primary-hover)]
+    hover:text-[var(--color-text-white)]
+    hover:border-[var(--color-button-primary-hover)]
+    px-8 py-6 md:py-7 
+    rounded-xl shadow-lg 
+    font-bold tracking-wide 
+    transition-all duration-200
+    min-w-[220px]
+  "
+  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
+  onClick={() => setShowFilters(true)}
+>
+  <Sparkles className="mr-2 size-5" />
+  Подобрать места
+</Button>
               </div>
             </motion.div>
             
@@ -277,12 +302,12 @@ export default function HomePage() {
           className="pointer-events-none select-none absolute -top-4 right-0 h-[420px] w-auto opacity-40 dark-contrast:hidden"
         />
         <div className="container relative mx-auto px-4">
-          <h2
-            className="font-sangha text-center mb-12"
-            style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#802405' }}
-          >
-            Ближайшие события
-          </h2>
+        <h2
+  className="font-sangha text-center mb-12 text-[var(--color-title-events)]"
+  style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+>
+  Ближайшие события
+</h2>
           <UpcomingEvents />
         </div>
       </section>
@@ -313,11 +338,7 @@ export default function HomePage() {
           «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
         </p>
         
-        <div className="flex flex-wrap justify-center gap-4 md:gap-8 items-center opacity-70 mt-12 relative z-10">
-          <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 1</div>
-          <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 2</div>
-          <div className="h-12 w-32 bg-white/20 rounded flex items-center justify-center text-sm md:text-base">Логотип 3</div>
-        </div>
+       
       </div>
     </section>
   );

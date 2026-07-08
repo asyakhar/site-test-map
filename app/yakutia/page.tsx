@@ -116,11 +116,21 @@ export default function YakutiaPage() {
         </Card>
 
         {/* Кнопка перехода */}
-        <div className="text-center pb-8">
-          <Button asChild size="lg" className="bg-accent-custom hover:bg-[var(--color-accent-hover)] text-white px-10 py-7 text-lg rounded-xl font-bold shadow-md transition-transform hover:scale-105">
-            <Link href="/map">Перейти к карте объектов</Link>
-          </Button>
-        </div>
+        <div className="flex justify-center">
+  <Button 
+    asChild 
+    size="lg" 
+    className="
+      bg-accent-custom hover:bg-[var(--color-accent-hover)] 
+      text-[var(--color-text-white)] 
+      px-8 py-6 text-lg rounded-xl font-bold shadow-md 
+      transition-transform hover:scale-105
+      high-contrast:text-black
+    "
+  >
+    <Link href="/map">Перейти к карте объектов</Link>
+  </Button>
+</div>
 
       </article>
     </PageWrapper>

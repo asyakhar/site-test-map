@@ -144,7 +144,8 @@ const adviceData: AdviceItem[] = [
     content: (
       <>
         <h3 className="font-bold text-xl text-[#4A72B2] mb-3 flex items-center gap-2">
-          <Snowflake className="size-5" /> Если дорога зимой
+          {/* Скрываем иконку снежинки в заголовке в контрастном режиме */}
+          <Snowflake className="size-5 dark-contrast:hidden" /> Если дорога зимой
         </h3>
         <p className="mb-3 text-[var(--color-text-primary)]">В машине обязательно должны быть:</p>
         <ul className="list-disc pl-6 space-y-2 text-[var(--color-text-primary)] mb-8">
@@ -156,7 +157,8 @@ const adviceData: AdviceItem[] = [
         </ul>
 
         <h3 className="font-bold text-xl text-[#E38920] mb-3 flex items-center gap-2 border-t pt-6">
-          <Sun className="size-5" /> Если дорога летом
+          {/* Скрываем иконку солнца в заголовке в контрастном режиме */}
+          <Sun className="size-5 dark-contrast:hidden" /> Если дорога летом
         </h3>
         <p className="mb-3 text-[var(--color-text-primary)]">Обязательно берём:</p>
         <ul className="list-disc pl-6 space-y-2 text-[var(--color-text-primary)]">
@@ -238,7 +240,8 @@ export default function AdvicePage() {
                 onClick={() => setSelectedAdvice(item)}
                 className="group p-6 bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all cursor-pointer shadow-sm hover:shadow-md h-full flex flex-col"
               >
-                <div className={`size-14 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${item.iconBgClass} ${item.iconColorClass}`}>
+                {/* Скрываем блок с иконкой в контрастном режиме (dark-contrast:hidden) */}
+                <div className={`size-14 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${item.iconBgClass} ${item.iconColorClass} dark-contrast:hidden`}>
                   <Icon className="size-7" />
                 </div>
                 
@@ -265,7 +268,8 @@ export default function AdvicePage() {
               <>
                 <div className={`p-6 md:p-8 border-b ${selectedAdvice.iconBgClass} dark-contrast:bg-gray-900`}>
                   <div className="flex items-center gap-4">
-                    <div className={`size-12 rounded-full flex items-center justify-center bg-white shadow-sm dark-contrast:bg-gray-800 ${selectedAdvice.iconColorClass}`}>
+                    {/* Скрываем блок с иконкой в заголовке модального окна (dark-contrast:hidden) */}
+                    <div className={`size-12 rounded-full flex items-center justify-center bg-white shadow-sm dark-contrast:hidden ${selectedAdvice.iconColorClass}`}>
                       <selectedAdvice.icon className="size-6" />
                     </div>
                     <DialogTitle className="font-sangha text-3xl md:text-4xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight">

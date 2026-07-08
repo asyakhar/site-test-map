@@ -2,7 +2,7 @@
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
-
+@custom-variant dark-contrast (&:is(.high-contrast *));
 
 :root {
   /* === ОСНОВНЫЕ ЦВЕТА === */
@@ -38,6 +38,10 @@
   --color-card-bg: #FFFFFF;
   --color-card-border: #E8E6E0;
   --color-card-shadow: rgba(56, 78, 65, 0.1);
+  --color-button-primary-bg: #9CB6E0;
+  --color-button-primary-text: #FFFFFF;
+  --color-button-primary-border: #9CB6E0;
+  --color-button-primary-hover: #708FC0;
   
   /* === ФОНОВОЕ ИЗОБРАЖЕНИЕ === */
   --bg-hero-image: url('/img/background_photo.png');
@@ -71,6 +75,7 @@
   --sidebar-accent-foreground: var(--color-text-primary);
   --sidebar-border: var(--color-card-border);
   --sidebar-ring: var(--color-accent);
+  --color-title-events: #802405;
 }
 
 .dark {
@@ -196,9 +201,128 @@
     color: var(--color-accent);
   }
   .bg-about-pattern {
-    background-image: url('/img/o_proekte.png');
-    background-repeat: no-repeat;
-    background-position: bottom center;
-    background-size: contain; /* Картинка адаптируется под ширину секции */
-  }
+  background-image: url('/img/o_proekte.png');
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: contain; /* Картинка адаптируется под ширину секции */
+}
+}
+/* ========================================================
+   РЕЖИМ ДЛЯ СЛАБОВИДЯЩИХ (ВЫСОКИЙ КОНТРАСТ И КРУПНЫЙ ШРИФТ)
+   ======================================================== */
+
+/* 1. Увеличиваем базовый размер шрифта (работает для всех rem-значений) */
+html.large-font {
+  font-size: 115%; 
+}
+html.large-font header .flex.items-center.gap-4 {
+  flex-shrink: 0 !important;
+  width: auto !important;
+  min-width: 80px !important;
+}
+
+html.large-font button[title="Версия для слабовидящих"] {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+}
+
+html.large-font button[title="Версия для слабовидящих"] svg {
+  flex-shrink: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+}
+/* 2. Переопределяем палитру на черное, белое и ярко-желтое */
+:root.high-contrast {
+  /* Радикально чёрный фон */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #000000;
+  --color-bg-white: #000000;
+  
+  /* Контрастный белый текст и желтые акценты */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFFF00; 
+  --color-text-white: #000000; /* Инверсия (черный текст на белых кнопках) */
+  
+  /* Яркий акцентный цвет (желтый) */
+  --color-accent: #FFFF00;
+  --color-accent-hover: #FFFFFF;
+  --color-accent-light: #FFFF00;
+  --color-accent-dark: #FFFF00;
+  
+  /* Зеленые и коричневые элементы тоже превращаем в контрастные */
+  --color-green-dark: #FFFFFF;
+  --color-green-medium: #FFFFFF;
+  --color-green-light: #CCCCCC;
+  
+  --color-brown-dark: #FFFFFF;
+  --color-brown-medium: #FFFF00;
+  --color-brown-light: #CCCCCC;
+  
+  --color-header-title: #FFFF00;
+  
+  /* Карточки и обводки */
+  --color-card-bg: #000000;
+  --color-card-border: #FFFF00;
+  --color-card-shadow: none;
+
+  /* Переопределение дефолтных переменных Tailwind (shadcn) */
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card: #000000;
+  --card-foreground: #FFFFFF;
+  --popover: #000000;
+  --popover-foreground: #FFFFFF;
+  --primary: #FFFF00;
+  --primary-foreground: #000000;
+  --muted: #000000;
+  --muted-foreground: #FFFF00;
+  --border: #FFFF00;
+
+  --color-button-primary-bg: #000000;
+  --color-button-primary-text: #FFFF00;
+  --color-button-primary-border: #FFFF00;
+  --color-button-primary-hover: #FFFF00;
+  --color-title-events: #FFFF00;
+}
+
+/* 3. Жесткие переопределения для максимальной доступности */
+:root.high-contrast body *:not(header *) {
+  font-weight: 700 !important;
+}
+/* Убираем декоративные фоновые картинки (например, на главном экране и в блоке "О проекте") */
+:root.high-contrast section {
+  background-image: none !important;
+  background-color: #000000 !important;
+}
+
+/* Убираем inline-градиент с главного экрана */
+:root.high-contrast div[style*="linear-gradient"] {
+  background: #000000 !important;
+}
+
+/* Добавляем строгую обводку всем карточкам, кнопкам и инпутам, чтобы они не сливались с фоном */
+:root.high-contrast button, 
+:root.high-contrast input,
+:root.high-contrast [data-slot="card"] {
+  border: 2px solid #FFFF00 !important;
+}
+
+/* Выделяем модальные окна (диалоги и фильтры) */
+:root.high-contrast [role="dialog"] {
+  border: 4px solid #FFFF00 !important;
+}
+:root.high-contrast [data-slot="badge"].absolute {
+  background-color: rgba(255, 255, 255, 0.9) !important; /* Фиксируем белый полупрозрачный фон */
+  color: #1B3A5C !important; /* Принудительно делаем текст темным, чтобы он не стал белым на белом */
+  border: none !important;
+  outline: none !important;
+}
+:root.high-contrast [class*="dark-contrast:hidden"] {
+  display: none !important;
 }
