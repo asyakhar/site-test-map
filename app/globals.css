@@ -637,4 +637,44 @@ html.large-font button[title="Версия для слабовидящих"] svg
 :root.high-contrast [data-active="true"] * {
   color: #000000 !important;
 }
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - ПРОТИВОПОКАЗАНИЯ
+   ======================================================== */
 
+/* Противопоказания - черный фон, белый текст */
+:root.high-contrast .bg-amber-50,
+:root.high-contrast .border-amber-200 {
+  background-color: #000000 !important;
+  border-color: #FFFFFF !important;
+}
+
+:root.high-contrast .bg-amber-50 *,
+:root.high-contrast .border-amber-200 * {
+  color: #FFFFFF !important;
+}
+
+/* Заголовок противопоказаний */
+:root.high-contrast .text-amber-900,
+:root.high-contrast .dark\:text-amber-300 {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .text-amber-600,
+:root.high-contrast .dark\:text-amber-400 {
+  color: #FFFFFF !important;
+}
+
+/* Текст противопоказаний */
+:root.high-contrast .text-amber-900\/90,
+:root.high-contrast .dark\:text-amber-200\/90 {
+  color: #FFFFFF !important;
+}
+
+/* Для темной темы */
+:root.high-contrast .dark\:bg-amber-950\/30 {
+  background-color: #000000 !important;
+}
+
+:root.high-contrast .dark\:border-amber-700 {
+  border-color: #FFFFFF !important;
+}
