@@ -165,7 +165,6 @@ function getCategoryMarkerIcon(category: string) {
   }
   const iconPath = iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
   
-  // Темно-оранжевый цвет для капли
   const pinColor = "#B86A18";
 
   return L.divIcon({
@@ -236,7 +235,6 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
-      {/* Шапка для мобилок */}
       {onClose && (
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-card-border)] lg:hidden bg-[var(--color-bg-white)] z-20">
           <h2 className="font-sangha text-2xl text-[var(--color-green-dark)] leading-none pt-1">Списки и фильтры</h2>
@@ -246,7 +244,6 @@ function SidebarContent({
         </div>
       )}
 
-      {/* Панель поиска (закреплена) */}
       <div className="flex flex-col px-5 py-4 border-b border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-sm z-10">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
@@ -260,10 +257,7 @@ function SidebarContent({
         </div>
       </div>
 
-      {/* Единая прокручиваемая область для Фильтров и Списка мест */}
       <div className="flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
-        
-        {/* Блок фильтров-тегов */}
         <div className="p-5 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)]">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-bold text-[var(--color-green-dark)]">Кому подходит:</span>
@@ -296,7 +290,6 @@ function SidebarContent({
           </div>
         </div>
 
-        {/* Список мест */}
         <div className="p-4 space-y-3">
           <div className="text-sm font-bold text-[var(--color-text-secondary)] px-1 mb-1">
             Найдено мест: {filteredObjectsCount}
@@ -327,7 +320,6 @@ function SidebarContent({
                       <span className="line-clamp-1">{obj.address}</span>
                     </div>
                   )}
-                  {/* Значки с текстом */}
                   {groups.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {groups.map((m) => {
@@ -356,6 +348,99 @@ function SidebarContent({
   )
 }
 
+// Компонент попапа с адаптивным дизайном
+function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
+  obj: MapObject;
+  onPlaceSelect?: (id: string) => void;
+  getBadgeColor: (obj: MapObject) => string;
+  basePath: string;
+}) {
+  const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id));
+  
+  return (
+    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
+      {/* Фото */}
+      <div className="relative h-32 w-full flex-shrink-0">
+        <img
+          src={obj.photos && obj.photos.length > 0 ? obj.photos[0] : `${basePath}/img/placeholder.jpg`}
+          alt={obj.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+          }}
+        />
+      </div>
+
+      {/* Контент с прокруткой */}
+      <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
+        <div>
+          <Badge 
+            className="mb-2 text-white border-0 shadow-sm text-xs sm:text-sm" 
+            style={{ backgroundColor: getBadgeColor(obj) }}
+          >
+            {CATEGORY_CONFIG[obj.category]?.name || obj.category}
+          </Badge>
+          <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] leading-tight">
+            {obj.name}
+          </h3>
+        </div>
+
+        <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] space-y-1.5">
+          {obj.address && (
+            <div className="flex items-start gap-1.5">
+              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-2">{obj.address}</span>
+            </div>
+          )}
+          {obj.workingHours && (
+            <div className="flex items-start gap-1.5">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-1 text-xs sm:text-sm">{obj.workingHours}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Значки доступности */}
+        {groups.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+            {groups.slice(0, 4).map((m) => {
+              const Icon = m.icon
+              return (
+                <span
+                  key={m.id}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                >
+                  <Icon className="size-2.5 sm:size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                  <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] hidden xs:inline">
+                    {m.name}
+                  </span>
+                </span>
+              )
+            })}
+            {groups.length > 4 && (
+              <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-secondary)] px-1">
+                +{groups.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+
+        {onPlaceSelect && (
+          <div className="pt-2 border-t border-[var(--color-card-border)]">
+            <Button 
+              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-2.5 sm:py-3 text-xs sm:text-sm"
+              onClick={() => onPlaceSelect(obj.id)}
+            >
+              Подробнее
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakutiaMapProps) {
 
 const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
@@ -364,6 +449,37 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [isHighContrast, setIsHighContrast] = useState(false);
+
+  // Отслеживаем высококонтрастный режим
+  useEffect(() => {
+    const checkHighContrast = () => {
+      const isHC = document.documentElement.classList.contains('high-contrast');
+      setIsHighContrast(isHC);
+    };
+    
+    checkHighContrast();
+    
+    const observer = new MutationObserver(checkHighContrast);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  // Функция переключения высококонтрастного режима
+  const toggleAccessibility = () => {
+    const newState = !isHighContrast;
+    setIsHighContrast(newState);
+    
+    if (newState) {
+      document.documentElement.classList.add('high-contrast', 'large-font');
+    } else {
+      document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+  };
 
   useEffect(() => {
     const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
@@ -391,7 +507,6 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return obj.layers.some((layer) => activeLayers.includes(layer))
   })
 
-  // Цвет бэйджиков берем из активного фильтра (для визуала)
   const getBadgeColor = useCallback((obj: MapObject) => {
     for (const layer of obj.layers) {
       if (activeLayers.includes(layer) && FILTER_COLORS[layer]) return FILTER_COLORS[layer]
@@ -402,12 +517,10 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
       
-      {/* Затемнение для мобильного меню */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-[1001] lg:hidden backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
       )}
 
-      {/* Мобильная версия единого сайдбара */}
       <div
         className={`fixed inset-y-0 left-0 w-full max-w-[360px] z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
         style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
@@ -426,23 +539,46 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         />
       </div>
 
-      {/* Мобильный хедер */}
-      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-4 gap-4 justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 md:px-4 gap-1 md:gap-2 justify-between">
+        <button onClick={() => router.push("/")} className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity flex-shrink-0 min-w-0">
           <img 
             src={`${basePath}/img/logo_homus.png`} 
             alt="Логотип Доступная Якутия" 
-            className="h-8 w-auto object-contain"
+            className="h-7 md:h-8 w-auto object-contain"
           />
-          <span className="font-sangha text-xl text-[var(--color-green-dark)] leading-tight pt-1">Доступная Якутия</span>
+          <span 
+            className={`font-sangha text-base md:text-xl leading-tight pt-1 ${
+              isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+            }`}
+          >
+            Доступная Якутия
+          </span>
         </button>
-        <button onClick={() => setMobileMenuOpen(true)} className="px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-2 font-bold text-sm" aria-label="Меню">
-          <Menu className="size-4" />
-          Списки и фильтры
-        </button>
+        
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          {/* Кнопка "глаз" для мобильной версии */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleAccessibility}
+            className={`${isHighContrast ? 'text-white hover:bg-white/20' : ''} w-8 h-8 md:w-10 md:h-10`}
+            title="Версия для слабовидящих"
+          >
+            <Eye className="size-4 md:size-5" />
+          </Button>
+          
+          <button 
+            onClick={() => setMobileMenuOpen(true)} 
+            className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
+            aria-label="Меню"
+          >
+            <Menu className="size-3 md:size-4" />
+            <span className="hidden xs:inline">Списки</span>
+            <span className="xs:hidden">Фильтры</span>
+          </button>
+        </div>
       </header>
 
-      {/* Десктопный единый сайдбар слева */}
       <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
         <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() =>router.push("/")}>
           <img 
@@ -451,7 +587,9 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             className="h-12 w-auto object-contain"
           />
           <div>
-            <h1 className="text-2xl font-sangha text-[var(--color-green-dark)] tracking-tight">Доступная Якутия</h1>
+            <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
+              Доступная Якутия
+            </h1>
             <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
           </div>
         </div>
@@ -469,97 +607,40 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         />
       </aside>
 
-      {/* Сама карта */}
       <main className="relative flex-1 pt-[64px] lg:pt-0 bg-[var(--color-bg-primary)]">
-        <MapContainer attributionControl={false} center={CONFIG.mapCenter} zoom={CONFIG.defaultZoom} minZoom={CONFIG.minZoom} maxZoom={CONFIG.maxZoom} className="h-full w-full z-0" zoomControl={true}>
+        <MapContainer 
+          attributionControl={false} 
+          center={CONFIG.mapCenter} 
+          zoom={CONFIG.defaultZoom} 
+          minZoom={CONFIG.minZoom} 
+          maxZoom={CONFIG.maxZoom} 
+          className="h-full w-full z-0" 
+          zoomControl={true}
+        >
           <AttributionControl prefix={false} />
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer 
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+          />
           {filteredObjects.map((obj) => (
             <Marker key={obj.id} position={obj.coordinates!} icon={getCategoryMarkerIcon(obj.category)}>
-              <Popup maxWidth={400} minWidth={280} className="custom-popup">
-  <div className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[90vw] sm:w-[400px]">
-    
-    {/* Фото */}
-    <div className="relative h-32 w-full flex-shrink-0">
-      <img
-        src={obj.photos && obj.photos.length > 0
-          ? obj.photos[0]
-          : `${basePath}/img/placeholder.jpg`}
-        alt={obj.name}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-        }}
-      />
-    </div>
-
-    {/* Контент с прокруткой */}
-    <div className="p-4 space-y-3 overflow-y-auto">
-      <div>
-        <Badge className="mb-2 text-white border-0 shadow-sm" style={{ backgroundColor: getBadgeColor(obj) }}>
-          {CATEGORY_CONFIG[obj.category]?.name || obj.category}
-        </Badge>
-        <h3 className="text-base font-bold text-[var(--color-text-primary)] leading-tight">{obj.name}</h3>
-      </div>
-
-      {/* Ограничиваем количество текста, чтобы он не занимал весь экран */}
-      <div className="text-sm text-[var(--color-text-secondary)] space-y-2">
-        {obj.address && (
-          <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-            <span className="line-clamp-1">{obj.address}</span>
-          </div>
-        )}
-        {obj.workingHours && (
-          <div className="flex items-start gap-2">
-            <Clock className="h-4 w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-            <span className="line-clamp-1">{obj.workingHours}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Значки доступности */}
-      {(() => {
-        const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
-        if (groups.length === 0) return null
-        return (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {groups.map((m) => {
-              const Icon = m.icon
-              return (
-                <span
-                  key={m.id}
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-[var(--color-card-border)]"
-                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
-                >
-                  <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
-                  <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{m.name}</span>
-                </span>
-              )
-            })}
-          </div>
-        )
-      })()}
-
-      <div className="pt-2 border-t border-[var(--color-card-border)]">
-        {onPlaceSelect && (
-          <Button 
-            className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-4 text-sm" 
-            onClick={() => onPlaceSelect(obj.id)}
-          >
-            Подробнее
-          </Button>
-        )}
-      </div>
-    </div>
-  </div>
-</Popup>
+              <Popup 
+                maxWidth={400} 
+                minWidth={280} 
+                className="custom-popup"
+              >
+                <CustomPopupContent 
+                  obj={obj} 
+                  onPlaceSelect={onPlaceSelect} 
+                  getBadgeColor={getBadgeColor} 
+                  basePath={basePath} 
+                />
+              </Popup>
             </Marker>
           ))}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
         </MapContainer>
 
-        {/* Плавающий бейджик для мобильных (показывает сколько мест на экране) */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none z-[400]">
           <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
             <MapPin className="h-4 w-4 mr-2 text-[var(--color-accent)]" /> Найдено: {filteredObjects.length}

@@ -163,6 +163,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-white: var(--color-text-white);
 }
 
 @layer base {
@@ -204,17 +205,19 @@
   background-image: url('/img/o_proekte.png');
   background-repeat: no-repeat;
   background-position: bottom center;
-  background-size: contain; /* Картинка адаптируется под ширину секции */
+  background-size: contain;
 }
 }
+
 /* ========================================================
    РЕЖИМ ДЛЯ СЛАБОВИДЯЩИХ (ВЫСОКИЙ КОНТРАСТ И КРУПНЫЙ ШРИФТ)
    ======================================================== */
 
-/* 1. Увеличиваем базовый размер шрифта (работает для всех rem-значений) */
+/* 1. Увеличиваем базовый размер шрифта (одинаково для всех устройств) */
 html.large-font {
   font-size: 115%; 
 }
+
 html.large-font header .flex.items-center.gap-4 {
   flex-shrink: 0 !important;
   width: auto !important;
@@ -237,92 +240,401 @@ html.large-font button[title="Версия для слабовидящих"] svg
   min-width: 20px !important;
   min-height: 20px !important;
 }
-/* 2. Переопределяем палитру на черное, белое и ярко-желтое */
+
+/* 2. Переопределяем палитру на черное и белое */
 :root.high-contrast {
-  /* Радикально чёрный фон */
   --color-bg-primary: #000000;
   --color-bg-secondary: #000000;
   --color-bg-white: #000000;
   
-  /* Контрастный белый текст и желтые акценты */
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #FFFF00; 
-  --color-text-white: #000000; /* Инверсия (черный текст на белых кнопках) */
+  --color-text-secondary: #FFFFFF;
+  --color-text-white: #FFFFFF;
   
-  /* Яркий акцентный цвет (желтый) */
-  --color-accent: #FFFF00;
-  --color-accent-hover: #FFFFFF;
-  --color-accent-light: #FFFF00;
-  --color-accent-dark: #FFFF00;
+  --color-accent: #FFFFFF;
+  --color-accent-hover: #CCCCCC;
+  --color-accent-light: #FFFFFF;
+  --color-accent-dark: #FFFFFF;
   
-  /* Зеленые и коричневые элементы тоже превращаем в контрастные */
   --color-green-dark: #FFFFFF;
   --color-green-medium: #FFFFFF;
-  --color-green-light: #CCCCCC;
+  --color-green-light: #FFFFFF;
   
   --color-brown-dark: #FFFFFF;
-  --color-brown-medium: #FFFF00;
-  --color-brown-light: #CCCCCC;
+  --color-brown-medium: #FFFFFF;
+  --color-brown-light: #FFFFFF;
   
-  --color-header-title: #FFFF00;
+  --color-header-title: #FFFFFF;
   
-  /* Карточки и обводки */
   --color-card-bg: #000000;
-  --color-card-border: #FFFF00;
+  --color-card-border: #FFFFFF;
   --color-card-shadow: none;
 
-  /* Переопределение дефолтных переменных Tailwind (shadcn) */
   --background: #000000;
   --foreground: #FFFFFF;
   --card: #000000;
   --card-foreground: #FFFFFF;
   --popover: #000000;
   --popover-foreground: #FFFFFF;
-  --primary: #FFFF00;
+  --primary: #FFFFFF;
   --primary-foreground: #000000;
   --muted: #000000;
-  --muted-foreground: #FFFF00;
-  --border: #FFFF00;
+  --muted-foreground: #FFFFFF;
+  --border: #FFFFFF;
 
   --color-button-primary-bg: #000000;
-  --color-button-primary-text: #FFFF00;
-  --color-button-primary-border: #FFFF00;
-  --color-button-primary-hover: #FFFF00;
-  --color-title-events: #FFFF00;
+  --color-button-primary-text: #FFFFFF;
+  --color-button-primary-border: #FFFFFF;
+  --color-button-primary-hover: #333333;
+  --color-title-events: #FFFFFF;
 }
 
-/* 3. Жесткие переопределения для максимальной доступности */
-:root.high-contrast body *:not(header *) {
+/* 3. Стили для высококонтрастного режима */
+:root.high-contrast body * {
   font-weight: 700 !important;
 }
-/* Убираем декоративные фоновые картинки (например, на главном экране и в блоке "О проекте") */
+
+/* Убираем декоративные фоновые картинки */
 :root.high-contrast section {
   background-image: none !important;
   background-color: #000000 !important;
 }
 
-/* Убираем inline-градиент с главного экрана */
 :root.high-contrast div[style*="linear-gradient"] {
   background: #000000 !important;
 }
 
-/* Добавляем строгую обводку всем карточкам, кнопкам и инпутам, чтобы они не сливались с фоном */
+/* Добавляем обводку для карточек и кнопок */
 :root.high-contrast button, 
 :root.high-contrast input,
 :root.high-contrast [data-slot="card"] {
-  border: 2px solid #FFFF00 !important;
+  border: 2px solid #FFFFFF !important;
 }
 
-/* Выделяем модальные окна (диалоги и фильтры) */
+/* Выделяем модальные окна */
 :root.high-contrast [role="dialog"] {
-  border: 4px solid #FFFF00 !important;
+  border: 3px solid #FFFFFF !important;
 }
+
 :root.high-contrast [data-slot="badge"].absolute {
-  background-color: rgba(255, 255, 255, 0.9) !important; /* Фиксируем белый полупрозрачный фон */
-  color: #1B3A5C !important; /* Принудительно делаем текст темным, чтобы он не стал белым на белом */
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #000000 !important;
   border: none !important;
-  outline: none !important;
 }
+
 :root.high-contrast [class*="dark-contrast:hidden"] {
   display: none !important;
 }
+
+/* === ПРИНУДИТЕЛЬНОЕ ПЕРЕКРАШИВАНИЕ ХЕДЕРА === */
+:root.high-contrast header,
+:root.high-contrast header * {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header .font-sangha {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header button,
+:root.high-contrast header [role="button"],
+:root.high-contrast header a {
+  color: #FFFFFF !important;
+  background-color: transparent !important;
+  border-color: #FFFFFF !important;
+}
+
+:root.high-contrast header button:hover,
+:root.high-contrast header [role="button"]:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:root.high-contrast header button[title="Версия для слабовидящих"] {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header button[title="Версия для слабовидящих"] svg {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header .bg-accent-custom,
+:root.high-contrast header .bg-\[var\(--color-accent\)\] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+:root.high-contrast header .bg-accent-custom *,
+:root.high-contrast header .bg-\[var\(--color-accent\)\] * {
+  color: #000000 !important;
+}
+
+/* === ВСЕ КНОПКИ НА СТРАНИЦЕ === */
+/* Кнопки с оранжевым фоном - становятся белыми с черным текстом */
+:root.high-contrast .bg-accent-custom,
+:root.high-contrast .bg-\[var\(--color-accent\)\],
+:root.high-contrast button.bg-accent-custom,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .bg-accent-custom *,
+:root.high-contrast .bg-\[var\(--color-accent\)\] *,
+:root.high-contrast button.bg-accent-custom *,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] * {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-accent-custom:hover,
+:root.high-contrast .bg-\[var\(--color-accent\)\]:hover,
+:root.high-contrast button.bg-accent-custom:hover,
+:root.high-contrast button.bg-\[var\(--color-accent\)\]:hover {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+}
+
+:root.high-contrast .bg-accent-custom:hover *,
+:root.high-contrast .bg-\[var\(--color-accent\)\]:hover *,
+:root.high-contrast button.bg-accent-custom:hover *,
+:root.high-contrast button.bg-\[var\(--color-accent\)\]:hover * {
+  color: #FFFFFF !important;
+}
+
+/* Кнопки с обводкой - белая обводка, белый текст */
+:root.high-contrast button.border-2,
+:root.high-contrast button[class*="border-2"] {
+  border-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+  background-color: transparent !important;
+}
+
+:root.high-contrast button.border-2:hover,
+:root.high-contrast button[class*="border-2"]:hover {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* Кнопки с голубым фоном (Подобрать места) */
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] * {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\]:hover {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\]:hover * {
+  color: #FFFFFF !important;
+}
+
+/* === ВЫСОКОКОНТРАСТНЫЙ ПОПАП КАРТЫ === */
+:root.high-contrast .leaflet-popup-content-wrapper {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-tip {
+  background-color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button:hover {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper [data-slot="badge"] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+/* === АДАПТАЦИЯ ПОПАПА КАРТЫ ДЛЯ МОБИЛЬНЫХ === */
+@media (max-width: 640px) {
+  .leaflet-popup {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+  
+  .leaflet-popup-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+}
+
+
+
+
+/* Дополнительный брейкпоинт для очень маленьких экранов */
+@layer utilities {
+  @media (min-width: 480px) {
+    .xs\:inline {
+      display: inline !important;
+    }
+    .xs\:hidden {
+      display: none !important;
+    }
+    .xs\:block {
+      display: block !important;
+    }
+    .xs\:flex {
+      display: flex !important;
+    }
+  }
+  @media (max-width: 479px) {
+    .xs\:inline {
+      display: none !important;
+    }
+    .xs\:hidden {
+      display: inline !important;
+    }
+    .xs\:block {
+      display: none !important;
+    }
+    .xs\:flex {
+      display: none !important;
+    }
+  }
+}
+/* ========================================================
+   ИСПРАВЛЕНИЯ ДЛЯ ВЫСОКОКОНТРАСТНОГО РЕЖИМА
+   ======================================================== */
+
+/* Иконка в кнопке "Перейти на карту" - черная на белом фоне */
+:root.high-contrast .bg-accent-custom svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast button.bg-accent-custom svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] svg {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-accent-custom:hover svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\]:hover svg,
+:root.high-contrast button.bg-accent-custom:hover svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\]:hover svg {
+  color: #FFFFFF !important;
+}
+
+/* Иконка в кнопке "Подобрать места" - белая на прозрачном фоне */
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] svg {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\]:hover svg {
+  color: #FFFFFF !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - СКРЫВАЕМ ИКОНКИ В КНОПКАХ
+   ======================================================== */
+
+/* Скрываем все иконки внутри кнопок на главной странице */
+:root.high-contrast .bg-accent-custom svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] svg,
+:root.high-contrast button.bg-accent-custom svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast button.bg-\[var\(--color-button-primary-bg\)\] svg {
+  display: none !important;
+}
+
+/* Также скрываем иконки в кнопках с обводкой */
+:root.high-contrast button.border-2 svg,
+:root.high-contrast button[class*="border-2"] svg {
+  display: none !important;
+}
+
+/* Скрываем иконки в кнопках хедера (кроме кнопки "глаз") */
+:root.high-contrast header button:not([title="Версия для слабовидящих"]) svg {
+  display: none !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - СКРЫВАЕМ ИКОНКИ ТОЛЬКО НА ГЛАВНОЙ
+   ======================================================== */
+
+/* Скрываем иконки в кнопках на главной странице */
+:root.high-contrast .bg-accent-custom svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] svg,
+:root.high-contrast button.bg-accent-custom svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast button.bg-\[var\(--color-button-primary-bg\)\] svg {
+  display: none !important;
+}
+
+/* Скрываем иконки в кнопках с обводкой на главной */
+:root.high-contrast button.border-2 svg,
+:root.high-contrast button[class*="border-2"] svg {
+  display: none !important;
+}
+
+/* ИКОНКА ГЛАЗА В ХЕДЕРЕ - ОСТАВЛЯЕМ ВИДИМОЙ */
+:root.high-contrast header button[title="Версия для слабовидящих"] svg {
+  display: inline-block !important;
+  color: #FFFFFF !important;
+}
+
+/* ИКОНКА БУРГЕРА (три черточки) В ХЕДЕРЕ - ОСТАВЛЯЕМ ВИДИМОЙ */
+:root.high-contrast header button:not([title="Версия для слабовидящих"]) svg {
+  display: inline-block !important;
+  color: #FFFFFF !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - ФИЛЬТРЫ (СПЛОШНОЙ ЖЕЛТЫЙ ФОН)
+   ======================================================== */
+
+/* Активные фильтры - сплошной желтый фон, черный текст */
+:root.high-contrast .flex.flex-wrap.gap-2 button {
+  background-color: transparent !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .flex.flex-wrap.gap-2 button span {
+  color: #FFFFFF !important;
+}
+
+/* Активный фильтр - сплошной желтый фон, черный текст */
+:root.high-contrast .flex.flex-wrap.gap-2 button.bg-\[var\(--color-accent\)\]\/10,
+:root.high-contrast .flex.flex-wrap.gap-2 button[data-active="true"] {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  border: 2px solid #FFFF00 !important;
+}
+
+:root.high-contrast .flex.flex-wrap.gap-2 button.bg-\[var\(--color-accent\)\]\/10 span,
+:root.high-contrast .flex.flex-wrap.gap-2 button[data-active="true"] span {
+  color: #000000 !important;
+}
+
+/* Дополнительно для надежности - все активные фильтры */
+:root.high-contrast [data-active="true"] {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  border: 2px solid #FFFF00 !important;
+}
+
+:root.high-contrast [data-active="true"] * {
+  color: #000000 !important;
+}
+
