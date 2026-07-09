@@ -27,11 +27,17 @@ export default function Header({ onOpenFilters }: HeaderProps) {
   const toggleAccessibility = () => {
     const newState = !highContrast;
     setHighContrast(newState);
-    
+
     if (newState) {
       document.documentElement.classList.add('high-contrast', 'large-font');
     } else {
       document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+    // Сохраняем выбор на сессию, чтобы он не сбрасывался при перезагрузке
+    try {
+      sessionStorage.setItem('visionPreference', newState ? 'partial' : 'none');
+    } catch {
+      /* ignore */
     }
   };
 
@@ -128,6 +134,8 @@ export default function Header({ onOpenFilters }: HeaderProps) {
             onClick={toggleAccessibility}
             className={`w-auto px-2 ${highContrast ? 'text-white hover:bg-white/20' : ''}`}
             title="Версия для слабовидящих"
+            aria-label="Версия для слабовидящих: высокий контраст и крупный шрифт"
+            aria-pressed={highContrast}
           >
             <img
               src={`${basePath}/img/eye.png`}

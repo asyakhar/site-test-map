@@ -32,6 +32,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/AppHeader";
 import PopularPlaces from "@/components/PopularPlaces";
 import UpcomingEvents from "@/components/UpcomingEvents";
+import VisionModal from "@/components/VisionModal";
 
 // Типы для категорий
 type Category = {
@@ -118,10 +119,22 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      
+
+      {/* Ссылка «Перейти к содержимому» для клавиатуры и скринридеров */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--color-accent)] focus:px-4 focus:py-2 focus:text-white focus:font-semibold focus:shadow-lg"
+      >
+        Перейти к содержимому
+      </a>
+
+      {/* Входное окно про нарушения зрения (раз за сессию, только на главной) */}
+      <VisionModal />
+
       {/* Вызываем нашу новую переиспользуемую шапку и передаем функцию открытия фильтров */}
       <Header onOpenFilters={() => setShowFilters(true)} />
 
+      <main id="main-content">
       {/* Блок 2. Главный экран с фоновым изображением */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
         {/* Фоновое изображение */}
@@ -361,6 +374,7 @@ export default function HomePage() {
     </section>
   );
 })()}
+      </main>
 
       {/* Модальное окно фильтров */}
       <Dialog open={showFilters} onOpenChange={setShowFilters}>

@@ -50,6 +50,13 @@ export default function RootLayout({
       className={`bg-background ${geistMono.variable} ${gilroy.variable} ${sanghaKali.variable}`}
     >
       <body className={`${gilroy.className} antialiased`}>
+        {/* Применяем сохранённый режим контраста до первой отрисовки — без мигания */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var p=sessionStorage.getItem('visionPreference');if(p==='partial'){document.documentElement.classList.add('high-contrast','large-font');}}catch(e){}",
+          }}
+        />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

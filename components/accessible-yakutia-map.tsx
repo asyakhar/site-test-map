@@ -473,11 +473,16 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const toggleAccessibility = () => {
     const newState = !isHighContrast;
     setIsHighContrast(newState);
-    
+
     if (newState) {
       document.documentElement.classList.add('high-contrast', 'large-font');
     } else {
       document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+    try {
+      sessionStorage.setItem('visionPreference', newState ? 'partial' : 'none');
+    } catch {
+      /* ignore */
     }
   };
 
