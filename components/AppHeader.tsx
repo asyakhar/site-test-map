@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Eye, Menu, X, MapPin } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -122,14 +122,19 @@ export default function Header({ onOpenFilters }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={toggleAccessibility}
-            className={highContrast ? 'text-white hover:bg-white/20' : ''}
+            className={`w-auto px-2 ${highContrast ? 'text-white hover:bg-white/20' : ''}`}
             title="Версия для слабовидящих"
           >
-            <Eye className="size-5" />
+            <img
+              src={`${basePath}/img/eye.png`}
+              alt=""
+              aria-hidden="true"
+              className="h-5 w-auto object-contain dark-contrast:brightness-0 dark-contrast:invert"
+            />
           </Button>
           
           <button 

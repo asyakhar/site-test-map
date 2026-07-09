@@ -277,12 +277,24 @@ export default function HomePage() {
       </section>
 
       {/* Блок 4. Карусель с объектами */}
-      <section className="py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black">
-        <div className="container mx-auto px-4">
+      <section className="relative py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black overflow-hidden">
+        <img
+          src={`${basePath}/img/events-pattern.png`}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute -top-4 right-0 h-[650px] w-auto opacity-40 dark-contrast:hidden"
+        />
+        <img
+          src={`${basePath}/img/union.png`}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"
+        />
+        <div className="container relative mx-auto px-4">
           <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-2 mb-8">
             <h2 className="font-sangha"
                 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#E38920' }}>
-              Популярные места
+              ПОПУЛЯРНЫЕ МЕСТА
             </h2>
             <Link href="/map" className="text-[var(--color-accent)] font-medium hover:underline flex items-center text-[clamp(0.875rem,1.5vw,1rem)]">
               Смотреть все <ChevronRight className="size-4" />
@@ -299,14 +311,20 @@ export default function HomePage() {
           src={`${basePath}/img/events-pattern.png`}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute -top-4 right-0 h-[420px] w-auto opacity-40 dark-contrast:hidden"
+          className="pointer-events-none select-none absolute -top-4 right-0 h-[750px] w-auto opacity-40 dark-contrast:hidden"
+        />
+        <img
+          src={`${basePath}/img/union.png`}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute left-0 top-1/2 -translate-y-1/2 w-[42%] max-w-[700px] opacity-30 dark-contrast:hidden"
         />
         <div className="container relative mx-auto px-4">
         <h2
   className="font-sangha text-center mb-12 text-[var(--color-title-events)]"
   style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
 >
-  Ближайшие события
+  БЛИЖАЙШИЕ СОБЫТИЯ
 </h2>
           <UpcomingEvents />
         </div>
