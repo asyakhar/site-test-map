@@ -215,7 +215,7 @@
 
 /* 1. Увеличиваем базовый размер шрифта (одинаково для всех устройств) */
 html.large-font {
-  font-size: 115%; 
+  font-size: 140%; 
 }
 
 html.large-font header .flex.items-center.gap-4 {
