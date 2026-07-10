@@ -45,9 +45,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html 
-      lang="ru" 
+    <html
+      lang="ru"
       className={`bg-background ${geistMono.variable} ${gilroy.variable} ${sanghaKali.variable}`}
+      suppressHydrationWarning
     >
       <body className={`${gilroy.className} antialiased`}>
         {/* Применяем сохранённый режим контраста до первой отрисовки — без мигания */}

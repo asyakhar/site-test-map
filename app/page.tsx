@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { 
-  MapPin, 
-  Sparkles, 
-  Eye, 
-  Ear, 
-  Users, 
-  Hospital, 
+import {
+  MapPin,
+  Sparkles,
+  Eye,
+  Ear,
+  Users,
+  Hospital,
   Accessibility,
   ChevronRight,
   Heart,
@@ -60,16 +60,16 @@ export default function HomePage() {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
-  
+
   // ✅ ДОБАВЛЯЕМ ЭТОТ useEffect ДЛЯ ОБРАБОТКИ ЯКОРЯ
   useEffect(() => {
     // Проверяем флаг в sessionStorage (устанавливается в Header при клике на "О проекте")
     const shouldScrollToAbout = sessionStorage.getItem('scrollToAbout');
-    
+
     if (shouldScrollToAbout === 'true') {
       // Удаляем флаг, чтобы не скроллить при обновлении страницы
       sessionStorage.removeItem('scrollToAbout');
-      
+
       // Функция скролла
       const scrollToAbout = () => {
         const element = document.getElementById('about');
@@ -77,14 +77,14 @@ export default function HomePage() {
           const headerHeight = 80;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
-          
+
           window.scrollTo({
             top: offsetPosition,
             behavior: 'smooth'
           });
         }
       };
-      
+
       // Проверяем, есть ли элемент уже в DOM
       if (document.getElementById('about')) {
         // Если есть - скроллим сразу
@@ -97,18 +97,18 @@ export default function HomePage() {
             scrollToAbout();
           }
         });
-        
+
         observer.observe(document.body, {
           childList: true,
           subtree: true
         });
-        
+
         // Таймаут на всякий случай (если элемент так и не появился)
         const timeout = setTimeout(() => {
           observer.disconnect();
           scrollToAbout();
         }, 3000);
-        
+
         return () => {
           observer.disconnect();
           clearTimeout(timeout);
@@ -135,80 +135,80 @@ export default function HomePage() {
       <Header onOpenFilters={() => setShowFilters(true)} />
 
       <main id="main-content">
-      {/* Блок 2. Главный экран с фоновым изображением */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
-        {/* Фоновое изображение */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center z-0"
-          style={{
-            backgroundImage: `url('${basePath}/img/background_photo.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {/* Затемнение — теплое бежевое */}
-          <div 
-            className="absolute inset-0"
+        {/* Блок 2. Главный экран с фоновым изображением */}
+        <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
+          {/* Фоновое изображение */}
+          <div
+            className="absolute inset-0 bg-cover bg-center z-0"
             style={{
-              background: 'linear-gradient(135deg, rgba(248, 246, 241, 0.6) 0%, rgba(237, 235, 229, 0.4) 50%, rgba(248, 246, 241, 0.6) 100%)',
+              backgroundImage: `url('${basePath}/img/background_photo.png')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
-          />
-        </div>
+          >
+            {/* Затемнение — теплое бежевое */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(135deg, rgba(248, 246, 241, 0.6) 0%, rgba(237, 235, 229, 0.4) 50%, rgba(248, 246, 241, 0.6) 100%)',
+              }}
+            />
+          </div>
 
-        <div className="relative z-10 container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-0 lg:gap-8">
-            
-            {/* Левая часть — ФОТО */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="flex-1 flex justify-center lg:justify-start w-full overflow-visible"
-            >
-              <div className="w-full max-w-[400px] lg:max-w-none flex justify-center items-center p-2">
-                <img 
-                  src={`${basePath}/img/cut_map.png`} 
-                  alt="Якутия" 
-                  className="max-w-full h-auto object-contain 
+          <div className="relative z-10 container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-0 lg:gap-8">
+
+              {/* Левая часть — ФОТО */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="flex-1 flex justify-center lg:justify-start w-full overflow-visible"
+              >
+                <div className="w-full max-w-[400px] lg:max-w-none flex justify-center items-center p-2">
+                  <img
+                    src={`${basePath}/img/cut_map.png`}
+                    alt="Якутия"
+                    className="max-w-full h-auto object-contain 
                              [-webkit-mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
                              [mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
                              lg:[-webkit-mask-image:none] lg:[mask-image:none] 
                              scale-100 lg:scale-125 origin-center"
-                />
-              </div>
-            </motion.div>
+                  />
+                </div>
+              </motion.div>
 
-            {/* Правая часть — ТЕКСТ */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex-1 text-center lg:text-right -mt-16 sm:-mt-24 lg:mt-0 relative z-10"
-            >
-              <h1 
-                className="font-sangha font-bold leading-[1.05] tracking-wide text-green-dark"
-                style={{
-                  fontSize: 'clamp(2.5rem, 6vw + 1rem, 4.5rem)',
-                  textShadow: '17px -7px 13.9px rgba(99, 84, 62, 0)',
-                }}
+              {/* Правая часть — ТЕКСТ */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="flex-1 text-center lg:text-right -mt-16 sm:-mt-24 lg:mt-0 relative z-10"
               >
-                УВЕРЕННЫЙ МАРШРУТ
-                <br />
-                <span className="text-accent-custom">НАЧИНАЕТСЯ ЗДЕСЬ</span>
-              </h1>
-              
-              <p 
-                className="mt-6 max-w-xl mx-auto lg:ml-auto lg:mr-0 text-brown-dark leading-relaxed"
-                style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
-              >
-                Интерактивный навигатор для комфортного и доступного путешествия по Республике Саха.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end mt-8">
-              {/* Кнопка "Перейти на карту" */}
-<Button 
-  size="lg" 
-  className="
+                <h1
+                  className="font-sangha font-bold leading-[1.05] tracking-wide text-green-dark"
+                  style={{
+                    fontSize: 'clamp(2.5rem, 6vw + 1rem, 4.5rem)',
+                    textShadow: '17px -7px 13.9px rgba(99, 84, 62, 0)',
+                  }}
+                >
+                  УВЕРЕННЫЙ МАРШРУТ
+                  <br />
+                  <span className="text-accent-custom">НАЧИНАЕТСЯ ЗДЕСЬ</span>
+                </h1>
+
+                <p
+                  className="mt-6 max-w-xl mx-auto lg:ml-auto lg:mr-0 text-brown-dark leading-relaxed"
+                  style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+                >
+                  Интерактивный навигатор для комфортного и доступного путешествия по Республике Саха.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end mt-8">
+                  {/* Кнопка "Перейти на карту" */}
+                  <Button
+                    size="lg"
+                    className="
     bg-accent-custom 
     hover:bg-[var(--color-accent-hover)] 
     text-[var(--color-text-white)] 
@@ -219,18 +219,18 @@ export default function HomePage() {
     hover:border-[var(--color-accent-hover)]
     min-w-[220px]
   "
-  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
-  onClick={() => router.push('/map')}
->
-  <MapPin className="mr-2 size-5" />
-  Перейти на карту
-</Button>
+                    style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
+                    onClick={() => router.push('/map')}
+                  >
+                    <MapPin className="mr-2 size-5" />
+                    Перейти на карту
+                  </Button>
 
-{/* Кнопка "Подобрать места" */}
-<Button 
-  size="lg" 
-  variant="outline" 
-  className="
+                  {/* Кнопка "Подобрать места" */}
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="
     bg-[var(--color-button-primary-bg)] 
     text-[var(--color-button-primary-text)] 
     border-2 border-[var(--color-button-primary-border)]
@@ -243,137 +243,137 @@ export default function HomePage() {
     transition-all duration-200
     min-w-[220px]
   "
-  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
-  onClick={() => setShowFilters(true)}
->
-  <Sparkles className="mr-2 size-5" />
-  Подобрать места
-</Button>
-              </div>
-            </motion.div>
-            
-          </div>
-        </div>
-      </section>
-
-      {/* Блок 3. Популярные категории */}
-      <section className="py-16 lg:py-24 bg-[var(--color-bg-primary)]">
-        <div className="container mx-auto px-4">
-          <h2 className="font-bold text-center mb-12 text-[var(--color-text-primary)]"
-              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
-            Для кого мы создали этот сервис
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Card 
-                  key={cat.id} 
-                  className="p-6 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700"
-                  onClick={() => {
-                    localStorage.setItem("preferredLayers", JSON.stringify([cat.id === 'vision' ? 'vision_impaired' : cat.id === 'hearing' ? 'hearing_impaired' : cat.id]));
-                    router.push('/map');
-                  }}
-                >
-                  <div 
-                    className="size-12 rounded-full flex items-center justify-center text-[var(--color-text-white)] mb-2 dark-contrast:bg-white"
-                    style={{ backgroundColor: cat.color }}
+                    style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
+                    onClick={() => setShowFilters(true)}
                   >
-                    <Icon className="size-6 dark-contrast:text-black" />
-                  </div>
-                  <span className="font-medium text-[clamp(0.875rem,1.5vw,1rem)] text-[var(--color-text-primary)] dark-contrast:text-white">{cat.label}</span>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+                    <Sparkles className="mr-2 size-5" />
+                    Подобрать места
+                  </Button>
+                </div>
+              </motion.div>
 
-      {/* Блок 4. Карусель с объектами */}
-      <section className="relative py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black overflow-hidden">
-        <img
-          src={`${basePath}/img/events-pattern.png`}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute -top-4 right-0 h-[650px] w-auto opacity-40 dark-contrast:hidden"
-        />
-        <img
-          src={`${basePath}/img/union.png`}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"
-        />
-        <div className="container relative mx-auto px-4">
-          <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-2 mb-8">
-            <h2 className="font-sangha"
-                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#E38920' }}>
-              ПОПУЛЯРНЫЕ МЕСТА
+            </div>
+          </div>
+        </section>
+
+        {/* Блок 3. Популярные категории */}
+        <section className="py-16 lg:py-24 bg-[var(--color-bg-primary)]">
+          <div className="container mx-auto px-4">
+            <h2 className="font-bold text-center mb-12 text-[var(--color-text-primary)]"
+              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
+              Для кого мы создали этот сервис
             </h2>
-            <Link href="/map" className="text-[var(--color-accent)] font-medium hover:underline flex items-center text-[clamp(0.875rem,1.5vw,1rem)]">
-              Смотреть все <ChevronRight className="size-4" />
-            </Link>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {categories.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <Card
+                    key={cat.id}
+                    className="p-6 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700"
+                    onClick={() => {
+                      localStorage.setItem("preferredLayers", JSON.stringify([cat.id === 'vision' ? 'vision_impaired' : cat.id === 'hearing' ? 'hearing_impaired' : cat.id]));
+                      router.push('/map');
+                    }}
+                  >
+                    <div
+                      className="size-12 rounded-full flex items-center justify-center text-[var(--color-text-white)] mb-2 dark-contrast:bg-white"
+                      style={{ backgroundColor: cat.color }}
+                    >
+                      <Icon className="size-6 dark-contrast:text-black" />
+                    </div>
+                    <span className="font-medium text-[clamp(0.875rem,1.5vw,1rem)] text-[var(--color-text-primary)] dark-contrast:text-white">{cat.label}</span>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-          
-          <PopularPlaces />
-        </div>
-      </section>
+        </section>
 
-      {/* Блок 5. Ближайшие события */}
-      <section className="relative py-16 lg:py-24 bg-[var(--color-bg-primary)] overflow-hidden">
-        <img
-          src={`${basePath}/img/events-pattern.png`}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute -top-4 right-0 h-[750px] w-auto opacity-40 dark-contrast:hidden"
-        />
-        <img
-          src={`${basePath}/img/union.png`}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute left-0 top-1/2 -translate-y-1/2 w-[42%] max-w-[700px] opacity-30 dark-contrast:hidden"
-        />
-        <div className="container relative mx-auto px-4">
-        <h2
-  className="font-sangha text-center mb-12 text-[var(--color-title-events)]"
-  style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
->
-  БЛИЖАЙШИЕ СОБЫТИЯ
-</h2>
-          <UpcomingEvents />
-        </div>
-      </section>
+        {/* Блок 4. Карусель с объектами */}
+        <section className="relative py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black overflow-hidden">
+          <img
+            src={`${basePath}/img/events-pattern.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute -top-4 right-0 h-[650px] w-auto opacity-40 dark-contrast:hidden"
+          />
+          <img
+            src={`${basePath}/img/union.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"
+          />
+          <div className="container relative mx-auto px-4">
+            <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-2 mb-8">
+              <h2 className="font-sangha"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#E38920' }}>
+                ПОПУЛЯРНЫЕ МЕСТА
+              </h2>
+              <Link href="/map" className="text-[var(--color-accent)] font-medium hover:underline flex items-center text-[clamp(0.875rem,1.5vw,1rem)]">
+                Смотреть все <ChevronRight className="size-4" />
+              </Link>
+            </div>
 
-     {/* Блок 6. О проекте */}
-{(() => {
-  // Объявляем basePath прямо внутри компонента перед рендером
-  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
-  
-  return (
-    <section 
-      id="about" 
-      className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 relative"
-      style={{
-        backgroundImage: `url('${basePath}/img/o_proekte.png')`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'bottom center',
-        backgroundSize: 'contain'
-      }}
-    >
-      <div className="container mx-auto px-4 text-center">
-        {/* Заголовок без font-bold с фирменным акцентным шрифтом */}
-        <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
-          О проекте
-        </h2>
-        
-        <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
-          «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
-        </p>
-        
-       
-      </div>
-    </section>
-  );
-})()}
+            <PopularPlaces />
+          </div>
+        </section>
+
+        {/* Блок 5. Ближайшие события */}
+        <section className="relative py-16 lg:py-24 bg-[var(--color-bg-primary)] overflow-hidden">
+          <img
+            src={`${basePath}/img/events-pattern.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute -top-4 right-0 h-[750px] w-auto opacity-40 dark-contrast:hidden"
+          />
+          <img
+            src={`${basePath}/img/union.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute left-0 top-1/2 -translate-y-1/2 w-[42%] max-w-[700px] opacity-30 dark-contrast:hidden"
+          />
+          <div className="container relative mx-auto px-4">
+            <h2
+              className="font-sangha text-center mb-12 text-[var(--color-title-events)]"
+              style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+            >
+              БЛИЖАЙШИЕ СОБЫТИЯ
+            </h2>
+            <UpcomingEvents />
+          </div>
+        </section>
+
+        {/* Блок 6. О проекте */}
+        {(() => {
+          // Объявляем basePath прямо внутри компонента перед рендером
+          const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+
+          return (
+            <section
+              id="about"
+              className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 relative"
+              style={{
+                backgroundImage: `url('${basePath}/img/o_proekte.png')`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'bottom center',
+                backgroundSize: 'contain'
+              }}
+            >
+              <div className="container mx-auto px-4 text-center">
+                {/* Заголовок без font-bold с фирменным акцентным шрифтом */}
+                <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
+                  О проекте
+                </h2>
+
+                <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+                  «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
+                </p>
+
+
+              </div>
+            </section>
+          );
+        })()}
       </main>
 
       {/* Модальное окно фильтров */}
