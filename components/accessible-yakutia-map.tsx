@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import ContrastToggle from "@/components/ContrastToggle"
 import { useRouter } from "next/navigation";
 import {
   Filter,
@@ -43,6 +44,7 @@ import {
   Menu,
   Search,
   List,
+  LocateFixed,
 } from "lucide-react"
 
 // Types
@@ -196,6 +198,13 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
     }
   }, [objects, map])
+  return null
+}
+
+// Отдаёт инстанс карты наружу (для кнопки центровки)
+function MapController({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => { onReady(map) }, [map, onReady])
   return null
 }
 
@@ -469,22 +478,9 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return () => observer.disconnect();
   }, []);
 
-  // Функция переключения высококонтрастного режима
-  const toggleAccessibility = () => {
-    const newState = !isHighContrast;
-    setIsHighContrast(newState);
-
-    if (newState) {
-      document.documentElement.classList.add('high-contrast', 'large-font');
-    } else {
-      document.documentElement.classList.remove('high-contrast', 'large-font');
-    }
-    try {
-      sessionStorage.setItem('visionPreference', newState ? 'partial' : 'none');
-    } catch {
-      /* ignore */
-    }
-  };
+  // Инстанс карты (для кнопки центровки)
+  const mapRef = useRef<L.Map | null>(null)
+  const handleMapReady = useCallback((map: L.Map) => { mapRef.current = map }, [])
 
   useEffect(() => {
     const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
@@ -519,6 +515,20 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return FILTER_COLORS.inclusive
   }, [activeLayers])
 
+  // Возврат карты к текущим отфильтрованным местам (центровка)
+  const recenterMap = () => {
+    const map = mapRef.current
+    if (!map) return
+    const coords = filteredObjects
+      .map((o) => o.coordinates)
+      .filter((c): c is [number, number] => Array.isArray(c))
+    if (coords.length > 0) {
+      map.fitBounds(L.latLngBounds(coords), { padding: [50, 50], maxZoom: 13 })
+    } else {
+      map.setView(CONFIG.mapCenter, CONFIG.defaultZoom)
+    }
+  }
+
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
       
@@ -527,7 +537,7 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
       )}
 
       <div
-        className={`fixed inset-y-0 left-0 w-full max-w-[360px] z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
+        className={`fixed inset-y-0 left-0 w-full ${isHighContrast ? 'max-w-[440px]' : 'max-w-[360px]'} z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
         style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
       >
         <SidebarContent
@@ -561,18 +571,10 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         </button>
         
         <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-          {/* Кнопка "глаз" для мобильной версии */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleAccessibility}
-            className={`${isHighContrast ? 'text-white hover:bg-white/20' : ''} w-8 h-8 md:w-10 md:h-10`}
-            title="Версия для слабовидящих"
-          >
-            <Eye className="size-4 md:size-5" />
-          </Button>
-          
-          <button 
+          {/* Кнопка "глаз" — высокий контраст */}
+          <ContrastToggle />
+
+          <button
             onClick={() => setMobileMenuOpen(true)} 
             className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
             aria-label="Меню"
@@ -584,21 +586,27 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         </div>
       </header>
 
-      <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
-        <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() =>router.push("/")}>
-          <img 
-            src={`${basePath}/img/logo_homus.png`} 
-            alt="Логотип Доступная Якутия" 
-            className="h-12 w-auto object-contain"
-          />
-          <div>
-            <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
-              Доступная Якутия
-            </h1>
-            <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
-          </div>
+      <aside className={`hidden lg:flex h-full ${isHighContrast ? 'w-[500px]' : 'w-[400px]'} flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)] transition-[width] duration-300`}>
+        <div className="flex items-center justify-between gap-2 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm">
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-4 min-w-0 text-left hover:opacity-80 transition-opacity"
+          >
+            <img
+              src={`${basePath}/img/logo_homus.png`}
+              alt="Логотип Доступная Якутия"
+              className="h-12 w-auto object-contain flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
+                Доступная Якутия
+              </h1>
+              <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
+            </div>
+          </button>
+          <ContrastToggle className="flex-shrink-0" />
         </div>
-        
+
         <SidebarContent
           activeLayers={activeLayers}
           searchQuery={searchQuery}
@@ -628,8 +636,19 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
           />
           {filteredObjects.map((obj) => (
-            <Marker key={obj.id} position={obj.coordinates!} icon={getCategoryMarkerIcon(obj.category)}>
-              <Popup 
+            <Marker
+              key={obj.id}
+              position={obj.coordinates!}
+              icon={getCategoryMarkerIcon(obj.category)}
+              title={obj.name}
+              eventHandlers={{
+                add: (e) => {
+                  const el = (e.target as L.Marker).getElement()
+                  if (el) el.setAttribute("aria-label", obj.name)
+                },
+              }}
+            >
+              <Popup
                 maxWidth={400} 
                 minWidth={280} 
                 className="custom-popup"
@@ -644,7 +663,18 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             </Marker>
           ))}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+          <MapController onReady={handleMapReady} />
         </MapContainer>
+
+        {/* Кнопка центровки — вернуть карту ко всем местам */}
+        <button
+          onClick={recenterMap}
+          title="Показать все места"
+          aria-label="Показать все места на карте"
+          className="absolute bottom-6 right-4 z-[400] flex items-center justify-center size-12 rounded-full bg-[var(--color-bg-white)] shadow-lg border border-[var(--color-card-border)] text-[var(--color-accent)] hover:bg-[var(--color-bg-primary)] transition-colors dark-contrast:text-white"
+        >
+          <LocateFixed className="size-5" />
+        </button>
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none z-[400]">
           <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
