@@ -43,6 +43,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ContrastToggle from '@/components/ContrastToggle';
 
 // Типы
 interface MapObject {
@@ -173,18 +174,21 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           <h1 className="text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
             {place.name}
           </h1>
-          <Button
-            variant="ghost"
-            className="gap-2 text-foreground"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: place.name, url: window.location.href });
-              }
-            }}
-          >
-            <Share2 className="size-5" />
-            <span className="hidden sm:inline">Поделиться</span>
-          </Button>
+          <div className="flex items-center gap-1">
+            <ContrastToggle />
+            <Button
+              variant="ghost"
+              className="gap-2 text-foreground"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: place.name, url: window.location.href });
+                }
+              }}
+            >
+              <Share2 className="size-5" />
+              <span className="hidden sm:inline">Поделиться</span>
+            </Button>
+          </div>
         </div>
       </header>
 
