@@ -381,6 +381,7 @@ function SidebarContent({
 }
 
 // Компонент попапа с адаптивным дизайном
+// Компонент попапа с адаптивным дизайном
 function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
   obj: MapObject;
   onPlaceSelect?: (id: string) => void;
@@ -389,18 +390,12 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
 }) {
   const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id));
   const [showAllGroups, setShowAllGroups] = useState(false);
-  const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
   
   const visibleGroups = showAllGroups ? groups : groups.slice(0, 4);
   const hiddenCount = groups.length - 4;
-
-  // Переключение раскрытия фильтра
-  const toggleFilter = (filterId: string) => {
-    setExpandedFilter(expandedFilter === filterId ? null : filterId);
-  };
-
+  
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[90vw] sm:w-[320px] md:w-[380px]">
+    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
       {/* Фото */}
       <div className="relative h-32 w-full flex-shrink-0">
         <img
@@ -414,72 +409,50 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
       </div>
 
       {/* Контент с прокруткой */}
-      <div className="p-2 sm:p-3 md:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
+      <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
         <div>
           <Badge 
-            className="mb-1 sm:mb-2 text-white border-0 shadow-sm text-[10px] sm:text-xs md:text-sm" 
+            className="mb-2 text-white border-0 shadow-sm text-xs sm:text-sm" 
             style={{ backgroundColor: getBadgeColor(obj) }}
           >
             {CATEGORY_CONFIG[obj.category]?.name || obj.category}
           </Badge>
-          <h3 className="text-xs sm:text-sm md:text-base font-bold text-[var(--color-text-primary)] leading-tight">
+          <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] leading-tight">
             {obj.name}
           </h3>
         </div>
 
-        <div className="text-[10px] sm:text-xs md:text-sm text-[var(--color-text-secondary)] space-y-1">
+        <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] space-y-1.5">
           {obj.address && (
-            <div className="flex items-start gap-1">
-              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-              <span className="line-clamp-2 text-[10px] sm:text-xs md:text-sm">{obj.address}</span>
+            <div className="flex items-start gap-1.5">
+              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-2">{obj.address}</span>
             </div>
           )}
           {obj.workingHours && (
-            <div className="flex items-start gap-1">
-              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-              <span className="line-clamp-1 text-[10px] sm:text-xs md:text-sm">{obj.workingHours}</span>
+            <div className="flex items-start gap-1.5">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-1 text-xs sm:text-sm">{obj.workingHours}</span>
             </div>
           )}
         </div>
 
-        {/* Значки доступности с раскрытием */}
+        {/* Значки доступности */}
         {groups.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-1">
             {visibleGroups.map((m) => {
-              const Icon = m.icon;
-              const isExpanded = expandedFilter === m.id;
-              
+              const Icon = m.icon
               return (
-                <button
+                <span
                   key={m.id}
-                  onClick={() => toggleFilter(m.id)}
-                  className={`flex items-center gap-1 px-1 py-0.5 rounded-full border transition-all duration-300 ease-in-out overflow-hidden ${
-                    isExpanded 
-                      ? 'border-[var(--color-accent)] shadow-sm' 
-                      : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
-                  }`}
-                  style={{ 
-                    backgroundColor: `${FILTER_COLORS[m.id]}15`,
-                    maxWidth: isExpanded ? '200px' : '24px',
-                    minWidth: isExpanded ? 'auto' : '24px',
-                  }}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
                 >
-                  <Icon 
-                    className="size-2.5 sm:size-3 flex-shrink-0" 
-                    style={{ color: FILTER_COLORS[m.id] }} 
-                  />
-                  <span 
-                    className={`text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] whitespace-nowrap transition-all duration-300 ${
-                      isExpanded ? 'opacity-100 max-w-[150px]' : 'opacity-0 max-w-0'
-                    }`}
-                    style={{ 
-                      overflow: 'hidden',
-                      display: 'inline-block'
-                    }}
-                  >
+                  <Icon className="size-2.5 sm:size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                  <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] hidden xs:inline">
                     {m.name}
                   </span>
-                </button>
+                </span>
               )
             })}
             
@@ -515,9 +488,9 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
         )}
 
         {onPlaceSelect && (
-          <div className="pt-1 sm:pt-2 border-t border-[var(--color-card-border)]">
+          <div className="pt-2 border-t border-[var(--color-card-border)]">
             <Button 
-              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-1.5 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm"
+              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-2.5 sm:py-3 text-xs sm:text-sm"
               onClick={() => onPlaceSelect(obj.id)}
             >
               Подробнее
