@@ -119,10 +119,12 @@ components/
     use-toast.ts
   accessible-yakutia-map.tsx
   AppHeader.tsx
+  ContrastToggle.tsx
   PageWrapper.tsx
   PopularPlaces.tsx
   theme-provider.tsx
   UpcomingEvents.tsx
+  VisionModal.tsx
 data/
   events.csv
 hooks/
@@ -140,9 +142,11 @@ public/
     background_photo.png
     cut_map.png
     events-pattern.png
+    eye.png
     logo_homus.png
     o_proekte.png
     placeholder.jpg
+    union.png
     uzor_phon.png
     uzor.svg
   apple-icon.png
@@ -6863,6 +6867,62 @@ function useToast() {
 export { useToast, toast }
 ```
 
+## File: components/ContrastToggle.tsx
+```typescript
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+
+/**
+ * Кнопка-глаз для включения/выключения высокого контраста и крупного шрифта.
+ * Такая же логика, как в шапке главной: переключает классы на <html> и
+ * запоминает выбор на сессию (sessionStorage), чтобы он не сбрасывался.
+ */
+export default function ContrastToggle({ className = "" }: { className?: string }) {
+  const basePath = process.env.NODE_ENV === "production" ? "/site-test-map" : "";
+  const [highContrast, setHighContrast] = useState(false);
+
+  useEffect(() => {
+    setHighContrast(document.documentElement.classList.contains("high-contrast"));
+  }, []);
+
+  const toggle = () => {
+    const next = !highContrast;
+    setHighContrast(next);
+    if (next) {
+      document.documentElement.classList.add("high-contrast", "large-font");
+    } else {
+      document.documentElement.classList.remove("high-contrast", "large-font");
+    }
+    try {
+      sessionStorage.setItem("visionPreference", next ? "partial" : "none");
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggle}
+      className={`w-auto px-2 ${highContrast ? "text-white hover:bg-white/20" : ""} ${className}`}
+      title="Версия для слабовидящих"
+      aria-label="Версия для слабовидящих: высокий контраст и крупный шрифт"
+      aria-pressed={highContrast}
+    >
+      <img
+        src={`${basePath}/img/eye.png`}
+        alt=""
+        aria-hidden="true"
+        className="h-5 w-auto object-contain dark-contrast:brightness-0 dark-contrast:invert"
+      />
+    </Button>
+  );
+}
+```
+
 ## File: components/PageWrapper.tsx
 ```typescript
 import AppHeader from "@/components/AppHeader";
@@ -7004,6 +7064,200 @@ import {
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+}
+```
+
+## File: components/VisionModal.tsx
+```typescript
+"use client";
+
+import { useEffect, useState } from "react";
+import { Eye, ScanEye, Contrast, ArrowLeft } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+type VisionPreference = "none" | "full" | "partial";
+
+const STORAGE_KEY = "visionPreference";
+
+function applyPreference(pref: VisionPreference) {
+  const root = document.documentElement;
+  if (pref === "partial") {
+    root.classList.add("high-contrast", "large-font");
+  } else {
+    root.classList.remove("high-contrast", "large-font");
+  }
+}
+
+/**
+ * Входное окно про нарушения зрения. Показывается один раз за сессию
+ * (sessionStorage) только на главной. Два шага:
+ *  1. «Есть ли у вас нарушения зрения?» → Да / Нет
+ *  2. При «Да»: Полная потеря (скринридер, вид не меняем) / Частичная (контраст+шрифт)
+ */
+export default function VisionModal() {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    let stored: string | null = null;
+    try {
+      stored = sessionStorage.getItem(STORAGE_KEY);
+    } catch {
+      /* sessionStorage недоступен — просто не показываем окно */
+    }
+    if (!stored) {
+      setStep(1);
+      setOpen(true);
+    }
+  }, []);
+
+  const resolve = (pref: VisionPreference) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, pref);
+    } catch {
+      /* ignore */
+    }
+    applyPreference(pref);
+    if (pref === "full") {
+      setAnnouncement(
+        "Сайт готов к работе со скринридером. Используйте команды озвучивания вашей программы для навигации."
+      );
+    }
+    setOpen(false);
+  };
+
+  // Закрытие без явного выбора (Esc / клик вне окна) трактуем как «нет нарушений»
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      let stored: string | null = null;
+      try {
+        stored = sessionStorage.getItem(STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+      if (!stored) resolve("none");
+      else setOpen(false);
+    }
+  };
+
+  const btnBase =
+    "w-full flex items-center gap-4 rounded-xl border-2 p-5 text-left transition-all " +
+    "border-[var(--color-card-border)] bg-[var(--color-bg-white)] hover:border-[var(--color-accent)] " +
+    "focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-accent)]/40 " +
+    "dark-contrast:bg-gray-900 dark-contrast:border-gray-600 dark-contrast:hover:border-white";
+
+  return (
+    <>
+      {/* Живая область для озвучивания скринридером */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
+
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-lg rounded-xl bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-black dark-contrast:text-white dark-contrast:border-gray-700">
+          {step === 1 ? (
+            <>
+              <DialogHeader className="text-left">
+                <DialogTitle className="font-sangha text-2xl md:text-3xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight">
+                  Есть ли у вас нарушения зрения?
+                </DialogTitle>
+                <DialogDescription className="text-base mt-2 text-[var(--color-text-secondary)] dark-contrast:text-gray-300">
+                  Мы можем подстроить сайт под вас, чтобы им было удобнее пользоваться.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-4 flex flex-col gap-3">
+                <button type="button" className={btnBase} onClick={() => setStep(2)}>
+                  <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent-dark)] dark-contrast:bg-white dark-contrast:text-black">
+                    <Eye className="size-6" />
+                  </span>
+                  <span className="text-lg font-semibold text-[var(--color-text-primary)] dark-contrast:text-white">
+                    Да
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className={btnBase}
+                  onClick={() => resolve("none")}
+                >
+                  <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-green-dark)]/15 text-[var(--color-green-dark)] dark-contrast:bg-white dark-contrast:text-black">
+                    <Contrast className="size-6" />
+                  </span>
+                  <span className="text-lg font-semibold text-[var(--color-text-primary)] dark-contrast:text-white">
+                    Нет
+                  </span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader className="text-left">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="mb-1 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] dark-contrast:text-gray-300 focus:outline-none focus-visible:underline"
+                >
+                  <ArrowLeft className="size-4" /> Назад
+                </button>
+                <DialogTitle className="font-sangha text-2xl md:text-3xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight">
+                  Какой у вас тип нарушения?
+                </DialogTitle>
+                <DialogDescription className="text-base mt-2 text-[var(--color-text-secondary)] dark-contrast:text-gray-300">
+                  Выберите вариант — сайт подстроится под вас.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-4 flex flex-col gap-3">
+                <button
+                  type="button"
+                  className={btnBase}
+                  onClick={() => resolve("full")}
+                >
+                  <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-green-dark)]/15 text-[var(--color-green-dark)] dark-contrast:bg-white dark-contrast:text-black">
+                    <ScanEye className="size-6" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-lg font-semibold text-[var(--color-text-primary)] dark-contrast:text-white">
+                      Полная потеря зрения
+                    </span>
+                    <span className="block text-sm text-[var(--color-text-secondary)] dark-contrast:text-gray-300">
+                      Работа со скринридером
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className={btnBase}
+                  onClick={() => resolve("partial")}
+                >
+                  <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent-dark)] dark-contrast:bg-white dark-contrast:text-black">
+                    <Contrast className="size-6" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-lg font-semibold text-[var(--color-text-primary)] dark-contrast:text-white">
+                      Частичная потеря зрения
+                    </span>
+                    <span className="block text-sm text-[var(--color-text-secondary)] dark-contrast:text-gray-300">
+                      Применим высокий контраст и крупный шрифт
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }
 ```
 
@@ -9042,400 +9296,6 @@ MIT License — свободное использование и модифик�
 Сделано с ❤️ для доступной Якутии
 ```
 
-## File: app/globals.css
-```css
-@import 'tailwindcss';
-@import 'tw-animate-css';
-
-@custom-variant dark (&:is(.dark *));
-@custom-variant dark-contrast (&:is(.high-contrast *));
-
-:root {
-  /* === ОСНОВНЫЕ ЦВЕТА === */
-  --color-bg-primary: #F8F6F1;
-  --color-bg-secondary: #EDEBE5;
-  --color-bg-white: #FFFFFF;
-  
-  /* === ЦВЕТА ТЕКСТА === */
-  --color-text-primary: #353535;
-  --color-text-secondary: #5A4E3C;
-  --color-text-white: #FFFFFF;
-  
-  /* === АКЦЕНТНЫЙ ЦВЕТ (ОРАНЖЕВЫЙ) === */
-  --color-accent: #E38920;
-  --color-accent-hover: #CC7A1D;
-  --color-accent-light: #F5D6A8;
-  --color-accent-dark: #B86A18;
-  
-  /* === ЗЕЛЕНЫЙ ЦВЕТ ДЛЯ ЗАГОЛОВКОВ === */
-  --color-green-dark: #384E41;
-  --color-green-medium: #4A6B52;
-  --color-green-light: #6B8F73;
-  
-  /* === КОРИЧНЕВЫЙ ЦВЕТ === */
-  --color-brown-dark: #5A4E3C;
-  --color-brown-medium: #8B7A66;
-  --color-brown-light: #C4B5A0;
-  
-  /* === ЦВЕТА ДЛЯ ХЕДЕРА === */
-  --color-header-title: #384E41;
-  
-  /* === ЦВЕТА ДЛЯ КАРТОЧЕК === */
-  --color-card-bg: #FFFFFF;
-  --color-card-border: #E8E6E0;
-  --color-card-shadow: rgba(56, 78, 65, 0.1);
-  --color-button-primary-bg: #9CB6E0;
-  --color-button-primary-text: #FFFFFF;
-  --color-button-primary-border: #9CB6E0;
-  --color-button-primary-hover: #708FC0;
-  
-  /* === ФОНОВОЕ ИЗОБРАЖЕНИЕ === */
-  --bg-hero-image: url('/img/background_photo.png');
-
-  /* === СТАНДАРТНЫЕ ПЕРЕМЕННЫЕ === */
-  --background: var(--color-bg-primary);
-  --foreground: var(--color-text-primary);
-  --card: var(--color-card-bg);
-  --card-foreground: var(--color-text-primary);
-  --popover: var(--color-bg-primary);
-  --popover-foreground: var(--color-text-primary);
-  --primary: var(--color-accent);
-  --primary-foreground: var(--color-text-white);
-  --secondary: var(--color-green-medium);
-  --secondary-foreground: var(--color-text-white);
-  --muted: var(--color-bg-secondary);
-  --muted-foreground: var(--color-text-secondary);
-  --accent: var(--color-accent);
-  --accent-foreground: var(--color-text-white);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: var(--color-card-border);
-  --input: var(--color-card-border);
-  --ring: var(--color-accent);
-  --radius: 0.75rem;
-  --sidebar: var(--color-bg-primary);
-  --sidebar-foreground: var(--color-text-primary);
-  --sidebar-primary: var(--color-accent);
-  --sidebar-primary-foreground: var(--color-text-white);
-  --sidebar-accent: var(--color-bg-secondary);
-  --sidebar-accent-foreground: var(--color-text-primary);
-  --sidebar-border: var(--color-card-border);
-  --sidebar-ring: var(--color-accent);
-  --color-title-events: #802405;
-}
-
-.dark {
-  /* Темная тема */
-  --color-bg-primary: #1a1a1a;
-  --color-bg-secondary: #2a2a2a;
-  --color-text-primary: #e5e5e5;
-  --color-text-secondary: #b5a890;
-  --color-accent: #E38920;
-  --color-accent-hover: #CC7A1D;
-  --color-green-dark: #5A7A6A;
-  
-  --background: var(--color-bg-primary);
-  --foreground: var(--color-text-primary);
-  --card: var(--color-bg-primary);
-  --card-foreground: var(--color-text-primary);
-  --popover: var(--color-bg-primary);
-  --popover-foreground: var(--color-text-primary);
-  --border: #333333;
-  --sidebar: var(--color-bg-primary);
-}
-
-@theme inline {
-  /* === ПОДКЛЮЧАЕМ CSS-ПЕРЕМЕННЫЕ В TAILWIND === */
-  --color-bg-primary: var(--color-bg-primary);
-  --color-bg-secondary: var(--color-bg-secondary);
-  
-  --color-text-primary: var(--color-text-primary);
-  --color-text-secondary: var(--color-text-secondary);
-  --color-text-white: var(--color-text-white);
-  
-  --color-accent: var(--color-accent);
-  --color-accent-hover: var(--color-accent-hover);
-  --color-accent-light: var(--color-accent-light);
-  --color-accent-dark: var(--color-accent-dark);
-  
-  --color-green-dark: var(--color-green-dark);
-  --color-green-medium: var(--color-green-medium);
-  --color-green-light: var(--color-green-light);
-  
-  --color-brown-dark: var(--color-brown-dark);
-  --color-brown-medium: var(--color-brown-medium);
-  --color-brown-light: var(--color-brown-light);
-  
-  --color-header-title: var(--color-header-title);
-  --color-card-bg: var(--color-card-bg);
-  --color-card-border: var(--color-card-border);
-  
-  --bg-hero-image: var(--bg-hero-image);
-
-  /* === ШРИФТЫ === */
-  --font-sans: var(--font-gilroy), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), 'Geist Mono', 'Geist Mono Fallback';
-  --font-sangha: var(--font-sangha), ui-sans-serif, system-ui, sans-serif;
-  
-  /* === СТАНДАРТНЫЕ ПЕРЕМЕННЫЕ === */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
-
-@layer base {
-
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  
-  .font-sangha {
-    font-family: var(--font-sangha), ui-sans-serif, system-ui, sans-serif;
-  }
-
-  /* Классы для новых цветов */
-  .text-green-dark {
-    color: var(--color-green-dark);
-  }
-  .text-brown-dark {
-    color: var(--color-brown-dark);
-  }
-  .text-brown-medium {
-    color: var(--color-brown-medium);
-  }
-  .bg-accent-custom {
-    background-color: var(--color-accent);
-  }
-  .bg-accent-custom:hover {
-    background-color: var(--color-accent-hover);
-  }
-  .border-accent-custom {
-    border-color: var(--color-accent);
-  }
-  .text-accent-custom {
-    color: var(--color-accent);
-  }
-  .bg-about-pattern {
-  background-image: url('/img/o_proekte.png');
-  background-repeat: no-repeat;
-  background-position: bottom center;
-  background-size: contain; /* Картинка адаптируется под ширину секции */
-}
-}
-/* ========================================================
-   РЕЖИМ ДЛЯ СЛАБОВИДЯЩИХ (ВЫСОКИЙ КОНТРАСТ И КРУПНЫЙ ШРИФТ)
-   ======================================================== */
-
-/* 1. Увеличиваем базовый размер шрифта (работает для всех rem-значений) */
-html.large-font {
-  font-size: 115%; 
-}
-html.large-font header .flex.items-center.gap-4 {
-  flex-shrink: 0 !important;
-  width: auto !important;
-  min-width: 80px !important;
-}
-
-html.large-font button[title="Версия для слабовидящих"] {
-  flex-shrink: 0 !important;
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  padding: 0 !important;
-}
-
-html.large-font button[title="Версия для слабовидящих"] svg {
-  flex-shrink: 0 !important;
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  min-height: 20px !important;
-}
-/* 2. Переопределяем палитру на черное, белое и ярко-желтое */
-:root.high-contrast {
-  /* Радикально чёрный фон */
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #000000;
-  --color-bg-white: #000000;
-  
-  /* Контрастный белый текст и желтые акценты */
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #FFFF00; 
-  --color-text-white: #000000; /* Инверсия (черный текст на белых кнопках) */
-  
-  /* Яркий акцентный цвет (желтый) */
-  --color-accent: #FFFF00;
-  --color-accent-hover: #FFFFFF;
-  --color-accent-light: #FFFF00;
-  --color-accent-dark: #FFFF00;
-  
-  /* Зеленые и коричневые элементы тоже превращаем в контрастные */
-  --color-green-dark: #FFFFFF;
-  --color-green-medium: #FFFFFF;
-  --color-green-light: #CCCCCC;
-  
-  --color-brown-dark: #FFFFFF;
-  --color-brown-medium: #FFFF00;
-  --color-brown-light: #CCCCCC;
-  
-  --color-header-title: #FFFF00;
-  
-  /* Карточки и обводки */
-  --color-card-bg: #000000;
-  --color-card-border: #FFFF00;
-  --color-card-shadow: none;
-
-  /* Переопределение дефолтных переменных Tailwind (shadcn) */
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --card: #000000;
-  --card-foreground: #FFFFFF;
-  --popover: #000000;
-  --popover-foreground: #FFFFFF;
-  --primary: #FFFF00;
-  --primary-foreground: #000000;
-  --muted: #000000;
-  --muted-foreground: #FFFF00;
-  --border: #FFFF00;
-
-  --color-button-primary-bg: #000000;
-  --color-button-primary-text: #FFFF00;
-  --color-button-primary-border: #FFFF00;
-  --color-button-primary-hover: #FFFF00;
-  --color-title-events: #FFFF00;
-}
-
-/* 3. Жесткие переопределения для максимальной доступности */
-:root.high-contrast body *:not(header *) {
-  font-weight: 700 !important;
-}
-/* Убираем декоративные фоновые картинки (например, на главном экране и в блоке "О проекте") */
-:root.high-contrast section {
-  background-image: none !important;
-  background-color: #000000 !important;
-}
-
-/* Убираем inline-градиент с главного экрана */
-:root.high-contrast div[style*="linear-gradient"] {
-  background: #000000 !important;
-}
-
-/* Добавляем строгую обводку всем карточкам, кнопкам и инпутам, чтобы они не сливались с фоном */
-:root.high-contrast button, 
-:root.high-contrast input,
-:root.high-contrast [data-slot="card"] {
-  border: 2px solid #FFFF00 !important;
-}
-
-/* Выделяем модальные окна (диалоги и фильтры) */
-:root.high-contrast [role="dialog"] {
-  border: 4px solid #FFFF00 !important;
-}
-:root.high-contrast [data-slot="badge"].absolute {
-  background-color: rgba(255, 255, 255, 0.9) !important; /* Фиксируем белый полупрозрачный фон */
-  color: #1B3A5C !important; /* Принудительно делаем текст темным, чтобы он не стал белым на белом */
-  border: none !important;
-  outline: none !important;
-}
-:root.high-contrast [class*="dark-contrast:hidden"] {
-  display: none !important;
-}
-```
-
-## File: app/layout.tsx
-```typescript
-import type { Metadata } from 'next'
-import { Geist_Mono } from 'next/font/google'
-import localFont from 'next/font/local'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
-
-// Geist Mono — оставляем для моноширинного текста (код)
-const geistMono = Geist_Mono({ 
-  subsets: ["latin"],
-  variable: '--font-geist-mono'
-})
-
-// Gilroy — только Bold как основной
-const gilroy = localFont({
-  src: [
-    {
-      path: './fonts/Gilroy-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-gilroy',
-  display: 'swap',
-})
-
-// Sangha — только для акцентных заголовков
-const sanghaKali = localFont({
-  src: './fonts/SanghaKali-Regular.woff2',
-  variable: '--font-sangha',
-  display: 'swap',
-})
-
-export const metadata: Metadata = {
-  title: 'Доступная Якутия - Инклюзивный навигатор',
-  description: 'Интерактивная карта медицинского и доступного туризма Республики Саха (Якутия)',
-  icons: {
-    // Основной фавикон — logo_homus (app/favicon.ico подключается автоматически).
-    apple: '/apple-icon.png',
-  },
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return (
-    <html 
-      lang="ru" 
-      className={`bg-background ${geistMono.variable} ${gilroy.variable} ${sanghaKali.variable}`}
-    >
-      <body className={`${gilroy.className} antialiased`}>
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
-    </html>
-  )
-}
-```
-
 ## File: package.json
 ```json
 {
@@ -9514,397 +9374,6 @@ export default function RootLayout({
     "tw-animate-css": "1.3.3",
     "typescript": "5.7.3"
   }
-}
-```
-
-## File: app/place/[id]/PlaceDetailClient.tsx
-```typescript
-'use client';
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import {
-  ArrowLeft,
-  Share2,
-  MapPin,
-  Phone,
-  Globe,
-  Navigation,
-  Clock,
-  Ticket as TicketIcon,
-  BadgePercent,
-  AlertTriangle,
-  Info,
-  Accessibility,
-  Eye,
-  Ear,
-  Utensils,
-  Heart,
-  Wind,
-  Brain,
-  Users,
-  Sparkles,
-  Hospital,
-  Building2,
-  Hotel,
-  UtensilsCrossed,
-  Coffee,
-  TreePine,
-  Theater,
-  Stethoscope,
-  Flower2,
-  Landmark,
-  ShoppingBag,
-  Dumbbell,
-  Mountain,
-  Palette,
-  Ticket,
-  GraduationCap,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-
-// Типы
-interface MapObject {
-  id: string;
-  name: string;
-  category: string;
-  layers: string[];
-  coordinates: [number, number] | null;
-  address?: string;
-  workingHours?: string;
-  description: string;
-  accessibility: Record<string, string>;
-  contraindications?: string;
-  tickets?: string;
-  benefits?: string;
-  notes?: string;
-  photos: string[];
-  contacts: {
-    phone?: string;
-    website?: string;
-    yandexMap?: string;
-  };
-}
-
-// Конфигурация категорий
-const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; color: string }> = {
-  museum: { name: "Музей", icon: Building2, color: "#8b5cf6" },
-  hotel: { name: "Гостиница", icon: Hotel, color: "#3b82f6" },
-  restaurant: { name: "Ресторан", icon: UtensilsCrossed, color: "#22c55e" },
-  cafe: { name: "Кафе", icon: Coffee, color: "#f97316" },
-  park: { name: "Парк", icon: TreePine, color: "#14b8a6" },
-  theater: { name: "Театр", icon: Theater, color: "#ec4899" },
-  medical: { name: "Медицина", icon: Stethoscope, color: "#ef4444" },
-  spa: { name: "СПА/Оздоровление", icon: Flower2, color: "#06b6d4" },
-  monument: { name: "Памятник", icon: Landmark, color: "#6366f1" },
-  shopping: { name: "Торговый центр", icon: ShoppingBag, color: "#eab308" },
-  sports: { name: "Спорт", icon: Dumbbell, color: "#84cc16" },
-  nature: { name: "Природа", icon: Mountain, color: "#0ea5e9" },
-  culture: { name: "Культура", icon: Palette, color: "#f43f5e" },
-  entertainment: { name: "Развлечения", icon: Ticket, color: "#d946ef" },
-  education: { name: "Образование", icon: GraduationCap, color: "#0284c7" },
-};
-
-// Категории доступности: заголовок, иконка, цвет (ключи совпадают с id слоёв)
-const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: string }[] = [
-  { id: "mobility", name: "Передвижение", icon: Accessibility, color: "#457B9D" },
-  { id: "vision_impaired", name: "Для незрячих и слабовидящих", icon: Eye, color: "#FF6B6B" },
-  { id: "hearing_impaired", name: "Для слабослышащих", icon: Ear, color: "#FFA07A" },
-  { id: "deaf_mute", name: "Для глухонемых", icon: Ear, color: "#DDA15E" },
-  { id: "dietary", name: "Питание", icon: Utensils, color: "#2AA98B" },
-  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart, color: "#E63946" },
-  { id: "respiratory", name: "Дыхательная система", icon: Wind, color: "#1D3557" },
-  { id: "mental", name: "Ментальные особенности", icon: Brain, color: "#7C9EC0" },
-  { id: "family", name: "Семьи с детьми", icon: Users, color: "#E0A400" },
-  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles, color: "#8B5A3C" },
-  { id: "health", name: "Отдых с пользой для здоровья", icon: Hospital, color: "#52B788" },
-];
-
-export default function PlaceDetailClient({ id }: { id: string }) {
-  const [place, setPlace] = useState<MapObject | null>(null);
-  const [loading, setLoading] = useState(true);
-  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
-
-  useEffect(() => {
-    const basePath = process.env.NODE_ENV === 'production'
-      ? '/site-test-map'
-      : ''
-
-    fetch(`${basePath}/data/objects.json`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data: MapObject[]) => {
-        const found = data.find((obj) => obj.id === id);
-        setPlace(found || null);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error loading data:", err);
-        setLoading(false);
-      });
-  }, [id]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F3E8]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-lg text-muted-foreground">Загрузка...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!place) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F3E8]">
-        <div className="text-center">
-          <h2 className="text-2xl text-[#2C3E50] mb-4">Место не найдено</h2>
-          <Link href="/map">
-            <Button className="bg-[#4ECDC4] hover:bg-[#3DBDB5]">
-              Вернуться к карте
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const categoryConfig = CATEGORY_CONFIG[place.category] || CATEGORY_CONFIG.museum;
-  const CategoryIcon = categoryConfig.icon;
-
-  // Категории доступности, для которых есть текст (в порядке ACCESS_META)
-  const accessSections = ACCESS_META.filter((m) => place.accessibility && place.accessibility[m.id]);
-
-  const phoneHref = place.contacts.phone ? place.contacts.phone.replace(/[^\d+]/g, '') : '';
-  const routeUrl = place.coordinates
-    ? `https://yandex.ru/maps/?rtext=~${place.coordinates[0]}%2C${place.coordinates[1]}&rtt=auto`
-    : place.contacts.yandexMap;
-
-  return (
-    <div className="min-h-screen bg-[#F7F3E8]">
-      <header className="sticky top-0 z-10 bg-white shadow-md">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/map">
-            <Button variant="ghost" className="gap-2 text-[#2C3E50] hover:text-[#1B3A5C]">
-              <ArrowLeft className="size-5" />
-              <span className="hidden sm:inline">На карту</span>
-            </Button>
-          </Link>
-          <h1 className="text-lg md:text-xl text-[#2C3E50] font-semibold flex-1 text-center px-4 line-clamp-1">
-            {place.name}
-          </h1>
-          <Button
-            variant="ghost"
-            className="gap-2 text-[#2C3E50]"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: place.name, url: window.location.href })
-              }
-            }}
-          >
-            <Share2 className="size-5" />
-            <span className="hidden sm:inline">Поделиться</span>
-          </Button>
-        </div>
-      </header>
-
-      <div className="relative h-64 md:h-96">
-        <img
-          src={place.photos && place.photos.length > 0
-            ? place.photos[0]
-            : `${basePath}/img/placeholder.jpg`}
-          alt={place.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4">
-          <Badge
-            className="mb-2 text-white border-white/30 px-3 py-1 text-sm"
-            style={{ backgroundColor: categoryConfig.color }}
-          >
-            <CategoryIcon className="size-3 mr-1" />
-            {categoryConfig.name}
-          </Badge>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#2C3E50] mb-3">{place.name}</h1>
-
-          {/* Адрес и часы работы */}
-          <div className="flex flex-col gap-2 mb-4">
-            {place.address && (
-              <div className="flex items-start gap-2 text-[#2C3E50]/80">
-                <MapPin className="size-5 flex-shrink-0 text-[#4ECDC4] mt-0.5" />
-                <span>{place.address}</span>
-              </div>
-            )}
-            {place.workingHours && (
-              <div className="flex items-start gap-2 text-[#2C3E50]/80">
-                <Clock className="size-5 flex-shrink-0 text-[#4ECDC4] mt-0.5" />
-                <span className="whitespace-pre-line">{place.workingHours}</span>
-              </div>
-            )}
-          </div>
-
-          {place.description && (
-            <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.description}</p>
-          )}
-        </div>
-
-        {/* Доступность — текст по категориям */}
-        <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
-          <h2 className="text-xl font-semibold text-[#2C3E50] mb-4 flex items-center gap-2">
-            <Accessibility className="size-5 text-[#4ECDC4]" />
-            Доступность и удобства
-          </h2>
-
-          {accessSections.length > 0 ? (
-            <div className="space-y-5">
-              {accessSections.map((m) => {
-                const Icon = m.icon;
-                return (
-                  <div key={m.id}>
-                    <h3 className="text-sm font-semibold mb-1.5 flex items-center gap-2" style={{ color: m.color }}>
-                      <span className="flex items-center justify-center size-7 rounded-full flex-shrink-0" style={{ backgroundColor: `${m.color}20` }}>
-                        <Icon className="size-4" />
-                      </span>
-                      {m.name}
-                    </h3>
-                    <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line pl-9">
-                      {place.accessibility[m.id]}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-500">Информация об особенностях доступности уточняется</p>
-          )}
-        </Card>
-
-        {/* Противопоказания */}
-        {place.contraindications && (
-          <Card className="mb-6 p-6 gap-2 bg-amber-50 border border-amber-200 shadow-md">
-            <h2 className="text-lg font-semibold text-amber-900 mb-2 flex items-center gap-2">
-              <AlertTriangle className="size-5 text-amber-600" />
-              Противопоказания
-            </h2>
-            <p className="text-amber-900/90 leading-relaxed whitespace-pre-line">{place.contraindications}</p>
-          </Card>
-        )}
-
-        {/* Билеты */}
-        {place.tickets && (
-          <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
-            <h2 className="text-lg font-semibold text-[#2C3E50] mb-2 flex items-center gap-2">
-              <TicketIcon className="size-5 text-[#4ECDC4]" />
-              Билеты
-            </h2>
-            <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.tickets}</p>
-          </Card>
-        )}
-
-        {/* Льготы */}
-        {place.benefits && (
-          <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
-            <h2 className="text-lg font-semibold text-[#2C3E50] mb-2 flex items-center gap-2">
-              <BadgePercent className="size-5 text-[#4ECDC4]" />
-              Льготы
-            </h2>
-            <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.benefits}</p>
-          </Card>
-        )}
-
-        {/* Контакты */}
-        <Card className="mb-6 p-6 gap-2 bg-white border-0 shadow-md">
-          <h2 className="text-xl font-semibold text-[#2C3E50] mb-4">Контакты</h2>
-          <div className="space-y-3">
-            {place.contacts.phone && (
-              <a href={`tel:${phoneHref}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center flex-shrink-0">
-                  <Phone className="size-5 text-[#1B3A5C]" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-gray-500">Телефон</div>
-                  <div className="text-[#2C3E50] font-medium">{place.contacts.phone}</div>
-                </div>
-              </a>
-            )}
-
-            {place.contacts.website && (
-              <a href={place.contacts.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center flex-shrink-0">
-                  <Globe className="size-5 text-[#1B3A5C]" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-gray-500">Сайт</div>
-                  <div className="text-[#2C3E50] font-medium truncate">{place.contacts.website}</div>
-                </div>
-              </a>
-            )}
-
-            {place.contacts.yandexMap && (
-              <a href={place.contacts.yandexMap} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="size-10 rounded-full bg-[#4ECDC4]/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="size-5 text-[#1B3A5C]" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-gray-500">Яндекс.Карты</div>
-                  <div className="text-[#2C3E50] font-medium truncate">Открыть карточку места</div>
-                </div>
-              </a>
-            )}
-
-            {routeUrl && (
-              <Button
-                className="w-full bg-[#4ECDC4] hover:bg-[#3DBDB5] text-white rounded-lg py-6 gap-2"
-                onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
-              >
-                <Navigation className="size-5" />
-                Построить маршрут в Яндекс.Картах
-              </Button>
-            )}
-          </div>
-        </Card>
-
-        {/* Примечания */}
-        {place.notes && (
-          <Card className="mb-6 p-5 gap-2 bg-[#1B3A5C]/5 border-0 shadow-sm">
-            <div className="flex items-start gap-2">
-              <Info className="size-5 text-[#1B3A5C] flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="text-sm font-semibold text-[#1B3A5C] mb-1">Примечания</div>
-                <p className="text-[#2C3E50]/80 leading-relaxed whitespace-pre-line">{place.notes}</p>
-              </div>
-            </div>
-          </Card>
-        )}
-      </div>
-
-      <footer className="bg-[#1B3A5C] text-white py-8 mt-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-sm opacity-90 mb-2">
-            © 2026 Доступная Якутия. Все права защищены.
-          </p>
-          <p className="text-xs opacity-70">
-            Информация на сайте носит ознакомительный характер и не является медицинской
-            консультацией. Перед посещением оздоровительных объектов и использованием
-            народной медицины проконсультируйтесь со специалистом.
-          </p>
-        </div>
-      </footer>
-    </div>
-  );
 }
 ```
 
@@ -10990,6 +10459,1228 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 ]
 ```
 
+## File: app/layout.tsx
+```typescript
+import type { Metadata } from 'next'
+import { Geist_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
+import { Analytics } from '@vercel/analytics/next'
+import './globals.css'
+
+// Geist Mono — оставляем для моноширинного текста (код)
+const geistMono = Geist_Mono({ 
+  subsets: ["latin"],
+  variable: '--font-geist-mono'
+})
+
+// Gilroy — только Bold как основной
+const gilroy = localFont({
+  src: [
+    {
+      path: './fonts/Gilroy-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-gilroy',
+  display: 'swap',
+})
+
+// Sangha — только для акцентных заголовков
+const sanghaKali = localFont({
+  src: './fonts/SanghaKali-Regular.woff2',
+  variable: '--font-sangha',
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: 'Доступная Якутия - Инклюзивный навигатор',
+  description: 'Интерактивная карта медицинского и доступного туризма Республики Саха (Якутия)',
+  icons: {
+    // Основной фавикон — logo_homus (app/favicon.ico подключается автоматически).
+    apple: '/apple-icon.png',
+  },
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html
+      lang="ru"
+      className={`bg-background ${geistMono.variable} ${gilroy.variable} ${sanghaKali.variable}`}
+      suppressHydrationWarning
+    >
+      <body className={`${gilroy.className} antialiased`}>
+        {/* Применяем сохранённый режим контраста до первой отрисовки — без мигания */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var p=sessionStorage.getItem('visionPreference');if(p==='partial'){document.documentElement.classList.add('high-contrast','large-font');}}catch(e){}",
+          }}
+        />
+        {children}
+        {process.env.NODE_ENV === 'production' && <Analytics />}
+      </body>
+    </html>
+  )
+}
+```
+
+## File: app/place/[id]/PlaceDetailClient.tsx
+```typescript
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import {
+  ArrowLeft,
+  Share2,
+  MapPin,
+  Phone,
+  Globe,
+  Navigation,
+  Clock,
+  Ticket as TicketIcon,
+  BadgePercent,
+  AlertTriangle,
+  Info,
+  Accessibility,
+  Eye,
+  Ear,
+  Utensils,
+  Heart,
+  Wind,
+  Brain,
+  Users,
+  Sparkles,
+  Hospital,
+  Building2,
+  Hotel,
+  UtensilsCrossed,
+  Coffee,
+  TreePine,
+  Theater,
+  Stethoscope,
+  Flower2,
+  Landmark,
+  ShoppingBag,
+  Dumbbell,
+  Mountain,
+  Palette,
+  Ticket,
+  GraduationCap,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import ContrastToggle from '@/components/ContrastToggle';
+
+// Типы
+interface MapObject {
+  id: string;
+  name: string;
+  category: string;
+  layers: string[];
+  coordinates: [number, number] | null;
+  address?: string;
+  workingHours?: string;
+  description: string;
+  accessibility: Record<string, string>;
+  contraindications?: string;
+  tickets?: string;
+  benefits?: string;
+  notes?: string;
+  photos: string[];
+  contacts: {
+    phone?: string;
+    website?: string;
+    yandexMap?: string;
+  };
+}
+
+// Конфигурация категорий
+const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; color: string }> = {
+  museum: { name: 'Музей', icon: Building2, color: '#8b5cf6' },
+  hotel: { name: 'Гостиница', icon: Hotel, color: '#3b82f6' },
+  restaurant: { name: 'Ресторан', icon: UtensilsCrossed, color: '#22c55e' },
+  cafe: { name: 'Кафе', icon: Coffee, color: '#f97316' },
+  park: { name: 'Парк', icon: TreePine, color: '#14b8a6' },
+  theater: { name: 'Театр', icon: Theater, color: '#ec4899' },
+  medical: { name: 'Медицина', icon: Stethoscope, color: '#ef4444' },
+  spa: { name: 'СПА/Оздоровление', icon: Flower2, color: '#06b6d4' },
+  monument: { name: 'Памятник', icon: Landmark, color: '#6366f1' },
+  shopping: { name: 'Торговый центр', icon: ShoppingBag, color: '#eab308' },
+  sports: { name: 'Спорт', icon: Dumbbell, color: '#84cc16' },
+  nature: { name: 'Природа', icon: Mountain, color: '#0ea5e9' },
+  culture: { name: 'Культура', icon: Palette, color: '#f43f5e' },
+  entertainment: { name: 'Развлечения', icon: Ticket, color: '#d946ef' },
+  education: { name: 'Образование', icon: GraduationCap, color: '#0284c7' },
+};
+
+// Категории доступности: заголовок, иконка, цвет (ключи совпадают с id слоёв)
+const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: string }[] = [
+  { id: 'mobility', name: 'Передвижение', icon: Accessibility, color: '#457B9D' },
+  { id: 'vision_impaired', name: 'Для незрячих и слабовидящих', icon: Eye, color: '#FF6B6B' },
+  { id: 'hearing_impaired', name: 'Для слабослышащих', icon: Ear, color: '#FFA07A' },
+  { id: 'deaf_mute', name: 'Для глухонемых', icon: Ear, color: '#DDA15E' },
+  { id: 'dietary', name: 'Питание', icon: Utensils, color: '#2AA98B' },
+  { id: 'cardiovascular', name: 'Сердечно-сосудистые', icon: Heart, color: '#E63946' },
+  { id: 'respiratory', name: 'Дыхательная система', icon: Wind, color: '#1D3557' },
+  { id: 'mental', name: 'Ментальные особенности', icon: Brain, color: '#7C9EC0' },
+  { id: 'family', name: 'Семьи с детьми', icon: Users, color: '#E0A400' },
+  { id: 'ethnomedicine', name: 'Народная медицина', icon: Sparkles, color: '#8B5A3C' },
+  { id: 'health', name: 'Отдых с пользой для здоровья', icon: Hospital, color: '#52B788' },
+];
+
+export default function PlaceDetailClient({ id }: { id: string }) {
+  const [place, setPlace] = useState<MapObject | null>(null);
+  const [loading, setLoading] = useState(true);
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+
+  useEffect(() => {
+    fetch(`${basePath}/data/objects.json`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data: MapObject[]) => {
+        const found = data.find((obj) => obj.id === id);
+        setPlace(found || null);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading data:', err);
+        setLoading(false);
+      });
+  }, [id, basePath]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-lg text-muted-foreground">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!place) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl text-foreground mb-4">Место не найдено</h2>
+          <Link href="/map">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Вернуться к карте
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const categoryConfig = CATEGORY_CONFIG[place.category] || CATEGORY_CONFIG.museum;
+  const CategoryIcon = categoryConfig.icon;
+
+  // Категории доступности, для которых есть текст (в порядке ACCESS_META)
+  const accessSections = ACCESS_META.filter((m) => place.accessibility && place.accessibility[m.id]);
+
+  const phoneHref = place.contacts.phone ? place.contacts.phone.replace(/[^\d+]/g, '') : '';
+  const routeUrl = place.coordinates
+    ? `https://yandex.ru/maps/?rtext=~${place.coordinates[0]}%2C${place.coordinates[1]}&rtt=auto`
+    : place.contacts.yandexMap;
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-10 bg-card shadow-md border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/map">
+            <Button variant="ghost" className="gap-2 text-foreground hover:text-primary">
+              <ArrowLeft className="size-5" />
+              <span className="hidden sm:inline">На карту</span>
+            </Button>
+          </Link>
+          <h1 className="text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
+            {place.name}
+          </h1>
+          <div className="flex items-center gap-1">
+            <ContrastToggle />
+            <Button
+              variant="ghost"
+              className="gap-2 text-foreground"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: place.name, url: window.location.href });
+                }
+              }}
+            >
+              <Share2 className="size-5" />
+              <span className="hidden sm:inline">Поделиться</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative h-64 md:h-96">
+        <img
+          src={place.photos && place.photos.length > 0 ? place.photos[0] : `${basePath}/img/placeholder.jpg`}
+          alt={place.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute bottom-4 left-4 right-4">
+          <Badge
+            className="mb-2 text-white border-white/30 px-3 py-1 text-sm"
+            style={{ backgroundColor: categoryConfig.color }}
+          >
+            <CategoryIcon className="size-3 mr-1" />
+            {categoryConfig.name}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground mb-3">{place.name}</h1>
+
+          {/* Адрес и часы работы */}
+          <div className="flex flex-col gap-2 mb-4">
+            {place.address && (
+              <div className="flex items-start gap-2 text-muted-foreground">
+                <MapPin className="size-5 flex-shrink-0 text-primary mt-0.5" />
+                <span>{place.address}</span>
+              </div>
+            )}
+            {place.workingHours && (
+              <div className="flex items-start gap-2 text-muted-foreground">
+                <Clock className="size-5 flex-shrink-0 text-primary mt-0.5" />
+                <span className="whitespace-pre-line">{place.workingHours}</span>
+              </div>
+            )}
+          </div>
+
+          {place.description && (
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.description}</p>
+          )}
+        </div>
+
+        {/* Доступность — текст по категориям */}
+        <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Accessibility className="size-5 text-primary" />
+            Доступность и удобства
+          </h2>
+
+          {accessSections.length > 0 ? (
+            <div className="space-y-5">
+              {accessSections.map((m) => {
+                const Icon = m.icon;
+                return (
+                  <div key={m.id}>
+                    <h3 className="text-sm font-semibold mb-1.5 flex items-center gap-2" style={{ color: m.color }}>
+                      <span
+                        className="flex items-center justify-center size-7 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: `${m.color}20` }}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      {m.name}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line pl-9">
+                      {place.accessibility[m.id]}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Информация об особенностях доступности уточняется</p>
+          )}
+        </Card>
+
+        {/* Противопоказания */}
+        {place.contraindications && (
+          <Card className="mb-6 p-6 gap-2 bg-amber-50 border border-amber-200 shadow-md dark:bg-amber-950/30 dark:border-amber-700">
+            <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
+              <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />
+              Противопоказания
+            </h2>
+            <p className="text-amber-900/90 dark:text-amber-200/90 leading-relaxed whitespace-pre-line">
+              {place.contraindications}
+            </p>
+          </Card>
+        )}
+
+        {/* Билеты */}
+        {place.tickets && (
+          <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">
+            <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+              <TicketIcon className="size-5 text-primary" />
+              Билеты
+            </h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.tickets}</p>
+          </Card>
+        )}
+
+        {/* Льготы */}
+        {place.benefits && (
+          <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">
+            <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+              <BadgePercent className="size-5 text-primary" />
+              Льготы
+            </h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.benefits}</p>
+          </Card>
+        )}
+
+        {/* Контакты */}
+        <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Контакты</h2>
+          <div className="space-y-3">
+            {place.contacts.phone && (
+              <a
+                href={`tel:${phoneHref}`}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Phone className="size-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm text-muted-foreground">Телефон</div>
+                  <div className="text-foreground font-medium">{place.contacts.phone}</div>
+                </div>
+              </a>
+            )}
+
+            {place.contacts.website && (
+              <a
+                href={place.contacts.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Globe className="size-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm text-muted-foreground">Сайт</div>
+                  <div className="text-foreground font-medium truncate">{place.contacts.website}</div>
+                </div>
+              </a>
+            )}
+
+            {place.contacts.yandexMap && (
+              <a
+                href={place.contacts.yandexMap}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="size-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm text-muted-foreground">Яндекс.Карты</div>
+                  <div className="text-foreground font-medium truncate">Открыть карточку места</div>
+                </div>
+              </a>
+            )}
+
+            {routeUrl && (
+              <Button
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2"
+                onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
+              >
+                <Navigation className="size-5" />
+                Построить маршрут в Яндекс.Картах
+              </Button>
+            )}
+          </div>
+        </Card>
+
+        {/* Примечания */}
+        {place.notes && (
+          <Card className="mb-6 p-5 gap-2 bg-muted/30 border-border shadow-sm">
+            <div className="flex items-start gap-2">
+              <Info className="size-5 text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-semibold text-foreground mb-1">Примечания</div>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.notes}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+      </div>
+
+      <footer className="bg-foreground text-background py-8 mt-12 border-t border-border">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <p className="text-sm opacity-90 mb-2">© 2026 Доступная Якутия. Все права защищены.</p>
+          <p className="text-xs opacity-70">
+            Информация на сайте носит ознакомительный характер и не является медицинской консультацией. Перед
+            посещением оздоровительных объектов и использованием народной медицины проконсультируйтесь со специалистом.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+```
+
+## File: app/globals.css
+```css
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant dark-contrast (&:is(.high-contrast *));
+
+:root {
+  /* === ОСНОВНЫЕ ЦВЕТА === */
+  --color-bg-primary: #F8F6F1;
+  --color-bg-secondary: #EDEBE5;
+  --color-bg-white: #FFFFFF;
+  
+  /* === ЦВЕТА ТЕКСТА === */
+  --color-text-primary: #353535;
+  --color-text-secondary: #5A4E3C;
+  --color-text-white: #FFFFFF;
+  
+  /* === АКЦЕНТНЫЙ ЦВЕТ (ОРАНЖЕВЫЙ) === */
+  --color-accent: #E38920;
+  --color-accent-hover: #CC7A1D;
+  --color-accent-light: #F5D6A8;
+  --color-accent-dark: #B86A18;
+  
+  /* === ЗЕЛЕНЫЙ ЦВЕТ ДЛЯ ЗАГОЛОВКОВ === */
+  --color-green-dark: #384E41;
+  --color-green-medium: #4A6B52;
+  --color-green-light: #6B8F73;
+  
+  /* === КОРИЧНЕВЫЙ ЦВЕТ === */
+  --color-brown-dark: #5A4E3C;
+  --color-brown-medium: #8B7A66;
+  --color-brown-light: #C4B5A0;
+  
+  /* === ЦВЕТА ДЛЯ ХЕДЕРА === */
+  --color-header-title: #384E41;
+  
+  /* === ЦВЕТА ДЛЯ КАРТОЧЕК === */
+  --color-card-bg: #FFFFFF;
+  --color-card-border: #E8E6E0;
+  --color-card-shadow: rgba(56, 78, 65, 0.1);
+  --color-button-primary-bg: #9CB6E0;
+  --color-button-primary-text: #FFFFFF;
+  --color-button-primary-border: #9CB6E0;
+  --color-button-primary-hover: #708FC0;
+  
+  /* === ФОНОВОЕ ИЗОБРАЖЕНИЕ === */
+  --bg-hero-image: url('/img/background_photo.png');
+
+  /* === СТАНДАРТНЫЕ ПЕРЕМЕННЫЕ === */
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-card-bg);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-primary);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-text-white);
+  --secondary: var(--color-green-medium);
+  --secondary-foreground: var(--color-text-white);
+  --muted: var(--color-bg-secondary);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-text-white);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: var(--color-card-border);
+  --input: var(--color-card-border);
+  --ring: var(--color-accent);
+  --radius: 0.75rem;
+  --sidebar: var(--color-bg-primary);
+  --sidebar-foreground: var(--color-text-primary);
+  --sidebar-primary: var(--color-accent);
+  --sidebar-primary-foreground: var(--color-text-white);
+  --sidebar-accent: var(--color-bg-secondary);
+  --sidebar-accent-foreground: var(--color-text-primary);
+  --sidebar-border: var(--color-card-border);
+  --sidebar-ring: var(--color-accent);
+  --color-title-events: #802405;
+}
+
+.dark {
+  /* Темная тема */
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #2a2a2a;
+  --color-text-primary: #e5e5e5;
+  --color-text-secondary: #b5a890;
+  --color-accent: #E38920;
+  --color-accent-hover: #CC7A1D;
+  --color-green-dark: #5A7A6A;
+  
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-bg-primary);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-primary);
+  --popover-foreground: var(--color-text-primary);
+  --border: #333333;
+  --sidebar: var(--color-bg-primary);
+}
+
+@theme inline {
+  /* === ПОДКЛЮЧАЕМ CSS-ПЕРЕМЕННЫЕ В TAILWIND === */
+  --color-bg-primary: var(--color-bg-primary);
+  --color-bg-secondary: var(--color-bg-secondary);
+  
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-white: var(--color-text-white);
+  
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-light: var(--color-accent-light);
+  --color-accent-dark: var(--color-accent-dark);
+  
+  --color-green-dark: var(--color-green-dark);
+  --color-green-medium: var(--color-green-medium);
+  --color-green-light: var(--color-green-light);
+  
+  --color-brown-dark: var(--color-brown-dark);
+  --color-brown-medium: var(--color-brown-medium);
+  --color-brown-light: var(--color-brown-light);
+  
+  --color-header-title: var(--color-header-title);
+  --color-card-bg: var(--color-card-bg);
+  --color-card-border: var(--color-card-border);
+  
+  --bg-hero-image: var(--bg-hero-image);
+
+  /* === ШРИФТЫ === */
+  --font-sans: var(--font-gilroy), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), 'Geist Mono', 'Geist Mono Fallback';
+  --font-sangha: var(--font-sangha), ui-sans-serif, system-ui, sans-serif;
+  
+  /* === СТАНДАРТНЫЕ ПЕРЕМЕННЫЕ === */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-white: var(--color-text-white);
+}
+
+@layer base {
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  .font-sangha {
+    font-family: var(--font-sangha), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Классы для новых цветов */
+  .text-green-dark {
+    color: var(--color-green-dark);
+  }
+  .text-brown-dark {
+    color: var(--color-brown-dark);
+  }
+  .text-brown-medium {
+    color: var(--color-brown-medium);
+  }
+  .bg-accent-custom {
+    background-color: var(--color-accent);
+  }
+  .bg-accent-custom:hover {
+    background-color: var(--color-accent-hover);
+  }
+  .border-accent-custom {
+    border-color: var(--color-accent);
+  }
+  .text-accent-custom {
+    color: var(--color-accent);
+  }
+  .bg-about-pattern {
+  background-image: url('/img/o_proekte.png');
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: contain;
+}
+}
+
+/* ========================================================
+   РЕЖИМ ДЛЯ СЛАБОВИДЯЩИХ (ВЫСОКИЙ КОНТРАСТ И КРУПНЫЙ ШРИФТ)
+   ======================================================== */
+
+/* 1. Увеличиваем базовый размер шрифта (одинаково для всех устройств) */
+html.large-font {
+  font-size: 140%; 
+}
+
+html.large-font header .flex.items-center.gap-4 {
+  flex-shrink: 0 !important;
+  width: auto !important;
+  min-width: 80px !important;
+}
+
+html.large-font button[title="Версия для слабовидящих"] {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+}
+
+html.large-font button[title="Версия для слабовидящих"] svg {
+  flex-shrink: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+}
+
+/* 2. Переопределяем палитру на черное и белое */
+:root.high-contrast {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #000000;
+  --color-bg-white: #000000;
+  
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFFFFF;
+  --color-text-white: #FFFFFF;
+  
+  --color-accent: #FFFFFF;
+  --color-accent-hover: #CCCCCC;
+  --color-accent-light: #FFFFFF;
+  --color-accent-dark: #FFFFFF;
+  
+  --color-green-dark: #FFFFFF;
+  --color-green-medium: #FFFFFF;
+  --color-green-light: #FFFFFF;
+  
+  --color-brown-dark: #FFFFFF;
+  --color-brown-medium: #FFFFFF;
+  --color-brown-light: #FFFFFF;
+  
+  --color-header-title: #FFFFFF;
+  
+  --color-card-bg: #000000;
+  --color-card-border: #FFFFFF;
+  --color-card-shadow: none;
+
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card: #000000;
+  --card-foreground: #FFFFFF;
+  --popover: #000000;
+  --popover-foreground: #FFFFFF;
+  --primary: #FFFFFF;
+  --primary-foreground: #000000;
+  --muted: #000000;
+  --muted-foreground: #FFFFFF;
+  --border: #FFFFFF;
+
+  --color-button-primary-bg: #000000;
+  --color-button-primary-text: #FFFFFF;
+  --color-button-primary-border: #FFFFFF;
+  --color-button-primary-hover: #333333;
+  --color-title-events: #FFFFFF;
+}
+
+/* 3. Стили для высококонтрастного режима */
+:root.high-contrast body * {
+  font-weight: 700 !important;
+}
+
+/* Убираем декоративные фоновые картинки */
+:root.high-contrast section {
+  background-image: none !important;
+  background-color: #000000 !important;
+}
+
+:root.high-contrast div[style*="linear-gradient"] {
+  background: #000000 !important;
+}
+
+/* Добавляем обводку для карточек и кнопок */
+:root.high-contrast button, 
+:root.high-contrast input,
+:root.high-contrast [data-slot="card"] {
+  border: 2px solid #FFFFFF !important;
+}
+
+/* Выделяем модальные окна */
+:root.high-contrast [role="dialog"] {
+  border: 3px solid #FFFFFF !important;
+}
+
+:root.high-contrast [data-slot="badge"].absolute {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #000000 !important;
+  border: none !important;
+}
+
+:root.high-contrast [class*="dark-contrast:hidden"] {
+  display: none !important;
+}
+
+/* === ПРИНУДИТЕЛЬНОЕ ПЕРЕКРАШИВАНИЕ ХЕДЕРА === */
+:root.high-contrast header,
+:root.high-contrast header * {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header .font-sangha {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header button,
+:root.high-contrast header [role="button"],
+:root.high-contrast header a {
+  color: #FFFFFF !important;
+  background-color: transparent !important;
+  border-color: #FFFFFF !important;
+}
+
+:root.high-contrast header button:hover,
+:root.high-contrast header [role="button"]:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:root.high-contrast header button[title="Версия для слабовидящих"] {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header button[title="Версия для слабовидящих"] svg {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast header .bg-accent-custom,
+:root.high-contrast header .bg-\[var\(--color-accent\)\] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+:root.high-contrast header .bg-accent-custom *,
+:root.high-contrast header .bg-\[var\(--color-accent\)\] * {
+  color: #000000 !important;
+}
+
+/* === ВСЕ КНОПКИ НА СТРАНИЦЕ === */
+/* Кнопки с оранжевым фоном - становятся белыми с черным текстом */
+:root.high-contrast .bg-accent-custom,
+:root.high-contrast .bg-\[var\(--color-accent\)\],
+:root.high-contrast button.bg-accent-custom,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .bg-accent-custom *,
+:root.high-contrast .bg-\[var\(--color-accent\)\] *,
+:root.high-contrast button.bg-accent-custom *,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] * {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-accent-custom:hover,
+:root.high-contrast .bg-\[var\(--color-accent\)\]:hover,
+:root.high-contrast button.bg-accent-custom:hover,
+:root.high-contrast button.bg-\[var\(--color-accent\)\]:hover {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+}
+
+:root.high-contrast .bg-accent-custom:hover *,
+:root.high-contrast .bg-\[var\(--color-accent\)\]:hover *,
+:root.high-contrast button.bg-accent-custom:hover *,
+:root.high-contrast button.bg-\[var\(--color-accent\)\]:hover * {
+  color: #FFFFFF !important;
+}
+
+/* Кнопки с обводкой - белая обводка, белый текст */
+:root.high-contrast button.border-2,
+:root.high-contrast button[class*="border-2"] {
+  border-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+  background-color: transparent !important;
+}
+
+:root.high-contrast button.border-2:hover,
+:root.high-contrast button[class*="border-2"]:hover {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* Кнопки с голубым фоном (Подобрать места) */
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] * {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\]:hover {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\]:hover * {
+  color: #FFFFFF !important;
+}
+
+/* === ВЫСОКОКОНТРАСТНЫЙ ПОПАП КАРТЫ === */
+:root.high-contrast .leaflet-popup-content-wrapper {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-tip {
+  background-color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button:hover {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper [data-slot="badge"] {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+/* === АДАПТАЦИЯ ПОПАПА КАРТЫ ДЛЯ МОБИЛЬНЫХ === */
+@media (max-width: 640px) {
+  .leaflet-popup {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+  
+  .leaflet-popup-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+}
+
+
+
+
+/* Дополнительный брейкпоинт для очень маленьких экранов */
+@layer utilities {
+  @media (min-width: 480px) {
+    .xs\:inline {
+      display: inline !important;
+    }
+    .xs\:hidden {
+      display: none !important;
+    }
+    .xs\:block {
+      display: block !important;
+    }
+    .xs\:flex {
+      display: flex !important;
+    }
+  }
+  @media (max-width: 479px) {
+    .xs\:inline {
+      display: none !important;
+    }
+    .xs\:hidden {
+      display: inline !important;
+    }
+    .xs\:block {
+      display: none !important;
+    }
+    .xs\:flex {
+      display: none !important;
+    }
+  }
+}
+/* ========================================================
+   ИСПРАВЛЕНИЯ ДЛЯ ВЫСОКОКОНТРАСТНОГО РЕЖИМА
+   ======================================================== */
+
+/* Иконка в кнопке "Перейти на карту" - черная на белом фоне */
+:root.high-contrast .bg-accent-custom svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast button.bg-accent-custom svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] svg {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-accent-custom:hover svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\]:hover svg,
+:root.high-contrast button.bg-accent-custom:hover svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\]:hover svg {
+  color: #FFFFFF !important;
+}
+
+/* Иконка в кнопке "Подобрать места" - белая на прозрачном фоне */
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] svg {
+  color: #000000 !important;
+}
+
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\]:hover svg {
+  color: #FFFFFF !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - СКРЫВАЕМ ИКОНКИ В КНОПКАХ
+   ======================================================== */
+
+/* Скрываем все иконки внутри кнопок на главной странице */
+:root.high-contrast .bg-accent-custom svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] svg,
+:root.high-contrast button.bg-accent-custom svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast button.bg-\[var\(--color-button-primary-bg\)\] svg {
+  display: none !important;
+}
+
+/* Также скрываем иконки в кнопках с обводкой */
+:root.high-contrast button.border-2 svg,
+:root.high-contrast button[class*="border-2"] svg {
+  display: none !important;
+}
+
+/* Скрываем иконки в кнопках хедера (кроме кнопки "глаз") */
+:root.high-contrast header button:not([title="Версия для слабовидящих"]) svg {
+  display: none !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - СКРЫВАЕМ ИКОНКИ ТОЛЬКО НА ГЛАВНОЙ
+   ======================================================== */
+
+/* Скрываем иконки в кнопках на главной странице */
+:root.high-contrast .bg-accent-custom svg,
+:root.high-contrast .bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast .bg-\[var\(--color-button-primary-bg\)\] svg,
+:root.high-contrast button.bg-accent-custom svg,
+:root.high-contrast button.bg-\[var\(--color-accent\)\] svg,
+:root.high-contrast button.bg-\[var\(--color-button-primary-bg\)\] svg {
+  display: none !important;
+}
+
+/* Скрываем иконки в кнопках с обводкой на главной */
+:root.high-contrast button.border-2 svg,
+:root.high-contrast button[class*="border-2"] svg {
+  display: none !important;
+}
+
+/* ИКОНКА ГЛАЗА В ХЕДЕРЕ - ОСТАВЛЯЕМ ВИДИМОЙ */
+:root.high-contrast header button[title="Версия для слабовидящих"] svg {
+  display: inline-block !important;
+  color: #FFFFFF !important;
+}
+
+/* ИКОНКА БУРГЕРА (три черточки) В ХЕДЕРЕ - ОСТАВЛЯЕМ ВИДИМОЙ */
+:root.high-contrast header button:not([title="Версия для слабовидящих"]) svg {
+  display: inline-block !important;
+  color: #FFFFFF !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - ФИЛЬТРЫ (СПЛОШНОЙ ЖЕЛТЫЙ ФОН)
+   ======================================================== */
+
+/* Активные фильтры - сплошной желтый фон, черный текст */
+:root.high-contrast .flex.flex-wrap.gap-2 button {
+  background-color: transparent !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+:root.high-contrast .flex.flex-wrap.gap-2 button span {
+  color: #FFFFFF !important;
+}
+
+/* Активный фильтр - сплошной желтый фон, черный текст */
+:root.high-contrast .flex.flex-wrap.gap-2 button.bg-\[var\(--color-accent\)\]\/10,
+:root.high-contrast .flex.flex-wrap.gap-2 button[data-active="true"] {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  border: 2px solid #FFFF00 !important;
+}
+
+:root.high-contrast .flex.flex-wrap.gap-2 button.bg-\[var\(--color-accent\)\]\/10 span,
+:root.high-contrast .flex.flex-wrap.gap-2 button[data-active="true"] span {
+  color: #000000 !important;
+}
+
+/* Дополнительно для надежности - все активные фильтры */
+:root.high-contrast [data-active="true"] {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  border: 2px solid #FFFF00 !important;
+}
+
+:root.high-contrast [data-active="true"] * {
+  color: #000000 !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - ПРОТИВОПОКАЗАНИЯ
+   ======================================================== */
+
+/* Противопоказания - черный фон, белый текст */
+:root.high-contrast .bg-amber-50,
+:root.high-contrast .border-amber-200 {
+  background-color: #000000 !important;
+  border-color: #FFFFFF !important;
+}
+
+:root.high-contrast .bg-amber-50 *,
+:root.high-contrast .border-amber-200 * {
+  color: #FFFFFF !important;
+}
+
+/* Заголовок противопоказаний */
+:root.high-contrast .text-amber-900,
+:root.high-contrast .dark\:text-amber-300 {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .text-amber-600,
+:root.high-contrast .dark\:text-amber-400 {
+  color: #FFFFFF !important;
+}
+
+/* Текст противопоказаний */
+:root.high-contrast .text-amber-900\/90,
+:root.high-contrast .dark\:text-amber-200\/90 {
+  color: #FFFFFF !important;
+}
+
+/* Для темной темы */
+:root.high-contrast .dark\:bg-amber-950\/30 {
+  background-color: #000000 !important;
+}
+
+:root.high-contrast .dark\:border-amber-700 {
+  border-color: #FFFFFF !important;
+}
+```
+
+## File: .github/workflows/deploy.yml
+```yaml
+# GitHub Actions workflow for deploying static Next.js site to GitHub Pages
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # Автоматическая установка pnpm
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm" # Теперь кэш будет работать правильно через pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build static site
+        run: |
+          if [ -f next.config.prod.mjs ]; then
+            cp next.config.prod.mjs next.config.mjs
+          fi
+          pnpm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./out"
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
 ## File: components/AppHeader.tsx
 ```typescript
 "use client";
@@ -10997,7 +11688,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Eye, Menu, X, MapPin } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -11021,11 +11712,17 @@ export default function Header({ onOpenFilters }: HeaderProps) {
   const toggleAccessibility = () => {
     const newState = !highContrast;
     setHighContrast(newState);
-    
+
     if (newState) {
       document.documentElement.classList.add('high-contrast', 'large-font');
     } else {
       document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+    // Сохраняем выбор на сессию, чтобы он не сбрасывался при перезагрузке
+    try {
+      sessionStorage.setItem('visionPreference', newState ? 'partial' : 'none');
+    } catch {
+      /* ignore */
     }
   };
 
@@ -11116,14 +11813,21 @@ export default function Header({ onOpenFilters }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={toggleAccessibility}
-            className={highContrast ? 'text-white hover:bg-white/20' : ''}
+            className={`w-auto px-2 ${highContrast ? 'text-white hover:bg-white/20' : ''}`}
             title="Версия для слабовидящих"
+            aria-label="Версия для слабовидящих: высокий контраст и крупный шрифт"
+            aria-pressed={highContrast}
           >
-            <Eye className="size-5" />
+            <img
+              src={`${basePath}/img/eye.png`}
+              alt=""
+              aria-hidden="true"
+              className="h-5 w-auto object-contain dark-contrast:brightness-0 dark-contrast:invert"
+            />
           </Button>
           
           <button 
@@ -11181,80 +11885,40 @@ export default function Header({ onOpenFilters }: HeaderProps) {
 }
 ```
 
-## File: .github/workflows/deploy.yml
-```yaml
-# GitHub Actions workflow for deploying static Next.js site to GitHub Pages
-name: Deploy to GitHub Pages
+## File: next.config.mjs
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'export',  // Включает экспорт статического HTML
+  images: {
+    unoptimized: true,  // GitHub Pages не поддерживает оптимизацию изображений Next.js
+  },
+  basePath: process.env.NODE_ENV === 'production' ? '/site-test-map' : undefined,
+  trailingSlash: true,  // Рекомендуется для GitHub Pages
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+   allowedDevOrigins: [
+    '172.20.10.8',     // IP вашего iPhone (замените на актуальный)
+    '*.local',           // Для macOS .local адресов
+    '*.local-ip.com',    // Альтернативный вариант для локальных IP
+  ],
+}
 
-on:
-  push:
-    branches: ["main", "master"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9 # Автоматическая установка pnpm
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "pnpm" # Теперь кэш будет работать правильно через pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Build static site
-        run: |
-          if [ -f next.config.prod.mjs ]; then
-            cp next.config.prod.mjs next.config.mjs
-          fi
-          pnpm run build
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "./out"
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+export default nextConfig
 ```
 
 ## File: components/accessible-yakutia-map.tsx
 ```typescript
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import ContrastToggle from "@/components/ContrastToggle"
 import { useRouter } from "next/navigation";
 import {
   Filter,
@@ -11292,6 +11956,7 @@ import {
   Menu,
   Search,
   List,
+  LocateFixed,
 } from "lucide-react"
 
 // Types
@@ -11414,7 +12079,6 @@ function getCategoryMarkerIcon(category: string) {
   }
   const iconPath = iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
   
-  // Темно-оранжевый цвет для капли
   const pinColor = "#B86A18";
 
   return L.divIcon({
@@ -11446,6 +12110,13 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
     }
   }, [objects, map])
+  return null
+}
+
+// Отдаёт инстанс карты наружу (для кнопки центровки)
+function MapController({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => { onReady(map) }, [map, onReady])
   return null
 }
 
@@ -11485,7 +12156,6 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
-      {/* Шапка для мобилок */}
       {onClose && (
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-card-border)] lg:hidden bg-[var(--color-bg-white)] z-20">
           <h2 className="font-sangha text-2xl text-[var(--color-green-dark)] leading-none pt-1">Списки и фильтры</h2>
@@ -11495,7 +12165,6 @@ function SidebarContent({
         </div>
       )}
 
-      {/* Панель поиска (закреплена) */}
       <div className="flex flex-col px-5 py-4 border-b border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-sm z-10">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
@@ -11509,10 +12178,7 @@ function SidebarContent({
         </div>
       </div>
 
-      {/* Единая прокручиваемая область для Фильтров и Списка мест */}
       <div className="flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
-        
-        {/* Блок фильтров-тегов */}
         <div className="p-5 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)]">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-bold text-[var(--color-green-dark)]">Кому подходит:</span>
@@ -11545,7 +12211,6 @@ function SidebarContent({
           </div>
         </div>
 
-        {/* Список мест */}
         <div className="p-4 space-y-3">
           <div className="text-sm font-bold text-[var(--color-text-secondary)] px-1 mb-1">
             Найдено мест: {filteredObjectsCount}
@@ -11576,7 +12241,6 @@ function SidebarContent({
                       <span className="line-clamp-1">{obj.address}</span>
                     </div>
                   )}
-                  {/* Значки с текстом */}
                   {groups.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {groups.map((m) => {
@@ -11605,6 +12269,99 @@ function SidebarContent({
   )
 }
 
+// Компонент попапа с адаптивным дизайном
+function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
+  obj: MapObject;
+  onPlaceSelect?: (id: string) => void;
+  getBadgeColor: (obj: MapObject) => string;
+  basePath: string;
+}) {
+  const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id));
+  
+  return (
+    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
+      {/* Фото */}
+      <div className="relative h-32 w-full flex-shrink-0">
+        <img
+          src={obj.photos && obj.photos.length > 0 ? obj.photos[0] : `${basePath}/img/placeholder.jpg`}
+          alt={obj.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+          }}
+        />
+      </div>
+
+      {/* Контент с прокруткой */}
+      <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
+        <div>
+          <Badge 
+            className="mb-2 text-white border-0 shadow-sm text-xs sm:text-sm" 
+            style={{ backgroundColor: getBadgeColor(obj) }}
+          >
+            {CATEGORY_CONFIG[obj.category]?.name || obj.category}
+          </Badge>
+          <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] leading-tight">
+            {obj.name}
+          </h3>
+        </div>
+
+        <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] space-y-1.5">
+          {obj.address && (
+            <div className="flex items-start gap-1.5">
+              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-2">{obj.address}</span>
+            </div>
+          )}
+          {obj.workingHours && (
+            <div className="flex items-start gap-1.5">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-1 text-xs sm:text-sm">{obj.workingHours}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Значки доступности */}
+        {groups.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+            {groups.slice(0, 4).map((m) => {
+              const Icon = m.icon
+              return (
+                <span
+                  key={m.id}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                >
+                  <Icon className="size-2.5 sm:size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                  <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] hidden xs:inline">
+                    {m.name}
+                  </span>
+                </span>
+              )
+            })}
+            {groups.length > 4 && (
+              <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-secondary)] px-1">
+                +{groups.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+
+        {onPlaceSelect && (
+          <div className="pt-2 border-t border-[var(--color-card-border)]">
+            <Button 
+              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-2.5 sm:py-3 text-xs sm:text-sm"
+              onClick={() => onPlaceSelect(obj.id)}
+            >
+              Подробнее
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakutiaMapProps) {
 
 const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
@@ -11613,6 +12370,29 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [isHighContrast, setIsHighContrast] = useState(false);
+
+  // Отслеживаем высококонтрастный режим
+  useEffect(() => {
+    const checkHighContrast = () => {
+      const isHC = document.documentElement.classList.contains('high-contrast');
+      setIsHighContrast(isHC);
+    };
+    
+    checkHighContrast();
+    
+    const observer = new MutationObserver(checkHighContrast);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  // Инстанс карты (для кнопки центровки)
+  const mapRef = useRef<L.Map | null>(null)
+  const handleMapReady = useCallback((map: L.Map) => { mapRef.current = map }, [])
 
   useEffect(() => {
     const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
@@ -11640,7 +12420,6 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return obj.layers.some((layer) => activeLayers.includes(layer))
   })
 
-  // Цвет бэйджиков берем из активного фильтра (для визуала)
   const getBadgeColor = useCallback((obj: MapObject) => {
     for (const layer of obj.layers) {
       if (activeLayers.includes(layer) && FILTER_COLORS[layer]) return FILTER_COLORS[layer]
@@ -11648,17 +12427,29 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return FILTER_COLORS.inclusive
   }, [activeLayers])
 
+  // Возврат карты к текущим отфильтрованным местам (центровка)
+  const recenterMap = () => {
+    const map = mapRef.current
+    if (!map) return
+    const coords = filteredObjects
+      .map((o) => o.coordinates)
+      .filter((c): c is [number, number] => Array.isArray(c))
+    if (coords.length > 0) {
+      map.fitBounds(L.latLngBounds(coords), { padding: [50, 50], maxZoom: 13 })
+    } else {
+      map.setView(CONFIG.mapCenter, CONFIG.defaultZoom)
+    }
+  }
+
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
       
-      {/* Затемнение для мобильного меню */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-[1001] lg:hidden backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
       )}
 
-      {/* Мобильная версия единого сайдбара */}
       <div
-        className={`fixed inset-y-0 left-0 w-full max-w-[360px] z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
+        className={`fixed inset-y-0 left-0 w-full ${isHighContrast ? 'max-w-[440px]' : 'max-w-[360px]'} z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
         style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
       >
         <SidebarContent
@@ -11675,36 +12466,59 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         />
       </div>
 
-      {/* Мобильный хедер */}
-      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-4 gap-4 justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 md:px-4 gap-1 md:gap-2 justify-between">
+        <button onClick={() => router.push("/")} className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity flex-shrink-0 min-w-0">
           <img 
             src={`${basePath}/img/logo_homus.png`} 
             alt="Логотип Доступная Якутия" 
-            className="h-8 w-auto object-contain"
+            className="h-7 md:h-8 w-auto object-contain"
           />
-          <span className="font-sangha text-xl text-[var(--color-green-dark)] leading-tight pt-1">Доступная Якутия</span>
+          <span 
+            className={`font-sangha text-base md:text-xl leading-tight pt-1 ${
+              isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+            }`}
+          >
+            Доступная Якутия
+          </span>
         </button>
-        <button onClick={() => setMobileMenuOpen(true)} className="px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-2 font-bold text-sm" aria-label="Меню">
-          <Menu className="size-4" />
-          Списки и фильтры
-        </button>
+        
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          {/* Кнопка "глаз" — высокий контраст */}
+          <ContrastToggle />
+
+          <button
+            onClick={() => setMobileMenuOpen(true)} 
+            className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
+            aria-label="Меню"
+          >
+            <Menu className="size-3 md:size-4" />
+            <span className="hidden xs:inline">Списки</span>
+            <span className="xs:hidden">Фильтры</span>
+          </button>
+        </div>
       </header>
 
-      {/* Десктопный единый сайдбар слева */}
-      <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
-        <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() =>router.push("/")}>
-          <img 
-            src={`${basePath}/img/logo_homus.png`} 
-            alt="Логотип Доступная Якутия" 
-            className="h-12 w-auto object-contain"
-          />
-          <div>
-            <h1 className="text-2xl font-sangha text-[var(--color-green-dark)] tracking-tight">Доступная Якутия</h1>
-            <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
-          </div>
+      <aside className={`hidden lg:flex h-full ${isHighContrast ? 'w-[500px]' : 'w-[400px]'} flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)] transition-[width] duration-300`}>
+        <div className="flex items-center justify-between gap-2 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm">
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-4 min-w-0 text-left hover:opacity-80 transition-opacity"
+          >
+            <img
+              src={`${basePath}/img/logo_homus.png`}
+              alt="Логотип Доступная Якутия"
+              className="h-12 w-auto object-contain flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
+                Доступная Якутия
+              </h1>
+              <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
+            </div>
+          </button>
+          <ContrastToggle className="flex-shrink-0" />
         </div>
-        
+
         <SidebarContent
           activeLayers={activeLayers}
           searchQuery={searchQuery}
@@ -11718,97 +12532,62 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         />
       </aside>
 
-      {/* Сама карта */}
       <main className="relative flex-1 pt-[64px] lg:pt-0 bg-[var(--color-bg-primary)]">
-        <MapContainer attributionControl={false} center={CONFIG.mapCenter} zoom={CONFIG.defaultZoom} minZoom={CONFIG.minZoom} maxZoom={CONFIG.maxZoom} className="h-full w-full z-0" zoomControl={true}>
+        <MapContainer 
+          attributionControl={false} 
+          center={CONFIG.mapCenter} 
+          zoom={CONFIG.defaultZoom} 
+          minZoom={CONFIG.minZoom} 
+          maxZoom={CONFIG.maxZoom} 
+          className="h-full w-full z-0" 
+          zoomControl={true}
+        >
           <AttributionControl prefix={false} />
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer 
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+          />
           {filteredObjects.map((obj) => (
-            <Marker key={obj.id} position={obj.coordinates!} icon={getCategoryMarkerIcon(obj.category)}>
-              <Popup maxWidth={400} minWidth={280} className="custom-popup">
-  <div className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[90vw] sm:w-[400px]">
-    
-    {/* Фото */}
-    <div className="relative h-32 w-full flex-shrink-0">
-      <img
-        src={obj.photos && obj.photos.length > 0
-          ? obj.photos[0]
-          : `${basePath}/img/placeholder.jpg`}
-        alt={obj.name}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-        }}
-      />
-    </div>
-
-    {/* Контент с прокруткой */}
-    <div className="p-4 space-y-3 overflow-y-auto">
-      <div>
-        <Badge className="mb-2 text-white border-0 shadow-sm" style={{ backgroundColor: getBadgeColor(obj) }}>
-          {CATEGORY_CONFIG[obj.category]?.name || obj.category}
-        </Badge>
-        <h3 className="text-base font-bold text-[var(--color-text-primary)] leading-tight">{obj.name}</h3>
-      </div>
-
-      {/* Ограничиваем количество текста, чтобы он не занимал весь экран */}
-      <div className="text-sm text-[var(--color-text-secondary)] space-y-2">
-        {obj.address && (
-          <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-            <span className="line-clamp-1">{obj.address}</span>
-          </div>
-        )}
-        {obj.workingHours && (
-          <div className="flex items-start gap-2">
-            <Clock className="h-4 w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-            <span className="line-clamp-1">{obj.workingHours}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Значки доступности */}
-      {(() => {
-        const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
-        if (groups.length === 0) return null
-        return (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {groups.map((m) => {
-              const Icon = m.icon
-              return (
-                <span
-                  key={m.id}
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-[var(--color-card-border)]"
-                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
-                >
-                  <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
-                  <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{m.name}</span>
-                </span>
-              )
-            })}
-          </div>
-        )
-      })()}
-
-      <div className="pt-2 border-t border-[var(--color-card-border)]">
-        {onPlaceSelect && (
-          <Button 
-            className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-4 text-sm" 
-            onClick={() => onPlaceSelect(obj.id)}
-          >
-            Подробнее
-          </Button>
-        )}
-      </div>
-    </div>
-  </div>
-</Popup>
+            <Marker
+              key={obj.id}
+              position={obj.coordinates!}
+              icon={getCategoryMarkerIcon(obj.category)}
+              title={obj.name}
+              eventHandlers={{
+                add: (e) => {
+                  const el = (e.target as L.Marker).getElement()
+                  if (el) el.setAttribute("aria-label", obj.name)
+                },
+              }}
+            >
+              <Popup
+                maxWidth={400} 
+                minWidth={280} 
+                className="custom-popup"
+              >
+                <CustomPopupContent 
+                  obj={obj} 
+                  onPlaceSelect={onPlaceSelect} 
+                  getBadgeColor={getBadgeColor} 
+                  basePath={basePath} 
+                />
+              </Popup>
             </Marker>
           ))}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+          <MapController onReady={handleMapReady} />
         </MapContainer>
 
-        {/* Плавающий бейджик для мобильных (показывает сколько мест на экране) */}
+        {/* Кнопка центровки — вернуть карту ко всем местам */}
+        <button
+          onClick={recenterMap}
+          title="Показать все места"
+          aria-label="Показать все места на карте"
+          className="absolute bottom-6 right-4 z-[400] flex items-center justify-center size-12 rounded-full bg-[var(--color-bg-white)] shadow-lg border border-[var(--color-card-border)] text-[var(--color-accent)] hover:bg-[var(--color-bg-primary)] transition-colors dark-contrast:text-white"
+        >
+          <LocateFixed className="size-5" />
+        </button>
+
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none z-[400]">
           <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
             <MapPin className="h-4 w-4 mr-2 text-[var(--color-accent)]" /> Найдено: {filteredObjects.length}
@@ -11820,29 +12599,6 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
 }
 ```
 
-## File: next.config.mjs
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',  // Включает экспорт статического HTML
-  images: {
-    unoptimized: true,  // GitHub Pages не поддерживает оптимизацию изображений Next.js
-  },
-  basePath: process.env.NODE_ENV === 'production' ? '/site-test-map' : undefined,
-  trailingSlash: true,  // Рекомендуется для GitHub Pages
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-   allowedDevOrigins: [
-    '172.20.10.8',     // IP вашего iPhone (замените на актуальный)
-    '*.local',           // Для macOS .local адресов
-    '*.local-ip.com',    // Альтернативный вариант для локальных IP
-  ],
-}
-
-export default nextConfig
-```
-
 ## File: app/page.tsx
 ```typescript
 "use client";
@@ -11850,13 +12606,13 @@ export default nextConfig
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { 
-  MapPin, 
-  Sparkles, 
-  Eye, 
-  Ear, 
-  Users, 
-  Hospital, 
+import {
+  MapPin,
+  Sparkles,
+  Eye,
+  Ear,
+  Users,
+  Hospital,
   Accessibility,
   ChevronRight,
   Heart,
@@ -11879,6 +12635,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/AppHeader";
 import PopularPlaces from "@/components/PopularPlaces";
 import UpcomingEvents from "@/components/UpcomingEvents";
+import VisionModal from "@/components/VisionModal";
 
 // Типы для категорий
 type Category = {
@@ -11906,16 +12663,16 @@ export default function HomePage() {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
-  
+
   // ✅ ДОБАВЛЯЕМ ЭТОТ useEffect ДЛЯ ОБРАБОТКИ ЯКОРЯ
   useEffect(() => {
     // Проверяем флаг в sessionStorage (устанавливается в Header при клике на "О проекте")
     const shouldScrollToAbout = sessionStorage.getItem('scrollToAbout');
-    
+
     if (shouldScrollToAbout === 'true') {
       // Удаляем флаг, чтобы не скроллить при обновлении страницы
       sessionStorage.removeItem('scrollToAbout');
-      
+
       // Функция скролла
       const scrollToAbout = () => {
         const element = document.getElementById('about');
@@ -11923,14 +12680,14 @@ export default function HomePage() {
           const headerHeight = 80;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
-          
+
           window.scrollTo({
             top: offsetPosition,
             behavior: 'smooth'
           });
         }
       };
-      
+
       // Проверяем, есть ли элемент уже в DOM
       if (document.getElementById('about')) {
         // Если есть - скроллим сразу
@@ -11943,18 +12700,18 @@ export default function HomePage() {
             scrollToAbout();
           }
         });
-        
+
         observer.observe(document.body, {
           childList: true,
           subtree: true
         });
-        
+
         // Таймаут на всякий случай (если элемент так и не появился)
         const timeout = setTimeout(() => {
           observer.disconnect();
           scrollToAbout();
         }, 3000);
-        
+
         return () => {
           observer.disconnect();
           clearTimeout(timeout);
@@ -11965,84 +12722,96 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      
+
+      {/* Ссылка «Перейти к содержимому» для клавиатуры и скринридеров */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--color-accent)] focus:px-4 focus:py-2 focus:text-white focus:font-semibold focus:shadow-lg"
+      >
+        Перейти к содержимому
+      </a>
+
+      {/* Входное окно про нарушения зрения (раз за сессию, только на главной) */}
+      <VisionModal />
+
       {/* Вызываем нашу новую переиспользуемую шапку и передаем функцию открытия фильтров */}
       <Header onOpenFilters={() => setShowFilters(true)} />
 
-      {/* Блок 2. Главный экран с фоновым изображением */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
-        {/* Фоновое изображение */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center z-0"
-          style={{
-            backgroundImage: `url('${basePath}/img/background_photo.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {/* Затемнение — теплое бежевое */}
-          <div 
-            className="absolute inset-0"
+      <main id="main-content">
+        {/* Блок 2. Главный экран с фоновым изображением */}
+        <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden py-12 lg:py-16">
+          {/* Фоновое изображение */}
+          <div
+            className="absolute inset-0 bg-cover bg-center z-0"
             style={{
-              background: 'linear-gradient(135deg, rgba(248, 246, 241, 0.6) 0%, rgba(237, 235, 229, 0.4) 50%, rgba(248, 246, 241, 0.6) 100%)',
+              backgroundImage: `url('${basePath}/img/background_photo.png')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
-          />
-        </div>
+          >
+            {/* Затемнение — теплое бежевое */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(135deg, rgba(248, 246, 241, 0.6) 0%, rgba(237, 235, 229, 0.4) 50%, rgba(248, 246, 241, 0.6) 100%)',
+              }}
+            />
+          </div>
 
-        <div className="relative z-10 container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-0 lg:gap-8">
-            
-            {/* Левая часть — ФОТО */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="flex-1 flex justify-center lg:justify-start w-full overflow-visible"
-            >
-              <div className="w-full max-w-[400px] lg:max-w-none flex justify-center items-center p-2">
-                <img 
-                  src={`${basePath}/img/cut_map.png`} 
-                  alt="Якутия" 
-                  className="max-w-full h-auto object-contain 
+          <div className="relative z-10 container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-0 lg:gap-8">
+
+              {/* Левая часть — ФОТО */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="flex-1 flex justify-center lg:justify-start w-full overflow-visible"
+              >
+                <div className="w-full max-w-[400px] lg:max-w-none flex justify-center items-center p-2">
+                  <img
+                    src={`${basePath}/img/cut_map.png`}
+                    alt="Якутия"
+                    className="max-w-full h-auto object-contain 
                              [-webkit-mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
                              [mask-image:linear-gradient(to_bottom,black_40%,transparent_85%)] 
                              lg:[-webkit-mask-image:none] lg:[mask-image:none] 
                              scale-100 lg:scale-125 origin-center"
-                />
-              </div>
-            </motion.div>
+                  />
+                </div>
+              </motion.div>
 
-            {/* Правая часть — ТЕКСТ */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex-1 text-center lg:text-right -mt-16 sm:-mt-24 lg:mt-0 relative z-10"
-            >
-              <h1 
-                className="font-sangha font-bold leading-[1.05] tracking-wide text-green-dark"
-                style={{
-                  fontSize: 'clamp(2.5rem, 6vw + 1rem, 4.5rem)',
-                  textShadow: '17px -7px 13.9px rgba(99, 84, 62, 0)',
-                }}
+              {/* Правая часть — ТЕКСТ */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="flex-1 text-center lg:text-right -mt-16 sm:-mt-24 lg:mt-0 relative z-10"
               >
-                УВЕРЕННЫЙ МАРШРУТ
-                <br />
-                <span className="text-accent-custom">НАЧИНАЕТСЯ ЗДЕСЬ</span>
-              </h1>
-              
-              <p 
-                className="mt-6 max-w-xl mx-auto lg:ml-auto lg:mr-0 text-brown-dark leading-relaxed"
-                style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
-              >
-                Интерактивный навигатор для комфортного и доступного путешествия по Республике Саха.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end mt-8">
-              {/* Кнопка "Перейти на карту" */}
-<Button 
-  size="lg" 
-  className="
+                <h1
+                  className="font-sangha font-bold leading-[1.05] tracking-wide text-green-dark"
+                  style={{
+                    fontSize: 'clamp(2.5rem, 6vw + 1rem, 4.5rem)',
+                    textShadow: '17px -7px 13.9px rgba(99, 84, 62, 0)',
+                  }}
+                >
+                  УВЕРЕННЫЙ МАРШРУТ
+                  <br />
+                  <span className="text-accent-custom">НАЧИНАЕТСЯ ЗДЕСЬ</span>
+                </h1>
+
+                <p
+                  className="mt-6 max-w-xl mx-auto lg:ml-auto lg:mr-0 text-brown-dark leading-relaxed"
+                  style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+                >
+                  Интерактивный навигатор для комфортного и доступного путешествия по Республике Саха.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end mt-8">
+                  {/* Кнопка "Перейти на карту" */}
+                  <Button
+                    size="lg"
+                    className="
     bg-accent-custom 
     hover:bg-[var(--color-accent-hover)] 
     text-[var(--color-text-white)] 
@@ -12053,18 +12822,18 @@ export default function HomePage() {
     hover:border-[var(--color-accent-hover)]
     min-w-[220px]
   "
-  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
-  onClick={() => router.push('/map')}
->
-  <MapPin className="mr-2 size-5" />
-  Перейти на карту
-</Button>
+                    style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
+                    onClick={() => router.push('/map')}
+                  >
+                    <MapPin className="mr-2 size-5" />
+                    Перейти на карту
+                  </Button>
 
-{/* Кнопка "Подобрать места" */}
-<Button 
-  size="lg" 
-  variant="outline" 
-  className="
+                  {/* Кнопка "Подобрать места" */}
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="
     bg-[var(--color-button-primary-bg)] 
     text-[var(--color-button-primary-text)] 
     border-2 border-[var(--color-button-primary-border)]
@@ -12077,119 +12846,138 @@ export default function HomePage() {
     transition-all duration-200
     min-w-[220px]
   "
-  style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
-  onClick={() => setShowFilters(true)}
->
-  <Sparkles className="mr-2 size-5" />
-  Подобрать места
-</Button>
-              </div>
-            </motion.div>
-            
-          </div>
-        </div>
-      </section>
-
-      {/* Блок 3. Популярные категории */}
-      <section className="py-16 lg:py-24 bg-[var(--color-bg-primary)]">
-        <div className="container mx-auto px-4">
-          <h2 className="font-bold text-center mb-12 text-[var(--color-text-primary)]"
-              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
-            Для кого мы создали этот сервис
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Card 
-                  key={cat.id} 
-                  className="p-6 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700"
-                  onClick={() => {
-                    localStorage.setItem("preferredLayers", JSON.stringify([cat.id === 'vision' ? 'vision_impaired' : cat.id === 'hearing' ? 'hearing_impaired' : cat.id]));
-                    router.push('/map');
-                  }}
-                >
-                  <div 
-                    className="size-12 rounded-full flex items-center justify-center text-[var(--color-text-white)] mb-2 dark-contrast:bg-white"
-                    style={{ backgroundColor: cat.color }}
+                    style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}
+                    onClick={() => setShowFilters(true)}
                   >
-                    <Icon className="size-6 dark-contrast:text-black" />
-                  </div>
-                  <span className="font-medium text-[clamp(0.875rem,1.5vw,1rem)] text-[var(--color-text-primary)] dark-contrast:text-white">{cat.label}</span>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+                    <Sparkles className="mr-2 size-5" />
+                    Подобрать места
+                  </Button>
+                </div>
+              </motion.div>
 
-      {/* Блок 4. Карусель с объектами */}
-      <section className="py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-2 mb-8">
-            <h2 className="font-sangha"
-                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#E38920' }}>
-              Популярные места
+            </div>
+          </div>
+        </section>
+
+        {/* Блок 3. Популярные категории */}
+        <section className="py-16 lg:py-24 bg-[var(--color-bg-primary)]">
+          <div className="container mx-auto px-4">
+            <h2 className="font-bold text-center mb-12 text-[var(--color-text-primary)]"
+              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
+              Для кого мы создали этот сервис
             </h2>
-            <Link href="/map" className="text-[var(--color-accent)] font-medium hover:underline flex items-center text-[clamp(0.875rem,1.5vw,1rem)]">
-              Смотреть все <ChevronRight className="size-4" />
-            </Link>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {categories.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <Card
+                    key={cat.id}
+                    className="p-6 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700"
+                    onClick={() => {
+                      localStorage.setItem("preferredLayers", JSON.stringify([cat.id === 'vision' ? 'vision_impaired' : cat.id === 'hearing' ? 'hearing_impaired' : cat.id]));
+                      router.push('/map');
+                    }}
+                  >
+                    <div
+                      className="size-12 rounded-full flex items-center justify-center text-[var(--color-text-white)] mb-2 dark-contrast:bg-white"
+                      style={{ backgroundColor: cat.color }}
+                    >
+                      <Icon className="size-6 dark-contrast:text-black" />
+                    </div>
+                    <span className="font-medium text-[clamp(0.875rem,1.5vw,1rem)] text-[var(--color-text-primary)] dark-contrast:text-white">{cat.label}</span>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-          
-          <PopularPlaces />
-        </div>
-      </section>
+        </section>
 
-      {/* Блок 5. Ближайшие события */}
-      <section className="relative py-16 lg:py-24 bg-[var(--color-bg-primary)] overflow-hidden">
-        <img
-          src={`${basePath}/img/events-pattern.png`}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute -top-4 right-0 h-[420px] w-auto opacity-40 dark-contrast:hidden"
-        />
-        <div className="container relative mx-auto px-4">
-        <h2
-  className="font-sangha text-center mb-12 text-[var(--color-title-events)]"
-  style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
->
-  Ближайшие события
-</h2>
-          <UpcomingEvents />
-        </div>
-      </section>
+        {/* Блок 4. Карусель с объектами */}
+        <section className="relative py-16 lg:py-24 bg-[var(--color-bg-secondary)] dark-contrast:bg-black overflow-hidden">
+          <img
+            src={`${basePath}/img/events-pattern.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute -top-4 right-0 h-[650px] w-auto opacity-40 dark-contrast:hidden"
+          />
+          <img
+            src={`${basePath}/img/union.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"
+          />
+          <div className="container relative mx-auto px-4">
+            <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-2 mb-8">
+              <h2 className="font-sangha"
+                style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#E38920' }}>
+                ПОПУЛЯРНЫЕ МЕСТА
+              </h2>
+              <Link href="/map" className="text-[var(--color-accent)] font-medium hover:underline flex items-center text-[clamp(0.875rem,1.5vw,1rem)]">
+                Смотреть все <ChevronRight className="size-4" />
+              </Link>
+            </div>
 
-     {/* Блок 6. О проекте */}
-{(() => {
-  // Объявляем basePath прямо внутри компонента перед рендером
-  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
-  
-  return (
-    <section 
-      id="about" 
-      className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 relative"
-      style={{
-        backgroundImage: `url('${basePath}/img/o_proekte.png')`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'bottom center',
-        backgroundSize: 'contain'
-      }}
-    >
-      <div className="container mx-auto px-4 text-center">
-        {/* Заголовок без font-bold с фирменным акцентным шрифтом */}
-        <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
-          О проекте
-        </h2>
-        
-        <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
-          «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
-        </p>
-        
-       
-      </div>
-    </section>
-  );
-})()}
+            <PopularPlaces />
+          </div>
+        </section>
+
+        {/* Блок 5. Ближайшие события */}
+        <section className="relative py-16 lg:py-24 bg-[var(--color-bg-primary)] overflow-hidden">
+          <img
+            src={`${basePath}/img/events-pattern.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute -top-4 right-0 h-[750px] w-auto opacity-40 dark-contrast:hidden"
+          />
+          <img
+            src={`${basePath}/img/union.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute left-0 top-1/2 -translate-y-1/2 w-[42%] max-w-[700px] opacity-30 dark-contrast:hidden"
+          />
+          <div className="container relative mx-auto px-4">
+            <h2
+              className="font-sangha text-center mb-12 text-[var(--color-title-events)]"
+              style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+            >
+              БЛИЖАЙШИЕ СОБЫТИЯ
+            </h2>
+            <UpcomingEvents />
+          </div>
+        </section>
+
+        {/* Блок 6. О проекте */}
+        {(() => {
+          // Объявляем basePath прямо внутри компонента перед рендером
+          const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+
+          return (
+            <section
+              id="about"
+              className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 relative"
+              style={{
+                backgroundImage: `url('${basePath}/img/o_proekte.png')`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'bottom center',
+                backgroundSize: 'contain'
+              }}
+            >
+              <div className="container mx-auto px-4 text-center">
+                {/* Заголовок без font-bold с фирменным акцентным шрифтом */}
+                <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
+                  О проекте
+                </h2>
+
+                <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+                  «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
+                </p>
+
+
+              </div>
+            </section>
+          );
+        })()}
+      </main>
 
       {/* Модальное окно фильтров */}
       <Dialog open={showFilters} onOpenChange={setShowFilters}>

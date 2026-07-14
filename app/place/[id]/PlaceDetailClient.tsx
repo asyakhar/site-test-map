@@ -102,6 +102,27 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: st
   { id: 'health', name: 'Отдых с пользой для здоровья', icon: Hospital, color: '#52B788' },
 ];
 
+// Компонент для сворачивания длинного текста
+function ExpandableText({ text, limit = 300 }: { text: string; limit?: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const shouldTruncate = text.length > limit;
+  const displayText = expanded || !shouldTruncate ? text : text.slice(0, limit) + '…';
+
+  return (
+    <div>
+      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{displayText}</p>
+      {shouldTruncate && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-[var(--color-accent)] hover:underline font-medium mt-2 text-sm"
+        >
+          {expanded ? 'Скрыть' : 'Читать далее'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
   const [loading, setLoading] = useState(true);
@@ -233,8 +254,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
             )}
           </div>
 
+          {/* Описание — с кнопкой «Читать далее» */}
           {place.description && (
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.description}</p>
+            <ExpandableText text={place.description} limit={400} />
           )}
         </div>
 
@@ -260,9 +282,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
                       </span>
                       {m.name}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line pl-9">
-                      {place.accessibility[m.id]}
-                    </p>
+                    <div className="pl-9">
+                      <ExpandableText text={place.accessibility[m.id]} limit={250} />
+                    </div>
                   </div>
                 );
               })}
@@ -279,9 +301,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />
               Противопоказания
             </h2>
-            <p className="text-amber-900/90 dark:text-amber-200/90 leading-relaxed whitespace-pre-line">
-              {place.contraindications}
-            </p>
+            <ExpandableText text={place.contraindications} limit={200} />
           </Card>
         )}
 
@@ -292,7 +312,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <TicketIcon className="size-5 text-primary" />
               Билеты
             </h2>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.tickets}</p>
+            <ExpandableText text={place.tickets} limit={300} />
           </Card>
         )}
 
@@ -303,7 +323,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <BadgePercent className="size-5 text-primary" />
               Льготы
             </h2>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.benefits}</p>
+            <ExpandableText text={place.benefits} limit={300} />
           </Card>
         )}
 
@@ -379,7 +399,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <Info className="size-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-foreground mb-1">Примечания</div>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.notes}</p>
+                <ExpandableText text={place.notes} limit={250} />
               </div>
             </div>
           </Card>

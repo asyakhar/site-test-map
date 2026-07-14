@@ -678,3 +678,102 @@ html.large-font button[title="Версия для слабовидящих"] svg
 :root.high-contrast .dark\:border-amber-700 {
   border-color: #FFFFFF !important;
 }
+/* Убираем жирность для всего текста */
+:root.high-contrast body * {
+  font-weight: normal !important;
+}
+
+/* Заголовки делаем жирными и с простым шрифтом */
+:root.high-contrast h1,
+:root.high-contrast h2,
+:root.high-contrast h3,
+:root.high-contrast h4,
+:root.high-contrast .font-sangha,
+:root.high-contrast [class*="font-sangha"] {
+  font-family: var(--font-sans), system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+}
+
+/* Увеличиваем межстрочный интервал для основного текста */
+:root.high-contrast p,
+:root.high-contrast li,
+:root.high-contrast .text-muted-foreground {
+  line-height: 1.8 !important;
+  letter-spacing: 0.02em;
+}
+
+/* Улучшаем читаемость заголовков на странице "Практические советы" */
+:root.high-contrast .advice-title {
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - КНОПКИ В ПОПАПЕ (УСИЛЕННЫЕ)
+   ======================================================== */
+
+/* Все кнопки внутри попапа */
+:root.high-contrast .leaflet-popup-content-wrapper button {
+  background-color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button span {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button:hover {
+  background-color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button:hover span {
+  color: #000000 !important;
+}
+/* ========================================================
+   АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ В ВЫСОКОКОНТРАСТНОМ РЕЖИМЕ
+   ======================================================== */
+
+/* Уменьшаем размер шрифта на мобильных в high-contrast */
+@media (max-width: 768px) {
+  :root.high-contrast html {
+    font-size: 110% !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content-wrapper {
+    max-width: 90vw !important;
+    width: 90vw !important;
+  }
+  
+  :root.high-contrast .leaflet-popup {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  /* Уменьшаем отступы в попапе на мобильных */
+  :root.high-contrast .leaflet-popup-content-wrapper .p-3 {
+    padding: 0.5rem !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content-wrapper .p-4 {
+    padding: 0.75rem !important;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+  :root.high-contrast html {
+    font-size: 100% !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content-wrapper {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+}

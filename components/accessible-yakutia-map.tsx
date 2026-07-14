@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import ContrastToggle from "@/components/ContrastToggle"
 import { useRouter } from "next/navigation";
 import {
   Filter,
@@ -44,7 +43,6 @@ import {
   Menu,
   Search,
   List,
-  LocateFixed,
 } from "lucide-react"
 
 // Types
@@ -201,13 +199,6 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
   return null
 }
 
-// Отдаёт инстанс карты наружу (для кнопки центровки)
-function MapController({ onReady }: { onReady: (map: L.Map) => void }) {
-  const map = useMap()
-  useEffect(() => { onReady(map) }, [map, onReady])
-  return null
-}
-
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -241,6 +232,7 @@ function SidebarContent({
   getBadgeColor
 }: SidebarContentProps) {
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
+  const [showAllFilters, setShowAllFilters] = useState(false);
 
   return (
     <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
@@ -277,25 +269,56 @@ function SidebarContent({
             )}
           </div>
           
+          {/* Фильтры "Кому подходит" */}
           <div className="flex flex-wrap gap-2">
-            {CATEGORY_FILTERS.map((filter) => {
-              const IconComponent = filter.icon;
-              const isActive = activeLayers.includes(filter.id);
+            {(() => {
+              const VISIBLE_FILTERS_COUNT = 4;
+              const visibleFilters = showAllFilters 
+                ? CATEGORY_FILTERS 
+                : CATEGORY_FILTERS.slice(0, VISIBLE_FILTERS_COUNT);
+              const hiddenCount = CATEGORY_FILTERS.length - VISIBLE_FILTERS_COUNT;
+              
               return (
-                <button
-                  key={filter.id}
-                  onClick={() => toggleLayer(filter.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
-                    isActive 
-                      ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
-                      : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
-                  }`}
-                >
-                  <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
-                  <span className="text-xs font-bold">{filter.name}</span>
-                </button>
-              )
-            })}
+                <>
+                  {visibleFilters.map((filter) => {
+                    const IconComponent = filter.icon;
+                    const isActive = activeLayers.includes(filter.id);
+                    return (
+                      <button
+                        key={filter.id}
+                        onClick={() => toggleLayer(filter.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
+                          isActive 
+                            ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
+                            : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
+                        }`}
+                      >
+                        <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
+                        <span className="text-xs font-bold">{filter.name}</span>
+                      </button>
+                    );
+                  })}
+                  
+                  {!showAllFilters && hiddenCount > 0 && (
+                    <button
+                      onClick={() => setShowAllFilters(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-accent)] hover:border-[var(--color-accent)]/50 transition-all"
+                    >
+                      <span className="text-xs font-bold">+{hiddenCount}</span>
+                    </button>
+                  )}
+                  
+                  {showAllFilters && (
+                    <button
+                      onClick={() => setShowAllFilters(false)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50 transition-all"
+                    >
+                      <span className="text-xs font-bold">Скрыть</span>
+                    </button>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
 
@@ -365,9 +388,19 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
   basePath: string;
 }) {
   const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id));
+  const [showAllGroups, setShowAllGroups] = useState(false);
+  const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
   
+  const visibleGroups = showAllGroups ? groups : groups.slice(0, 4);
+  const hiddenCount = groups.length - 4;
+
+  // Переключение раскрытия фильтра
+  const toggleFilter = (filterId: string) => {
+    setExpandedFilter(expandedFilter === filterId ? null : filterId);
+  };
+
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
+    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[90vw] sm:w-[320px] md:w-[380px]">
       {/* Фото */}
       <div className="relative h-32 w-full flex-shrink-0">
         <img
@@ -381,64 +414,110 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
       </div>
 
       {/* Контент с прокруткой */}
-      <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
+      <div className="p-2 sm:p-3 md:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
         <div>
           <Badge 
-            className="mb-2 text-white border-0 shadow-sm text-xs sm:text-sm" 
+            className="mb-1 sm:mb-2 text-white border-0 shadow-sm text-[10px] sm:text-xs md:text-sm" 
             style={{ backgroundColor: getBadgeColor(obj) }}
           >
             {CATEGORY_CONFIG[obj.category]?.name || obj.category}
           </Badge>
-          <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] leading-tight">
+          <h3 className="text-xs sm:text-sm md:text-base font-bold text-[var(--color-text-primary)] leading-tight">
             {obj.name}
           </h3>
         </div>
 
-        <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] space-y-1.5">
+        <div className="text-[10px] sm:text-xs md:text-sm text-[var(--color-text-secondary)] space-y-1">
           {obj.address && (
-            <div className="flex items-start gap-1.5">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-              <span className="line-clamp-2">{obj.address}</span>
+            <div className="flex items-start gap-1">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-2 text-[10px] sm:text-xs md:text-sm">{obj.address}</span>
             </div>
           )}
           {obj.workingHours && (
-            <div className="flex items-start gap-1.5">
-              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-              <span className="line-clamp-1 text-xs sm:text-sm">{obj.workingHours}</span>
+            <div className="flex items-start gap-1">
+              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-1 text-[10px] sm:text-xs md:text-sm">{obj.workingHours}</span>
             </div>
           )}
         </div>
 
-        {/* Значки доступности */}
+        {/* Значки доступности с раскрытием */}
         {groups.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-1">
-            {groups.slice(0, 4).map((m) => {
-              const Icon = m.icon
+            {visibleGroups.map((m) => {
+              const Icon = m.icon;
+              const isExpanded = expandedFilter === m.id;
+              
               return (
-                <span
+                <button
                   key={m.id}
-                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)]"
-                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                  onClick={() => toggleFilter(m.id)}
+                  className={`flex items-center gap-1 px-1 py-0.5 rounded-full border transition-all duration-300 ease-in-out overflow-hidden ${
+                    isExpanded 
+                      ? 'border-[var(--color-accent)] shadow-sm' 
+                      : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+                  }`}
+                  style={{ 
+                    backgroundColor: `${FILTER_COLORS[m.id]}15`,
+                    maxWidth: isExpanded ? '200px' : '24px',
+                    minWidth: isExpanded ? 'auto' : '24px',
+                  }}
                 >
-                  <Icon className="size-2.5 sm:size-3" style={{ color: FILTER_COLORS[m.id] }} />
-                  <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] hidden xs:inline">
+                  <Icon 
+                    className="size-2.5 sm:size-3 flex-shrink-0" 
+                    style={{ color: FILTER_COLORS[m.id] }} 
+                  />
+                  <span 
+                    className={`text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] whitespace-nowrap transition-all duration-300 ${
+                      isExpanded ? 'opacity-100 max-w-[150px]' : 'opacity-0 max-w-0'
+                    }`}
+                    style={{ 
+                      overflow: 'hidden',
+                      display: 'inline-block'
+                    }}
+                  >
                     {m.name}
                   </span>
-                </span>
+                </button>
               )
             })}
-            {groups.length > 4 && (
-              <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-secondary)] px-1">
-                +{groups.length - 4}
-              </span>
+            
+            {!showAllGroups && hiddenCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(true);
+                }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all"
+                style={{ backgroundColor: `${FILTER_COLORS.inclusive}15` }}
+              >
+                <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-accent)]">
+                  +{hiddenCount}
+                </span>
+              </button>
+            )}
+            
+            {showAllGroups && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(false);
+                }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all"
+              >
+                <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-secondary)]">
+                  Скрыть
+                </span>
+              </button>
             )}
           </div>
         )}
 
         {onPlaceSelect && (
-          <div className="pt-2 border-t border-[var(--color-card-border)]">
+          <div className="pt-1 sm:pt-2 border-t border-[var(--color-card-border)]">
             <Button 
-              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-2.5 sm:py-3 text-xs sm:text-sm"
+              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-1.5 sm:py-2.5 md:py-3 text-[10px] sm:text-xs md:text-sm"
               onClick={() => onPlaceSelect(obj.id)}
             >
               Подробнее
@@ -478,9 +557,17 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return () => observer.disconnect();
   }, []);
 
-  // Инстанс карты (для кнопки центровки)
-  const mapRef = useRef<L.Map | null>(null)
-  const handleMapReady = useCallback((map: L.Map) => { mapRef.current = map }, [])
+  // Функция переключения высококонтрастного режима
+  const toggleAccessibility = () => {
+    const newState = !isHighContrast;
+    setIsHighContrast(newState);
+    
+    if (newState) {
+      document.documentElement.classList.add('high-contrast', 'large-font');
+    } else {
+      document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+  };
 
   useEffect(() => {
     const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
@@ -515,20 +602,6 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return FILTER_COLORS.inclusive
   }, [activeLayers])
 
-  // Возврат карты к текущим отфильтрованным местам (центровка)
-  const recenterMap = () => {
-    const map = mapRef.current
-    if (!map) return
-    const coords = filteredObjects
-      .map((o) => o.coordinates)
-      .filter((c): c is [number, number] => Array.isArray(c))
-    if (coords.length > 0) {
-      map.fitBounds(L.latLngBounds(coords), { padding: [50, 50], maxZoom: 13 })
-    } else {
-      map.setView(CONFIG.mapCenter, CONFIG.defaultZoom)
-    }
-  }
-
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
       
@@ -536,10 +609,10 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         <div className="fixed inset-0 bg-black/50 z-[1001] lg:hidden backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
       )}
 
-      <div
-        className={`fixed inset-y-0 left-0 w-full ${isHighContrast ? 'max-w-[440px]' : 'max-w-[360px]'} z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
-        style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
-      >
+<div
+  className={`fixed inset-y-0 left-0 w-full max-w-[85vw] z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
+  style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
+>
         <SidebarContent
           activeLayers={activeLayers}
           searchQuery={searchQuery}
@@ -554,59 +627,61 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         />
       </div>
 
-      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 md:px-4 gap-1 md:gap-2 justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity flex-shrink-0 min-w-0">
+      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 gap-1 justify-between" style={{ height: isHighContrast ? 'auto' : '64px', minHeight: isHighContrast ? '56px' : '64px', paddingTop: isHighContrast ? '4px' : '0', paddingBottom: isHighContrast ? '4px' : '0' }}>
+  <button onClick={() => router.push("/")} className="flex items-center gap-1 hover:opacity-80 transition-opacity flex-shrink min-w-0 flex-1">
+    <img 
+      src={`${basePath}/img/logo_homus.png`} 
+      alt="Логотип Доступная Якутия" 
+      className="h-6 md:h-8 w-auto object-contain flex-shrink-0"
+    />
+    <span 
+      className={`font-sangha text-sm md:text-xl leading-tight pt-0.5 truncate ${
+        isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+      }`}
+    >
+      Доступная Якутия
+    </span>
+  </button>
+  
+  <div className="flex items-center gap-0.5 md:gap-2 flex-shrink-0 ml-1">
+    {/* Кнопка "глаз" для мобильной версии */}
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      onClick={toggleAccessibility}
+      className={`${isHighContrast ? 'text-white hover:bg-white/20' : ''} w-7 h-7 md:w-10 md:h-10 flex-shrink-0`}
+      title="Версия для слабовидящих"
+    >
+      <Eye className="size-3.5 md:size-5" />
+    </Button>
+    
+    <button 
+      onClick={() => setMobileMenuOpen(true)} 
+      className="px-1.5 md:px-4 py-1 md:py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-0.5 md:gap-2 font-bold text-[10px] md:text-sm flex-shrink-0"
+      aria-label="Меню"
+    >
+      <Menu className="size-3 md:size-4" />
+      <span className="hidden xs:inline text-[10px] md:text-sm">Списки</span>
+      <span className="xs:hidden text-[10px]">Фильтры</span>
+    </button>
+  </div>
+</header>
+
+      <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
+        <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() =>router.push("/")}>
           <img 
             src={`${basePath}/img/logo_homus.png`} 
             alt="Логотип Доступная Якутия" 
-            className="h-7 md:h-8 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
-          <span 
-            className={`font-sangha text-base md:text-xl leading-tight pt-1 ${
-              isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
-            }`}
-          >
-            Доступная Якутия
-          </span>
-        </button>
+          <div>
+            <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
+              Доступная Якутия
+            </h1>
+            <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
+          </div>
+        </div>
         
-        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-          {/* Кнопка "глаз" — высокий контраст */}
-          <ContrastToggle />
-
-          <button
-            onClick={() => setMobileMenuOpen(true)} 
-            className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
-            aria-label="Меню"
-          >
-            <Menu className="size-3 md:size-4" />
-            <span className="hidden xs:inline">Списки</span>
-            <span className="xs:hidden">Фильтры</span>
-          </button>
-        </div>
-      </header>
-
-      <aside className={`hidden lg:flex h-full ${isHighContrast ? 'w-[500px]' : 'w-[400px]'} flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)] transition-[width] duration-300`}>
-        <div className="flex items-center justify-between gap-2 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm">
-          <button
-            onClick={() => router.push("/")}
-            className="flex items-center gap-4 min-w-0 text-left hover:opacity-80 transition-opacity"
-          >
-            <img
-              src={`${basePath}/img/logo_homus.png`}
-              alt="Логотип Доступная Якутия"
-              className="h-12 w-auto object-contain flex-shrink-0"
-            />
-            <div className="min-w-0">
-              <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
-                Доступная Якутия
-              </h1>
-              <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
-            </div>
-          </button>
-          <ContrastToggle className="flex-shrink-0" />
-        </div>
-
         <SidebarContent
           activeLayers={activeLayers}
           searchQuery={searchQuery}
@@ -636,19 +711,8 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
           />
           {filteredObjects.map((obj) => (
-            <Marker
-              key={obj.id}
-              position={obj.coordinates!}
-              icon={getCategoryMarkerIcon(obj.category)}
-              title={obj.name}
-              eventHandlers={{
-                add: (e) => {
-                  const el = (e.target as L.Marker).getElement()
-                  if (el) el.setAttribute("aria-label", obj.name)
-                },
-              }}
-            >
-              <Popup
+            <Marker key={obj.id} position={obj.coordinates!} icon={getCategoryMarkerIcon(obj.category)}>
+              <Popup 
                 maxWidth={400} 
                 minWidth={280} 
                 className="custom-popup"
@@ -663,18 +727,7 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             </Marker>
           ))}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
-          <MapController onReady={handleMapReady} />
         </MapContainer>
-
-        {/* Кнопка центровки — вернуть карту ко всем местам */}
-        <button
-          onClick={recenterMap}
-          title="Показать все места"
-          aria-label="Показать все места на карте"
-          className="absolute bottom-6 right-4 z-[400] flex items-center justify-center size-12 rounded-full bg-[var(--color-bg-white)] shadow-lg border border-[var(--color-card-border)] text-[var(--color-accent)] hover:bg-[var(--color-bg-primary)] transition-colors dark-contrast:text-white"
-        >
-          <LocateFixed className="size-5" />
-        </button>
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none z-[400]">
           <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
