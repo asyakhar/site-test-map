@@ -102,27 +102,6 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: st
   { id: 'health', name: 'Отдых с пользой для здоровья', icon: Hospital, color: '#52B788' },
 ];
 
-// Компонент для сворачивания длинного текста
-function ExpandableText({ text, limit = 300 }: { text: string; limit?: number }) {
-  const [expanded, setExpanded] = useState(false);
-  const shouldTruncate = text.length > limit;
-  const displayText = expanded || !shouldTruncate ? text : text.slice(0, limit) + '…';
-
-  return (
-    <div>
-      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{displayText}</p>
-      {shouldTruncate && (
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-[var(--color-accent)] hover:underline font-medium mt-2 text-sm"
-        >
-          {expanded ? 'Скрыть' : 'Читать далее'}
-        </button>
-      )}
-    </div>
-  );
-}
-
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
   const [loading, setLoading] = useState(true);
@@ -185,34 +164,36 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-10 bg-card shadow-md border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/map">
-            <Button variant="ghost" className="gap-2 text-foreground hover:text-primary">
-              <ArrowLeft className="size-5" />
-              <span className="hidden sm:inline">На карту</span>
-            </Button>
-          </Link>
-          <h1 className="text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
-            {place.name}
-          </h1>
-          <div className="flex items-center gap-1">
-            <ContrastToggle />
-            <Button
-              variant="ghost"
-              className="gap-2 text-foreground"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: place.name, url: window.location.href });
-                }
-              }}
-            >
-              <Share2 className="size-5" />
-              <span className="hidden sm:inline">Поделиться</span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
+  <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <Link href="/map">
+      <Button variant="ghost" className="gap-2 text-foreground hover:text-primary">
+        <ArrowLeft className="size-5" />
+        <span className="hidden sm:inline">На карту</span>
+      </Button>
+    </Link>
+    
+    {/* Название видно ТОЛЬКО на десктопе (≥ 640px) */}
+    <h1 className="hidden sm:block text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
+      {place.name}
+    </h1>
+    
+    <div className="flex items-center gap-1">
+      <ContrastToggle />
+      <Button
+        variant="ghost"
+        className="gap-2 text-foreground"
+        onClick={() => {
+          if (navigator.share) {
+            navigator.share({ title: place.name, url: window.location.href });
+          }
+        }}
+      >
+        <Share2 className="size-5" />
+        <span className="hidden sm:inline">Поделиться</span>
+      </Button>
+    </div>
+  </div>
+</header>
       <div className="relative h-64 md:h-96">
         <img
           src={place.photos && place.photos.length > 0 ? place.photos[0] : `${basePath}/img/placeholder.jpg`}
@@ -254,9 +235,8 @@ export default function PlaceDetailClient({ id }: { id: string }) {
             )}
           </div>
 
-          {/* Описание — с кнопкой «Читать далее» */}
           {place.description && (
-            <ExpandableText text={place.description} limit={400} />
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.description}</p>
           )}
         </div>
 
@@ -282,9 +262,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
                       </span>
                       {m.name}
                     </h3>
-                    <div className="pl-9">
-                      <ExpandableText text={place.accessibility[m.id]} limit={250} />
-                    </div>
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line pl-9">
+                      {place.accessibility[m.id]}
+                    </p>
                   </div>
                 );
               })}
@@ -301,7 +281,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />
               Противопоказания
             </h2>
-            <ExpandableText text={place.contraindications} limit={200} />
+            <p className="text-amber-900/90 dark:text-amber-200/90 leading-relaxed whitespace-pre-line">
+              {place.contraindications}
+            </p>
           </Card>
         )}
 
@@ -312,7 +294,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <TicketIcon className="size-5 text-primary" />
               Билеты
             </h2>
-            <ExpandableText text={place.tickets} limit={300} />
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.tickets}</p>
           </Card>
         )}
 
@@ -323,7 +305,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <BadgePercent className="size-5 text-primary" />
               Льготы
             </h2>
-            <ExpandableText text={place.benefits} limit={300} />
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.benefits}</p>
           </Card>
         )}
 
@@ -380,15 +362,16 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               </a>
             )}
 
-            {routeUrl && (
-              <Button
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2"
-                onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
-              >
-                <Navigation className="size-5" />
-                Построить маршрут в Яндекс.Картах
-              </Button>
-            )}
+{routeUrl && (
+  <Button
+    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2 text-sm sm:text-base"
+    onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
+  >
+    <Navigation className="size-5 flex-shrink-0" />
+    <span className="whitespace-nowrap">Построить маршрут</span>
+    <span className="hidden sm:inline">в Яндекс.Картах</span>
+  </Button>
+)}
           </div>
         </Card>
 
@@ -399,7 +382,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <Info className="size-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-foreground mb-1">Примечания</div>
-                <ExpandableText text={place.notes} limit={250} />
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.notes}</p>
               </div>
             </div>
           </Card>

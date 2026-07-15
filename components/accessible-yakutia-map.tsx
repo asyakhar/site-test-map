@@ -600,45 +600,45 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
         />
       </div>
 
-      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 gap-1 justify-between" style={{ height: isHighContrast ? 'auto' : '64px', minHeight: isHighContrast ? '56px' : '64px', paddingTop: isHighContrast ? '4px' : '0', paddingBottom: isHighContrast ? '4px' : '0' }}>
-  <button onClick={() => router.push("/")} className="flex items-center gap-1 hover:opacity-80 transition-opacity flex-shrink min-w-0 flex-1">
-    <img 
-      src={`${basePath}/img/logo_homus.png`} 
-      alt="Логотип Доступная Якутия" 
-      className="h-6 md:h-8 w-auto object-contain flex-shrink-0"
-    />
-    <span 
-      className={`font-sangha text-sm md:text-xl leading-tight pt-0.5 truncate ${
-        isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
-      }`}
-    >
-      Доступная Якутия
-    </span>
-  </button>
-  
-  <div className="flex items-center gap-0.5 md:gap-2 flex-shrink-0 ml-1">
-    {/* Кнопка "глаз" для мобильной версии */}
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      onClick={toggleAccessibility}
-      className={`${isHighContrast ? 'text-white hover:bg-white/20' : ''} w-7 h-7 md:w-10 md:h-10 flex-shrink-0`}
-      title="Версия для слабовидящих"
-    >
-      <Eye className="size-3.5 md:size-5" />
-    </Button>
-    
-    <button 
-      onClick={() => setMobileMenuOpen(true)} 
-      className="px-1.5 md:px-4 py-1 md:py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-0.5 md:gap-2 font-bold text-[10px] md:text-sm flex-shrink-0"
-      aria-label="Меню"
-    >
-      <Menu className="size-3 md:size-4" />
-      <span className="hidden xs:inline text-[10px] md:text-sm">Списки</span>
-      <span className="xs:hidden text-[10px]">Фильтры</span>
-    </button>
-  </div>
-</header>
+      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 md:px-4 gap-1 md:gap-2 justify-between">
+        <button onClick={() => router.push("/")} className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity flex-shrink-0 min-w-0">
+          <img 
+            src={`${basePath}/img/logo_homus.png`} 
+            alt="Логотип Доступная Якутия" 
+            className="h-7 md:h-8 w-auto object-contain"
+          />
+          <span 
+            className={`font-sangha text-base md:text-xl leading-tight pt-1 ${
+              isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+            }`}
+          >
+            Доступная Якутия
+          </span>
+        </button>
+        
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          {/* Кнопка "глаз" для мобильной версии */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleAccessibility}
+            className={`${isHighContrast ? 'text-white hover:bg-white/20' : ''} w-8 h-8 md:w-10 md:h-10`}
+            title="Версия для слабовидящих"
+          >
+            <Eye className="size-4 md:size-5" />
+          </Button>
+          
+          <button 
+            onClick={() => setMobileMenuOpen(true)} 
+            className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
+            aria-label="Меню"
+          >
+            <Menu className="size-3 md:size-4" />
+            <span className="hidden xs:inline">Списки</span>
+            <span className="xs:hidden">Фильтры</span>
+          </button>
+        </div>
+      </header>
 
       <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
         <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() =>router.push("/")}>

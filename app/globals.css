@@ -215,15 +215,32 @@
 
 /* 1. Увеличиваем базовый размер шрифта (одинаково для всех устройств) */
 html.large-font {
-  font-size: 140%; 
+  font-size: 140%;
 }
 
-html.large-font header .flex.items-center.gap-4 {
-  flex-shrink: 0 !important;
-  width: auto !important;
-  min-width: 80px !important;
+@media (max-width: 640px) {
+  html.large-font {
+    font-size: 110% !important;
+  }
 }
 
+
+:root.high-contrast header button:first-child {
+  overflow: hidden !important;
+}
+
+:root.high-contrast header button:first-child span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Уменьшаем шрифт в high-contrast на мобильных */
+@media (max-width: 640px) {
+  :root.high-contrast html {
+    font-size: 120% !important;
+  }
+}
 html.large-font button[title="Версия для слабовидящих"] {
   flex-shrink: 0 !important;
   width: 36px !important;
@@ -776,4 +793,22 @@ html.large-font button[title="Версия для слабовидящих"] svg
     max-width: 95vw !important;
     width: 95vw !important;
   }
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - ЖЕЛТЫЕ ФИЛЬТРЫ В ПОПАПЕ
+   ======================================================== */
+
+/* Фильтры "Дыхательная система" и "Сердечно-сосудистые" в высококонтрастном режиме */
+:root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] {
+  background-color: #FFD700 !important;
+  border-color: #FFD700 !important;
+  color: #000000 !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] span {
+  color: #000000 !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] svg {
+  color: #000000 !important;
 }
