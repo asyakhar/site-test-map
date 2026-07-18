@@ -1,4 +1,4 @@
-// scripts/generate-github-links.js
+// scripts/update-photo.js
 const fs = require('fs');
 const path = require('path');
 
@@ -7,10 +7,12 @@ const GITHUB_USERNAME = 'asyakhar';
 const REPO_NAME = 'yakutia-images';
 const BRANCH = 'main';
 
-// Путь к objects.json в вашем проекте
+
+const LOCAL_IMAGES_PATH = path.join('/Users', 'nastaharitonova', 'Documents', 'yakutia-images');
+
 const OBJECTS_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
 
-// === СООТВЕТСТВИЕ ID → ПАПКИ (ВСЕ 31 ОБЪЕКТ) ===
+// === СООТВЕТСТВИЕ ID → ПАПКИ ===
 const ID_MAPPING = {
   // Музеи
   "obj-01": "museum/arheology-etno-museum",
@@ -58,48 +60,63 @@ const ID_MAPPING = {
   "obj-31": "nature/orto-doydu-zoo",
 };
 
-// === КАКИЕ ФАЙЛЫ ЕСТЬ В ПАПКЕ (вы указываете вручную) ===
-// Если вы знаете, какие файлы есть в каждой папке на GitHub
-const PHOTO_FILES = {
-  "museum/arheology-etno-museum": ["main.jpg"],
-  "museum/mammoth-museum": ["main.jpeg"],
-  "museum/treasury": ["main.jpg"],
-  "museum/yaroslavsky-museum": ["main.jpg"],
-  "museum/khomus-museum": ["main.jpg"],
-  "museum/national-art-museum": ["main.jpg"],
-  "museum/foreign-art-gallery": ["main.jpeg"],
-  "museum/music-museum": ["main.jpg"],
-  "theater/opera-theater": ["main.jpg"],
-  "theater/sakha-theater": ["main.jpg"],
-  "theater/philharmonic": ["main.png"],
-  "theater/estrada-theater": ["main.jpeg"],
-  "theater/circus": ["main.jpg"],
-  "tourism/permafrost-kingdom": ["main.jpg"],
-  "tourism/old-town": ["main.jpeg"],
-  "tourism/atlasov-estate": ["main.jpg"],
-  "tourism/simekh": ["main.jpg"],
-  "tourism/history-park": ["main.jpg"],
-  "tourism/friendship-house": ["main.jpeg"],
-  "health/medical-center": ["main.jpg"],
-  "health/yarmiac": ["main.jpeg"],
-  "health/oncology-center": ["main.jpeg"],
-  "health/raduga-center": ["main.jpg"],
-  "health/rehabilitation-center": ["main.jpeg"],
-  "education/permafrost-institute": ["main.jpg"],
-  "education/svfu": ["main.jpg"],
-  "education/adaptive-school": ["main.jpg"],
-  "food/avrora-restaurant": ["main.jpeg"],
-  "food/green-city-restaurant": ["main.jpeg"],
-  "food/coffeeshop-company": ["main.jpeg"],
-  "nature/orto-doydu-zoo": ["main.jpg"],
-};
-
 function getGitHubRawUrl(folderPath, filename) {
   return `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${folderPath}/${filename}`;
 }
 
+// === СКАНИРУЕМ ЛОКАЛЬНУЮ ПАПКУ ===
+function scanLocalFolder(folderPath) {
+  const fullPath = path.join(LOCAL_IMAGES_PATH, folderPath);
+  
+  if (!fs.existsSync(fullPath)) {
+    console.log(`⚠️ Папка не найдена: ${folderPath}`);
+    console.log(`   Искал: ${fullPath}`);
+    return null;
+  }
+  
+  try {
+    const files = fs.readdirSync(fullPath);
+    // Фильтруем только изображения
+    const imageFiles = files.filter(file => 
+      /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file)
+    );
+    
+    if (imageFiles.length === 0) {
+      console.log(`⚠️ В папке нет изображений: ${folderPath}`);
+      return null;
+    }
+    
+    // Сортируем: main.* всегда первым, остальные по алфавиту
+    imageFiles.sort((a, b) => {
+      if (a.startsWith('main.')) return -1;
+      if (b.startsWith('main.')) return 1;
+      return a.localeCompare(b);
+    });
+    
+    console.log(`   📸 Найдено файлов: ${imageFiles.length}`);
+    imageFiles.forEach(file => console.log(`      - ${file}`));
+    
+    return imageFiles;
+  } catch (error) {
+    console.error(`❌ Ошибка чтения папки ${folderPath}:`, error.message);
+    return null;
+  }
+}
+
+// === ОСНОВНАЯ ФУНКЦИЯ ===
 async function main() {
   console.log('🚀 Начинаем генерацию ссылок на GitHub...');
+  console.log(`📁 Используем локальную папку: ${LOCAL_IMAGES_PATH}`);
+  console.log('');
+  
+  // Проверяем существование корневой папки
+  if (!fs.existsSync(LOCAL_IMAGES_PATH)) {
+    console.error(`❌ Папка с фотографиями не найдена: ${LOCAL_IMAGES_PATH}`);
+    console.log('💡 Убедитесь, что путь правильный:');
+    console.log(`   Сейчас ищет: ${LOCAL_IMAGES_PATH}`);
+    console.log('   Создайте папку или укажите правильный путь в LOCAL_IMAGES_PATH');
+    return;
+  }
   
   if (!fs.existsSync(OBJECTS_JSON_PATH)) {
     console.error(`❌ objects.json не найден: ${OBJECTS_JSON_PATH}`);
@@ -108,9 +125,12 @@ async function main() {
   
   const objects = JSON.parse(fs.readFileSync(OBJECTS_JSON_PATH, 'utf8'));
   console.log(`📄 Найдено ${objects.length} объектов в objects.json`);
+  console.log('');
   
   let updatedCount = 0;
-  let totalObjects = objects.length;
+  let totalPhotos = 0;
+  const errors = [];
+  const noPhotos = [];
   
   for (const obj of objects) {
     const folderPath = ID_MAPPING[obj.id];
@@ -120,21 +140,41 @@ async function main() {
       continue;
     }
     
-    const files = PHOTO_FILES[folderPath] || [];
+    console.log(`📂 Обработка: ${obj.name} (${obj.id})`);
+    console.log(`   Путь: ${folderPath}`);
     
-    if (files.length === 0) {
-      console.log(`⚠️ Нет файлов для ${obj.id} (${obj.name}) в папке ${folderPath}`);
+    const files = scanLocalFolder(folderPath);
+    
+    if (!files || files.length === 0) {
+      console.log(`   ❌ Нет файлов\n`);
+      noPhotos.push(`${obj.id} (${obj.name})`);
       continue;
     }
     
     const newPhotos = files.map(file => getGitHubRawUrl(folderPath, file));
     obj.photos = newPhotos;
     updatedCount++;
-    console.log(`✅ ${obj.id} (${obj.name}): ${newPhotos.length} фото`);
+    totalPhotos += newPhotos.length;
+    console.log(`   ✅ Обновлено (${newPhotos.length} фото)\n`);
   }
   
-  fs.writeFileSync(OBJECTS_JSON_PATH, JSON.stringify(objects, null, 2));
-  console.log(`\n🎉 Готово! Обновлено ${updatedCount} объектов из ${totalObjects}`);
+  // Сохраняем обновленный objects.json
+  fs.writeFileSync(OBJECTS_JSON_PATH, JSON.stringify(objects, null, 2), 'utf8');
+  
+  // Итоговая статистика
+  console.log('═══════════════════════════════════════════════');
+  console.log(`🎉 Готово!`);
+  console.log(`📊 Обновлено объектов: ${updatedCount} из ${objects.length}`);
+  console.log(`📸 Всего фото: ${totalPhotos}`);
+  console.log(`📈 Среднее фото на объект: ${(totalPhotos / updatedCount || 0).toFixed(1)}`);
+  
+  if (noPhotos.length > 0) {
+    console.log(`\n⚠️ Без фото (${noPhotos.length}):`);
+    noPhotos.forEach(name => console.log(`  ${name}`));
+  }
+  
+  console.log(`\n📁 Файл сохранен: ${OBJECTS_JSON_PATH}`);
 }
 
+// Запускаем
 main().catch(console.error);

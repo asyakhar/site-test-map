@@ -313,7 +313,8 @@
     "tickets": "Стоимость входных билетов:\n\nВзрослые (граждане РФ) — 300 ₽\nПенсионеры — 200 ₽\nСтуденты — 200 ₽\nЛица до 18 лет — Бесплатно\nМногодетные семьи — Бесплатно\nСтуденты-художники — Бесплатно\nИностранные граждане — 500 ₽\n\nОбзорная экскурсия\nВзрослые (граждане РФ) — 300 ₽\nПенсионеры — 250 ₽\nСтуденты — 250 ₽\nЛица до 18 лет — 200 ₽\nМногодетные семьи — 150 ₽\nИностранные граждане — 1000 ₽\n\nТематическая экскурсия\n\nВзрослые (граждане РФ) — 350 ₽\nПенсионеры — 350 ₽\nСтуденты — 250 ₽\nЛица до 18 лет — 250 ₽\nМногодетные семьи — 150 ₽\nИностранные граждане — 600 ₽",
     "benefits": "Лица до 18 лет — Бесплатно\nМногодетные семьи — Бесплатно\nСтуденты-художники — Бесплатно",
     "photos": [
-      "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/national-art-museum/main.jpg"
+      "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/national-art-museum/main.jpg",
+      "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/national-art-museum/gallery-1.png"
     ],
     "contacts": {
       "phone": "33-52-80",

@@ -812,3 +812,20 @@ html.large-font button[title="Версия для слабовидящих"] svg
 :root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] svg {
   color: #000000 !important;
 }
+/* Стили для карусели на странице деталей */
+.embla__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+/* Адаптация для высококонтрастного режима */
+:root.high-contrast .carousel-button {
+  background-color: #000 !important;
+  border: 2px solid #fff !important;
+  color: #fff !important;
+}
+
+:root.high-contrast .carousel-button:hover {
+  background-color: #fff !important;
+  color: #000 !important;
+}

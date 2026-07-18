@@ -39,11 +39,21 @@ import {
   Palette,
   Ticket,
   GraduationCap,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ContrastToggle from '@/components/ContrastToggle';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  type CarouselApi,
+} from '@/components/ui/carousel';
 
 // Типы
 interface MapObject {
@@ -87,7 +97,7 @@ const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; co
   education: { name: 'Образование', icon: GraduationCap, color: '#0284c7' },
 };
 
-// Категории доступности: заголовок, иконка, цвет (ключи совпадают с id слоёв)
+// Категории доступности
 const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: string }[] = [
   { id: 'mobility', name: 'Передвижение', icon: Accessibility, color: '#457B9D' },
   { id: 'vision_impaired', name: 'Для незрячих и слабовидящих', icon: Eye, color: '#FF6B6B' },
@@ -105,6 +115,8 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: st
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [api, setApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
 
   useEffect(() => {
@@ -123,6 +135,15 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         setLoading(false);
       });
   }, [id, basePath]);
+
+  // Отслеживаем текущий слайд
+  useEffect(() => {
+    if (!api) return;
+    setCurrentSlide(api.selectedScrollSnap());
+    api.on('select', () => {
+      setCurrentSlide(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   if (loading) {
     return (
@@ -152,9 +173,11 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
   const categoryConfig = CATEGORY_CONFIG[place.category] || CATEGORY_CONFIG.museum;
   const CategoryIcon = categoryConfig.icon;
-
-  // Категории доступности, для которых есть текст (в порядке ACCESS_META)
   const accessSections = ACCESS_META.filter((m) => place.accessibility && place.accessibility[m.id]);
+
+  // Подготавливаем фото для галереи
+  const photos = place.photos && place.photos.length > 0 ? place.photos : [`${basePath}/img/placeholder.jpg`];
+  const hasMultiplePhotos = photos.length > 1;
 
   const phoneHref = place.contacts.phone ? place.contacts.phone.replace(/[^\d+]/g, '') : '';
   const routeUrl = place.coordinates
@@ -164,62 +187,106 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-10 bg-card shadow-md border-b border-border">
-  <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-    <Link href="/map">
-      <Button variant="ghost" className="gap-2 text-foreground hover:text-primary">
-        <ArrowLeft className="size-5" />
-        <span className="hidden sm:inline">На карту</span>
-      </Button>
-    </Link>
-    
-    {/* Название видно ТОЛЬКО на десктопе (≥ 640px) */}
-    <h1 className="hidden sm:block text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
-      {place.name}
-    </h1>
-    
-    <div className="flex items-center gap-1">
-      <ContrastToggle />
-      <Button
-        variant="ghost"
-        className="gap-2 text-foreground"
-        onClick={() => {
-          if (navigator.share) {
-            navigator.share({ title: place.name, url: window.location.href });
-          }
-        }}
-      >
-        <Share2 className="size-5" />
-        <span className="hidden sm:inline">Поделиться</span>
-      </Button>
-    </div>
-  </div>
-</header>
-      <div className="relative h-64 md:h-96">
-        <img
-          src={place.photos && place.photos.length > 0 ? place.photos[0] : `${basePath}/img/placeholder.jpg`}
-          alt={place.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4">
-          <Badge
-            className="mb-2 text-white border-white/30 px-3 py-1 text-sm"
-            style={{ backgroundColor: categoryConfig.color }}
-          >
-            <CategoryIcon className="size-3 mr-1" />
-            {categoryConfig.name}
-          </Badge>
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/map">
+            <Button variant="ghost" className="gap-2 text-foreground hover:text-primary">
+              <ArrowLeft className="size-5" />
+              <span className="hidden sm:inline">На карту</span>
+            </Button>
+          </Link>
+          
+          <h1 className="hidden sm:block text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
+            {place.name}
+          </h1>
+          
+          <div className="flex items-center gap-1">
+            <ContrastToggle />
+            <Button
+              variant="ghost"
+              className="gap-2 text-foreground"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: place.name, url: window.location.href });
+                }
+              }}
+            >
+              <Share2 className="size-5" />
+              <span className="hidden sm:inline">Поделиться</span>
+            </Button>
+          </div>
         </div>
+      </header>
+
+      {/* ГАЛЕРЕЯ - КАРУСЕЛЬ */}
+      <div className="relative w-full bg-black/5">
+        <Carousel setApi={setApi} className="w-full">
+          <CarouselContent>
+            {photos.map((photo, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-[300px] md:h-[450px] w-full">
+                  <img
+                    src={photo}
+                    alt={`${place.name} - фото ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+                    }}
+                  />
+                  {/* Градиент снизу для текста */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  
+                  {/* Индикатор количества фото */}
+                  {hasMultiplePhotos && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {photos.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => api?.scrollTo(idx)}
+                          className={`h-2 rounded-full transition-all ${
+                            currentSlide === idx
+                              ? 'w-8 bg-white'
+                              : 'w-2 bg-white/50 hover:bg-white/70'
+                          }`}
+                          aria-label={`Перейти к фото ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Количество фото */}
+                  {hasMultiplePhotos && (
+                    <div className="absolute top-4 right-4 bg-black/60 text-white text-sm px-3 py-1.5 rounded-full backdrop-blur-sm">
+                      {currentSlide + 1} / {photos.length}
+                    </div>
+                  )}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          
+          {/* Кнопки навигации - только если фото > 1 */}
+          {hasMultiplePhotos && (
+            <>
+              <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-black border-0 shadow-lg size-10 rounded-full flex items-center justify-center" />
+              <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-black border-0 shadow-lg size-10 rounded-full flex items-center justify-center" />
+            </>
+          )}
+        </Carousel>
       </div>
 
+      {/* КОНТЕНТ */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">
+          <Badge
+            className="mb-3 text-white border-0 px-3 py-1.5 text-sm"
+            style={{ backgroundColor: categoryConfig.color }}
+          >
+            <CategoryIcon className="size-3.5 mr-1.5" />
+            {categoryConfig.name}
+          </Badge>
+          
           <h1 className="text-3xl font-bold text-foreground mb-3">{place.name}</h1>
 
-          {/* Адрес и часы работы */}
           <div className="flex flex-col gap-2 mb-4">
             {place.address && (
               <div className="flex items-start gap-2 text-muted-foreground">
@@ -240,7 +307,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Доступность — текст по категориям */}
+        {/* Доступность */}
         <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Accessibility className="size-5 text-primary" />
@@ -362,16 +429,16 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               </a>
             )}
 
-{routeUrl && (
-  <Button
-    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2 text-sm sm:text-base"
-    onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
-  >
-    <Navigation className="size-5 flex-shrink-0" />
-    <span className="whitespace-nowrap">Построить маршрут</span>
-    <span className="hidden sm:inline">в Яндекс.Картах</span>
-  </Button>
-)}
+            {routeUrl && (
+              <Button
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2 text-sm sm:text-base"
+                onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
+              >
+                <Navigation className="size-5 flex-shrink-0" />
+                <span className="whitespace-nowrap">Построить маршрут</span>
+                <span className="hidden sm:inline">в Яндекс.Картах</span>
+              </Button>
+            )}
           </div>
         </Card>
 
