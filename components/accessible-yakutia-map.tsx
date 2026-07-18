@@ -112,22 +112,23 @@ const CATEGORY_FILTERS = [
   { id: "health", name: "Здоровье", icon: Hospital },
 ]
 
-const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2 }> = {
-  museum: { name: "Музей", icon: Building2 },
-  hotel: { name: "Гостиница", icon: Hotel },
-  restaurant: { name: "Ресторан", icon: UtensilsCrossed },
-  cafe: { name: "Кафе", icon: Coffee },
-  park: { name: "Парк", icon: TreePine },
-  theater: { name: "Театр", icon: Theater },
-  medical: { name: "Медицина", icon: Stethoscope },
-  spa: { name: "СПА/Оздоровление", icon: Flower2 },
-  monument: { name: "Памятник", icon: Landmark },
-  shopping: { name: "Торговый центр", icon: ShoppingBag },
-  sports: { name: "Спорт", icon: Dumbbell },
-  nature: { name: "Природа", icon: Mountain },
-  culture: { name: "Культура", icon: Palette },
-  entertainment: { name: "Развлечения", icon: Ticket },
-  education: { name: "Образование", icon: GraduationCap },
+// ⭐ КАТЕГОРИИ С ЦВЕТАМИ ⭐
+const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; color: string }> = {
+  museum: { name: "Музей", icon: Building2, color: "#8b5cf6" },
+  hotel: { name: "Гостиница", icon: Hotel, color: "#3b82f6" },
+  restaurant: { name: "Ресторан", icon: UtensilsCrossed, color: "#22c55e" },
+  cafe: { name: "Кафе", icon: Coffee, color: "#f97316" },
+  park: { name: "Парк", icon: TreePine, color: "#14b8a6" },
+  theater: { name: "Театр", icon: Theater, color: "#ec4899" },
+  medical: { name: "Медицина", icon: Stethoscope, color: "#ef4444" },
+  spa: { name: "СПА/Оздоровление", icon: Flower2, color: "#06b6d4" },
+  monument: { name: "Памятник", icon: Landmark, color: "#6366f1" },
+  shopping: { name: "Торговый центр", icon: ShoppingBag, color: "#eab308" },
+  sports: { name: "Спорт", icon: Dumbbell, color: "#84cc16" },
+  nature: { name: "Природа", icon: Mountain, color: "#0ea5e9" },
+  culture: { name: "Культура", icon: Palette, color: "#f43f5e" },
+  entertainment: { name: "Развлечения", icon: Ticket, color: "#d946ef" },
+  education: { name: "Образование", icon: GraduationCap, color: "#0284c7" },
 }
 
 // Метаданные категорий доступности
@@ -145,6 +146,7 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2 }[] = [
   { id: "health", name: "Отдых с пользой", icon: Hospital },
 ]
 
+// ⭐ ФУНКЦИЯ СОЗДАНИЯ ИКОНКИ С ЦВЕТОМ КАТЕГОРИИ ⭐
 function getCategoryMarkerIcon(category: string) {
   const iconPaths: Record<string, string> = {
     museum: '<path d="M3 22V8l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M6 22V11h4v11"/><path d="M14 22V11h4v11"/>',
@@ -165,7 +167,8 @@ function getCategoryMarkerIcon(category: string) {
   }
   const iconPath = iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
   
-  const pinColor = "#B86A18";
+  // ⭐ БЕРЁМ ЦВЕТ ИЗ CATEGORY_CONFIG ⭐
+  const pinColor = CATEGORY_CONFIG[category]?.color || "#B86A18";
 
   return L.divIcon({
     className: "custom-marker-wrapper",
@@ -380,7 +383,6 @@ function SidebarContent({
   )
 }
 
-// Компонент попапа с адаптивным дизайном
 // Компонент попапа с адаптивным дизайном
 function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
   obj: MapObject;
