@@ -637,45 +637,97 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
       
       {/* Mobile Version */}
       <div className="lg:hidden flex flex-col h-full w-full">
-        <header className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm z-20">
-          <div className="px-3 py-2">
-            <div className="flex items-center justify-between mb-2">
-              <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0">
-                <img 
-                  src={`${basePath}/img/logo_homus.png`} 
-                  alt="Логотип Доступная Якутия" 
-                  className="h-7 w-auto object-contain flex-shrink-0"
-                />
-                <span className={`font-sangha text-sm leading-tight pt-1 truncate ${
-                  isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
-                }`}>
-                  Доступная Якутия
-                </span>
-              </button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleAccessibility}
-                className={`flex-shrink-0 ${isHighContrast ? 'text-white hover:bg-white/20' : ''}`}
-                title="Версия для слабовидящих"
-              >
-                <Eye className="size-5" />
-              </Button>
-            </div>
+  <header className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm z-20">
+    <div className="px-3 py-2">
+      {/* Логотип и кнопка доступности */}
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0">
+          <img 
+            src={`${basePath}/img/logo_homus.png`} 
+            alt="Логотип Доступная Якутия" 
+            className="h-7 w-auto object-contain flex-shrink-0"
+          />
+          <span className={`font-sangha text-sm leading-tight pt-1 truncate ${
+            isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+          }`}>
+            Доступная Якутия
+          </span>
+        </button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleAccessibility}
+          className={`flex-shrink-0 ${isHighContrast ? 'text-white hover:bg-white/20' : ''}`}
+          title="Версия для слабовидящих"
+        >
+          <Eye className="size-5" />
+        </Button>
+      </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Поиск места..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
-              />
-            </div>
-          </div>
-        </header>
+      {/* Строка поиска */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="Поиск места..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
+        />
+      </div>
+      <div className="flex items-center justify-between mt-2 mb-2">
+  <span className="text-xs font-bold text-[var(--color-text-secondary)]">
+    Найдено: {filteredObjects.length} {filteredObjects.length === 1 ? 'место' : 
+      filteredObjects.length >= 2 && filteredObjects.length <= 4 ? 'места' : 'мест'}
+  </span>
+  {searchQuery && (
+    <button 
+      onClick={() => setSearchQuery("")}
+      className="text-xs text-[var(--color-accent)] hover:underline"
+    >
+      Очистить поиск
+    </button>
+  )}
+</div>
+      {/* Кнопки "Фильтры" и "Списком" теперь здесь */}
+      <div className="flex items-stretch gap-2 mt-2">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-bold text-xs transition-all ${
+            showFilters
+              ? 'bg-[var(--color-accent)] text-white shadow-md'
+              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+          }`}
+        >
+          <SlidersHorizontal className="size-3.5" />
+          Фильтры
+          {activeLayers.length > 1 && (
+            <span className="bg-white/20 rounded-full min-w-[18px] h-4 flex items-center justify-center text-[10px] px-1">
+              {activeLayers.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+          className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-bold text-xs bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-all"
+        >
+          {viewMode === 'map' ? (
+            <>
+              <List className="size-3.5" />
+              Списком
+            </>
+          ) : (
+            <>
+              <Map className="size-3.5" />
+              На карте
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  </header>
 
         {showFilters && (
           <div className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm animate-slideDown">
@@ -756,9 +808,7 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
             </MapContainer>
             
             <div className="absolute top-3 left-3 bg-[var(--color-bg-white)]/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-[var(--color-card-border)]">
-              <span className="text-xs font-bold text-[var(--color-text-primary)]">
-                Найдено: {filteredObjects.length}
-              </span>
+             
             </div>
           </div>
 
@@ -792,43 +842,7 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
           </div>
         </div>
 
-        <div className="flex-shrink-0 bg-[var(--color-bg-white)] border-t border-[var(--color-card-border)] shadow-lg z-20">
-          <div className="flex items-stretch gap-2 p-3">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
-                showFilters
-                  ? 'bg-[var(--color-accent)] text-white shadow-md'
-                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
-              }`}
-            >
-              <SlidersHorizontal className="size-4" />
-              Фильтры
-              {activeLayers.length > 1 && (
-                <span className="bg-white/20 rounded-full min-w-[20px] h-5 flex items-center justify-center text-xs px-1">
-                  {activeLayers.length}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-all"
-            >
-              {viewMode === 'map' ? (
-                <>
-                  <List className="size-4" />
-                  Списком
-                </>
-              ) : (
-                <>
-                  <Map className="size-4" />
-                  На карте
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+      
       </div>
 
       {/* Desktop Sidebar */}
@@ -896,4 +910,4 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
       </main>
     </div>
   )
-}
+} 

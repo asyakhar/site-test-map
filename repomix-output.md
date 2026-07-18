@@ -8044,150 +8044,6 @@ console.log(`\n!Нет координат (${missingCoords.length}) — впиш
 missingCoords.forEach((l) => console.log('  ' + l));
 ```
 
-## File: scripts/update-photo.js
-```javascript
-// scripts/generate-github-links.js
-const fs = require('fs');
-const path = require('path');
-
-// === НАСТРОЙКИ ===
-const GITHUB_USERNAME = 'asyakhar';
-const REPO_NAME = 'yakutia-images';
-const BRANCH = 'main';
-
-// Путь к objects.json в вашем проекте
-const OBJECTS_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
-
-// === СООТВЕТСТВИЕ ID → ПАПКИ (ВСЕ 31 ОБЪЕКТ) ===
-const ID_MAPPING = {
-  // Музеи
-  "obj-01": "museum/arheology-etno-museum",
-  "obj-03": "museum/mammoth-museum",
-  "obj-04": "museum/treasury",
-  "obj-05": "museum/yaroslavsky-museum",
-  "obj-08": "museum/khomus-museum",
-  "obj-09": "museum/national-art-museum",
-  "obj-24": "museum/foreign-art-gallery",
-  "obj-28": "museum/music-museum",
-
-  // Театры
-  "obj-16": "theater/opera-theater",
-  "obj-17": "theater/sakha-theater",
-  "obj-18": "theater/philharmonic",
-  "obj-19": "theater/estrada-theater",
-  "obj-30": "theater/circus",
-
-  // Туристические комплексы
-  "obj-02": "tourism/permafrost-kingdom",
-  "obj-07": "tourism/old-town",
-  "obj-10": "tourism/atlasov-estate",
-  "obj-11": "tourism/simekh",
-  "obj-23": "tourism/history-park",
-  "obj-29": "tourism/friendship-house",
-
-  // Медицина
-  "obj-13": "health/medical-center",
-  "obj-14": "health/yarmiac",
-  "obj-15": "health/oncology-center",
-  "obj-20": "health/raduga-center",
-  "obj-21": "health/rehabilitation-center",
-
-  // Образование
-  "obj-06": "education/permafrost-institute",
-  "obj-12": "education/svfu",
-  "obj-22": "education/adaptive-school",
-
-  // Рестораны и кафе
-  "obj-25": "food/avrora-restaurant",
-  "obj-26": "food/green-city-restaurant",
-  "obj-27": "food/coffeeshop-company",
-
-  // Природа
-  "obj-31": "nature/orto-doydu-zoo",
-};
-
-// === КАКИЕ ФАЙЛЫ ЕСТЬ В ПАПКЕ (вы указываете вручную) ===
-// Если вы знаете, какие файлы есть в каждой папке на GitHub
-const PHOTO_FILES = {
-  "museum/arheology-etno-museum": ["main.jpg"],
-  "museum/mammoth-museum": ["main.jpeg"],
-  "museum/treasury": ["main.jpg"],
-  "museum/yaroslavsky-museum": ["main.jpg"],
-  "museum/khomus-museum": ["main.jpg"],
-  "museum/national-art-museum": ["main.jpg"],
-  "museum/foreign-art-gallery": ["main.jpeg"],
-  "museum/music-museum": ["main.jpg"],
-  "theater/opera-theater": ["main.jpg"],
-  "theater/sakha-theater": ["main.jpg"],
-  "theater/philharmonic": ["main.png"],
-  "theater/estrada-theater": ["main.jpeg"],
-  "theater/circus": ["main.jpg"],
-  "tourism/permafrost-kingdom": ["main.jpg"],
-  "tourism/old-town": ["main.jpeg"],
-  "tourism/atlasov-estate": ["main.jpg"],
-  "tourism/simekh": ["main.jpg"],
-  "tourism/history-park": ["main.jpg"],
-  "tourism/friendship-house": ["main.jpeg"],
-  "health/medical-center": ["main.jpg"],
-  "health/yarmiac": ["main.jpeg"],
-  "health/oncology-center": ["main.jpeg"],
-  "health/raduga-center": ["main.jpg"],
-  "health/rehabilitation-center": ["main.jpeg"],
-  "education/permafrost-institute": ["main.jpg"],
-  "education/svfu": ["main.jpg"],
-  "education/adaptive-school": ["main.jpg"],
-  "food/avrora-restaurant": ["main.jpeg"],
-  "food/green-city-restaurant": ["main.jpeg"],
-  "food/coffeeshop-company": ["main.jpeg"],
-  "nature/orto-doydu-zoo": ["main.jpg"],
-};
-
-function getGitHubRawUrl(folderPath, filename) {
-  return `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${folderPath}/${filename}`;
-}
-
-async function main() {
-  console.log('🚀 Начинаем генерацию ссылок на GitHub...');
-  
-  if (!fs.existsSync(OBJECTS_JSON_PATH)) {
-    console.error(`❌ objects.json не найден: ${OBJECTS_JSON_PATH}`);
-    return;
-  }
-  
-  const objects = JSON.parse(fs.readFileSync(OBJECTS_JSON_PATH, 'utf8'));
-  console.log(`📄 Найдено ${objects.length} объектов в objects.json`);
-  
-  let updatedCount = 0;
-  let totalObjects = objects.length;
-  
-  for (const obj of objects) {
-    const folderPath = ID_MAPPING[obj.id];
-    
-    if (!folderPath) {
-      console.log(`⚠️ Нет соответствия для ${obj.id} (${obj.name}), пропускаем`);
-      continue;
-    }
-    
-    const files = PHOTO_FILES[folderPath] || [];
-    
-    if (files.length === 0) {
-      console.log(`⚠️ Нет файлов для ${obj.id} (${obj.name}) в папке ${folderPath}`);
-      continue;
-    }
-    
-    const newPhotos = files.map(file => getGitHubRawUrl(folderPath, file));
-    obj.photos = newPhotos;
-    updatedCount++;
-    console.log(`✅ ${obj.id} (${obj.name}): ${newPhotos.length} фото`);
-  }
-  
-  fs.writeFileSync(OBJECTS_JSON_PATH, JSON.stringify(objects, null, 2));
-  console.log(`\n🎉 Готово! Обновлено ${updatedCount} объектов из ${totalObjects}`);
-}
-
-main().catch(console.error);
-```
-
 ## File: .gitignore
 ```
 # v0 sandbox internal files
@@ -8591,6 +8447,190 @@ export async function fetchObjects(): Promise<MapObject[]> {
 <path d="M1890.58 44.4829L1885.04 37.4829M1876.25 12.7335C1879.09 14.4085 1881.42 16.3418 1883.31 18.6496C1885.62 21.466 1887.29 24.8401 1888.45 28.9829C1889.64 33.255 1890.3 38.3446 1890.58 44.4829C1883.7 43.2671 1878.46 41.4876 1874.42 38.8473C1872.01 37.2744 1870.03 35.3961 1868.39 33.1496M1860.75 6.81625L1870.12 18.6496M1876.25 12.7335C1874.43 11.6591 1872.39 10.6909 1870.12 9.79849C1867.36 8.71045 1864.25 7.73488 1860.75 6.81625C1861.24 11.2321 1861.82 15.1581 1862.57 18.6496C1863.13 21.2743 1863.79 23.6534 1864.57 25.8106C1865.6 28.6149 1866.85 31.044 1868.39 33.1496M1885.04 37.4829L1874.42 38.8473M1885.04 37.4829L1880.42 31.6496M1885.04 37.4829L1888.45 28.9829M1880.42 31.6496L1868.39 33.1496M1880.42 31.6496L1875.01 24.8162M1880.42 31.6496L1883.31 18.6496M1875.01 24.8162L1864.57 25.8106M1875.01 24.8162L1870.12 18.6496M1875.01 24.8162L1876.25 12.7335M1870.12 18.6496H1862.57M1870.12 18.6496V9.79849" stroke="#7F715A" stroke-width="1.3"/>
 <path d="M1890.42 44.4833L1895.99 37.4833M1904.83 12.7339C1901.97 14.4089 1899.63 16.3422 1897.73 18.65C1895.4 21.4664 1893.73 24.8405 1892.57 28.9833C1891.36 33.2554 1890.7 38.345 1890.42 44.4833C1897.34 43.2675 1902.61 41.488 1906.67 38.8477M1920.42 6.81666L1910.99 18.65M1860.42 6.81666H1920.42C1919.92 11.2325 1919.34 15.1585 1918.59 18.65C1918.03 21.2747 1917.36 23.6538 1916.57 25.811C1915.54 28.6153 1914.29 31.0444 1912.74 33.15M1904.83 12.7339C1906.66 11.6595 1908.71 10.6914 1910.99 9.7989C1913.77 8.71086 1916.9 7.73529 1920.42 6.81666M1895.99 37.4833L1906.67 38.8477M1895.99 37.4833L1900.64 31.65M1895.99 37.4833L1892.57 28.9833M1906.67 38.8477C1909.09 37.2748 1911.08 35.3966 1912.74 33.15M1900.64 31.65L1912.74 33.15M1900.64 31.65L1906.08 24.8167M1900.64 31.65L1897.73 18.65M1906.08 24.8167L1916.57 25.811M1906.08 24.8167L1910.99 18.65M1906.08 24.8167L1904.83 12.7339M1910.99 18.65H1918.59M1910.99 18.65V9.7989M1860.42 0.649993H1920.42M1860.42 44.4833H1920.42M1920.42 50.8167H1860.42" stroke="#7F715A" stroke-width="1.3"/>
 </svg>
+```
+
+## File: scripts/update-photo.js
+```javascript
+// scripts/update-photo.js
+const fs = require('fs');
+const path = require('path');
+
+// === НАСТРОЙКИ ===
+const GITHUB_USERNAME = 'asyakhar';
+const REPO_NAME = 'yakutia-images';
+const BRANCH = 'main';
+
+
+const LOCAL_IMAGES_PATH = path.join('/Users', 'nastaharitonova', 'Documents', 'yakutia-images');
+
+const OBJECTS_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
+
+// === СООТВЕТСТВИЕ ID → ПАПКИ ===
+const ID_MAPPING = {
+  // Музеи
+  "obj-01": "museum/arheology-etno-museum",
+  "obj-03": "museum/mammoth-museum",
+  "obj-04": "museum/treasury",
+  "obj-05": "museum/yaroslavsky-museum",
+  "obj-08": "museum/khomus-museum",
+  "obj-09": "museum/national-art-museum",
+  "obj-24": "museum/foreign-art-gallery",
+  "obj-28": "museum/music-museum",
+
+  // Театры
+  "obj-16": "theater/opera-theater",
+  "obj-17": "theater/sakha-theater",
+  "obj-18": "theater/philharmonic",
+  "obj-19": "theater/estrada-theater",
+  "obj-30": "theater/circus",
+
+  // Туристические комплексы
+  "obj-02": "tourism/permafrost-kingdom",
+  "obj-07": "tourism/old-town",
+  "obj-10": "tourism/atlasov-estate",
+  "obj-11": "tourism/simekh",
+  "obj-23": "tourism/history-park",
+  "obj-29": "tourism/friendship-house",
+
+  // Медицина
+  "obj-13": "health/medical-center",
+  "obj-14": "health/yarmiac",
+  "obj-15": "health/oncology-center",
+  "obj-20": "health/raduga-center",
+  "obj-21": "health/rehabilitation-center",
+
+  // Образование
+  "obj-06": "education/permafrost-institute",
+  "obj-12": "education/svfu",
+  "obj-22": "education/adaptive-school",
+
+  // Рестораны и кафе
+  "obj-25": "food/avrora-restaurant",
+  "obj-26": "food/green-city-restaurant",
+  "obj-27": "food/coffeeshop-company",
+
+  // Природа
+  "obj-31": "nature/orto-doydu-zoo",
+};
+
+function getGitHubRawUrl(folderPath, filename) {
+  return `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${folderPath}/${filename}`;
+}
+
+// === СКАНИРУЕМ ЛОКАЛЬНУЮ ПАПКУ ===
+function scanLocalFolder(folderPath) {
+  const fullPath = path.join(LOCAL_IMAGES_PATH, folderPath);
+  
+  if (!fs.existsSync(fullPath)) {
+    console.log(`⚠️ Папка не найдена: ${folderPath}`);
+    console.log(`   Искал: ${fullPath}`);
+    return null;
+  }
+  
+  try {
+    const files = fs.readdirSync(fullPath);
+    // Фильтруем только изображения
+    const imageFiles = files.filter(file => 
+      /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file)
+    );
+    
+    if (imageFiles.length === 0) {
+      console.log(`⚠️ В папке нет изображений: ${folderPath}`);
+      return null;
+    }
+    
+    // Сортируем: main.* всегда первым, остальные по алфавиту
+    imageFiles.sort((a, b) => {
+      if (a.startsWith('main.')) return -1;
+      if (b.startsWith('main.')) return 1;
+      return a.localeCompare(b);
+    });
+    
+    console.log(`   📸 Найдено файлов: ${imageFiles.length}`);
+    imageFiles.forEach(file => console.log(`      - ${file}`));
+    
+    return imageFiles;
+  } catch (error) {
+    console.error(`❌ Ошибка чтения папки ${folderPath}:`, error.message);
+    return null;
+  }
+}
+
+// === ОСНОВНАЯ ФУНКЦИЯ ===
+async function main() {
+  console.log('🚀 Начинаем генерацию ссылок на GitHub...');
+  console.log(`📁 Используем локальную папку: ${LOCAL_IMAGES_PATH}`);
+  console.log('');
+  
+  // Проверяем существование корневой папки
+  if (!fs.existsSync(LOCAL_IMAGES_PATH)) {
+    console.error(`❌ Папка с фотографиями не найдена: ${LOCAL_IMAGES_PATH}`);
+    console.log('💡 Убедитесь, что путь правильный:');
+    console.log(`   Сейчас ищет: ${LOCAL_IMAGES_PATH}`);
+    console.log('   Создайте папку или укажите правильный путь в LOCAL_IMAGES_PATH');
+    return;
+  }
+  
+  if (!fs.existsSync(OBJECTS_JSON_PATH)) {
+    console.error(`❌ objects.json не найден: ${OBJECTS_JSON_PATH}`);
+    return;
+  }
+  
+  const objects = JSON.parse(fs.readFileSync(OBJECTS_JSON_PATH, 'utf8'));
+  console.log(`📄 Найдено ${objects.length} объектов в objects.json`);
+  console.log('');
+  
+  let updatedCount = 0;
+  let totalPhotos = 0;
+  const errors = [];
+  const noPhotos = [];
+  
+  for (const obj of objects) {
+    const folderPath = ID_MAPPING[obj.id];
+    
+    if (!folderPath) {
+      console.log(`⚠️ Нет соответствия для ${obj.id} (${obj.name}), пропускаем`);
+      continue;
+    }
+    
+    console.log(`📂 Обработка: ${obj.name} (${obj.id})`);
+    console.log(`   Путь: ${folderPath}`);
+    
+    const files = scanLocalFolder(folderPath);
+    
+    if (!files || files.length === 0) {
+      console.log(`   ❌ Нет файлов\n`);
+      noPhotos.push(`${obj.id} (${obj.name})`);
+      continue;
+    }
+    
+    const newPhotos = files.map(file => getGitHubRawUrl(folderPath, file));
+    obj.photos = newPhotos;
+    updatedCount++;
+    totalPhotos += newPhotos.length;
+    console.log(`   ✅ Обновлено (${newPhotos.length} фото)\n`);
+  }
+  
+  // Сохраняем обновленный objects.json
+  fs.writeFileSync(OBJECTS_JSON_PATH, JSON.stringify(objects, null, 2), 'utf8');
+  
+  // Итоговая статистика
+  console.log('═══════════════════════════════════════════════');
+  console.log(`🎉 Готово!`);
+  console.log(`📊 Обновлено объектов: ${updatedCount} из ${objects.length}`);
+  console.log(`📸 Всего фото: ${totalPhotos}`);
+  console.log(`📈 Среднее фото на объект: ${(totalPhotos / updatedCount || 0).toFixed(1)}`);
+  
+  if (noPhotos.length > 0) {
+    console.log(`\n⚠️ Без фото (${noPhotos.length}):`);
+    noPhotos.forEach(name => console.log(`  ${name}`));
+  }
+  
+  console.log(`\n📁 Файл сохранен: ${OBJECTS_JSON_PATH}`);
+}
+
+// Запускаем
+main().catch(console.error);
 ```
 
 ## File: pnpm-workspace.yaml
@@ -9377,6 +9417,344 @@ MIT License — свободное использование и модифик�
 }
 ```
 
+## File: app/layout.tsx
+```typescript
+import type { Metadata } from 'next'
+import { Geist_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
+import { Analytics } from '@vercel/analytics/next'
+import './globals.css'
+
+// Geist Mono — оставляем для моноширинного текста (код)
+const geistMono = Geist_Mono({ 
+  subsets: ["latin"],
+  variable: '--font-geist-mono'
+})
+
+// Gilroy — только Bold как основной
+const gilroy = localFont({
+  src: [
+    {
+      path: './fonts/Gilroy-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-gilroy',
+  display: 'swap',
+})
+
+// Sangha — только для акцентных заголовков
+const sanghaKali = localFont({
+  src: './fonts/SanghaKali-Regular.woff2',
+  variable: '--font-sangha',
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: 'Доступная Якутия - Инклюзивный навигатор',
+  description: 'Интерактивная карта медицинского и доступного туризма Республики Саха (Якутия)',
+  icons: {
+    // Основной фавикон — logo_homus (app/favicon.ico подключается автоматически).
+    apple: '/apple-icon.png',
+  },
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html
+      lang="ru"
+      className={`bg-background ${geistMono.variable} ${gilroy.variable} ${sanghaKali.variable}`}
+      suppressHydrationWarning
+    >
+      <body className={`${gilroy.className} antialiased`}>
+        {/* Применяем сохранённый режим контраста до первой отрисовки — без мигания */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var p=sessionStorage.getItem('visionPreference');if(p==='partial'){document.documentElement.classList.add('high-contrast','large-font');}}catch(e){}",
+          }}
+        />
+        {children}
+        {process.env.NODE_ENV === 'production' && <Analytics />}
+      </body>
+    </html>
+  )
+}
+```
+
+## File: .github/workflows/deploy.yml
+```yaml
+# GitHub Actions workflow for deploying static Next.js site to GitHub Pages
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # Автоматическая установка pnpm
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm" # Теперь кэш будет работать правильно через pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build static site
+        run: |
+          if [ -f next.config.prod.mjs ]; then
+            cp next.config.prod.mjs next.config.mjs
+          fi
+          pnpm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./out"
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+## File: components/AppHeader.tsx
+```typescript
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface HeaderProps {
+  onOpenFilters?: () => void; 
+}
+
+export default function Header({ onOpenFilters }: HeaderProps) {
+    
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+  
+  useEffect(() => {
+    if (document.documentElement.classList.contains('high-contrast')) {
+      setHighContrast(true);
+    }
+  }, []);
+
+  const toggleAccessibility = () => {
+    const newState = !highContrast;
+    setHighContrast(newState);
+
+    if (newState) {
+      document.documentElement.classList.add('high-contrast', 'large-font');
+    } else {
+      document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+    // Сохраняем выбор на сессию, чтобы он не сбрасывался при перезагрузке
+    try {
+      sessionStorage.setItem('visionPreference', newState ? 'partial' : 'none');
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleScrollToAbout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    if (pathname === '/') {
+      const element = document.getElementById('about');
+      if (element) {
+        const headerHeight = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      sessionStorage.setItem('scrollToAbout', 'true');
+      router.push('/');
+    }
+  };
+
+  const handleOpenFilters = () => {
+    if (onOpenFilters) {
+      onOpenFilters();
+    } else {
+      router.push('/'); 
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleGoToMap = () => {
+    setIsMobileMenuOpen(false);
+    router.push('/map');
+  };
+
+  return (
+    <header className={`sticky top-0 z-50 transition-colors relative ${
+      highContrast 
+        ? 'bg-black' 
+        : 'bg-[var(--color-bg-primary)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-bg-primary)]/60'
+    }`}>
+      
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between relative z-10">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <img 
+            src={`${basePath}/img/logo_homus.png`} 
+            alt="Логотип Доступная Якутия" 
+            className="h-10 w-auto object-contain"
+          />
+          <span 
+            className={`${highContrast ? 'text-white' : 'text-[var(--color-header-title)]'} font-sangha`}
+            style={{
+              fontSize: 'clamp(1.2rem, 2.5vw, 1.75rem)',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Доступная Якутия
+          </span>
+        </Link>
+
+        <nav className="hidden md:flex items-center gap-8">
+          <Link href="/advice" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
+            Практические советы
+          </Link>
+          <Link href="/yakutia" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
+            О Якутии
+          </Link>
+          <button 
+            onClick={handleScrollToAbout} 
+            className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)] cursor-pointer"
+          >
+            О проекте
+          </button>
+          
+          {/* ✅ "Перейти на карту" - как обычный текст, но темно-оранжевый */}
+          <button 
+            onClick={handleGoToMap}
+            className={`text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold text-[var(--color-accent-dark)] hover:text-[var(--color-accent-hover)] transition-colors cursor-pointer ${
+              highContrast ? 'text-white hover:text-gray-300' : ''
+            }`}
+          >
+            Перейти на карту
+          </button>
+        </nav>
+
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleAccessibility}
+            className={`w-auto px-2 ${highContrast ? 'text-white hover:bg-white/20' : ''}`}
+            title="Версия для слабовидящих"
+            aria-label="Версия для слабовидящих: высокий контраст и крупный шрифт"
+            aria-pressed={highContrast}
+          >
+            <img
+              src={`${basePath}/img/eye.png`}
+              alt=""
+              aria-hidden="true"
+              className="h-5 w-auto object-contain dark-contrast:brightness-0 dark-contrast:invert"
+            />
+          </Button>
+          
+          <button 
+            className="md:hidden p-2"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
+          </button>
+        </div>
+      </div>
+
+      <div className={`border-b ${highContrast ? 'border-white/30' : 'border-[var(--color-card-border)]'}`} />
+      
+      <div 
+        className="w-full bg-repeat-x"
+        style={{ 
+          backgroundImage: `url("${basePath}/img/uzor.svg")`,
+          backgroundSize: "auto 30px",
+          backgroundPosition: "bottom center",
+          height: "30px",
+          opacity: highContrast ? 0.3 : 0.7,
+          filter: highContrast ? 'invert(1)' : 'none',
+        }}
+      />
+
+      {/* Мобильное меню */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-[var(--color-bg-primary)] border-b border-[var(--color-card-border)] shadow-lg py-4 px-4 flex flex-col gap-4 z-20">
+          <Link href="/advice" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
+            Практические советы
+          </Link>
+          <Link href="/yakutia" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
+            О Якутии
+          </Link>
+          <button 
+            onClick={handleScrollToAbout}
+            className="py-2 text-lg font-bold text-[var(--color-text-primary)] text-left"
+          >
+            О проекте
+          </button>
+          
+          {/* ✅ "Перейти на карту" в мобильном меню - темно-оранжевый */}
+          <button 
+            onClick={handleGoToMap}
+            className={`py-2 text-lg font-bold text-[var(--color-accent-dark)] text-left hover:text-[var(--color-accent-hover)] transition-colors ${
+              highContrast ? 'text-white hover:text-gray-300' : ''
+            }`}
+          >
+            Перейти на карту
+          </button>
+        </div>
+      )}
+    </header>
+  );
+}
+```
+
 ## File: public/data/objects.json
 ```json
 [
@@ -9675,8 +10053,7 @@ MIT License — свободное использование и модифик�
       "family"
     ],
     "coordinates": [
-      62.026382,
-      129.745318
+      62.025816, 129.732206
     ],
     "address": "г. Якутск, ул. Кирова, 9",
     "workingHours": "(Среда):\n12:00 - 20:00\n (Ост. дни):\n10:00 - 18:00\nВыходные: пн, вт",
@@ -9694,7 +10071,8 @@ MIT License — свободное использование и модифик�
     "tickets": "Стоимость входных билетов:\n\nВзрослые (граждане РФ) — 300 ₽\nПенсионеры — 200 ₽\nСтуденты — 200 ₽\nЛица до 18 лет — Бесплатно\nМногодетные семьи — Бесплатно\nСтуденты-художники — Бесплатно\nИностранные граждане — 500 ₽\n\nОбзорная экскурсия\nВзрослые (граждане РФ) — 300 ₽\nПенсионеры — 250 ₽\nСтуденты — 250 ₽\nЛица до 18 лет — 200 ₽\nМногодетные семьи — 150 ₽\nИностранные граждане — 1000 ₽\n\nТематическая экскурсия\n\nВзрослые (граждане РФ) — 350 ₽\nПенсионеры — 350 ₽\nСтуденты — 250 ₽\nЛица до 18 лет — 250 ₽\nМногодетные семьи — 150 ₽\nИностранные граждане — 600 ₽",
     "benefits": "Лица до 18 лет — Бесплатно\nМногодетные семьи — Бесплатно\nСтуденты-художники — Бесплатно",
     "photos": [
-      "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/national-art-museum/main.jpg"
+      "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/national-art-museum/main.jpg",
+      "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/national-art-museum/gallery-1.png"
     ],
     "contacts": {
       "phone": "33-52-80",
@@ -9793,7 +10171,7 @@ MIT License — свободное использование и модифик�
       "hearing_impaired",
       "deaf_mute"
     ],
-    "coordinates": null,
+    "coordinates": [62.016822, 129.703919],
     "address": "677000, Республика Саха (Якутия), г. Якутск, ул. Белинского, д. 58",
     "workingHours": "Большинство административных подразделений работают с 09:00 до 17:00 в будни, с перерывом на обед с 13:00 до 14:00. Суббота и воскресенье — выходные дни.",
     "description": "Северо-Восточный федеральный университет имени М. К. Аммосова — многоотраслевой федеральный университет в Якутске, имеющий филиалы в Анадыре, Мирном и Нерюнгри; крупнейшее высшее учебное заведение в Республике Саха и Чукотском автономном округе, а также научно-образовательный центр Северо-Востока России. В его структуру входят 12 институтов, 5 факультетов, 5 научно-исследовательских институтов и 3 филиала (в Мирном, Нерюнгри и Анадыре). Полный список институтов СВФУ: Горный институт, Инженерно-технический институт, Институт естественных наук, Институт зарубежной филологии и регионоведения, Институт математики и информатики, Медицинский институт, Педагогический институт, Институт психологии, Институт физической культуры и спорта, Физико-технический институт, Финансово-экономический институт, Институт языков и культуры народов Северо-Востока РФ.",
@@ -9992,8 +10370,7 @@ MIT License — свободное использование и модифик�
       "family"
     ],
     "coordinates": [
-      62.0276,
-      129.7329
+      62.026395, 129.733740
     ],
     "address": "Республика Саха (Якутия) город Якутск ул. Ярославского, 27",
     "workingHours": "Режим работы: пн-пт, с 9:00 до 18:00, обед с 13:00 до 14:00, касса работает без перерыва на обед. сб с 10:00 до 17:00, выходной - воскресенье.",
@@ -10459,76 +10836,6 @@ MIT License — свободное использование и модифик�
 ]
 ```
 
-## File: app/layout.tsx
-```typescript
-import type { Metadata } from 'next'
-import { Geist_Mono } from 'next/font/google'
-import localFont from 'next/font/local'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
-
-// Geist Mono — оставляем для моноширинного текста (код)
-const geistMono = Geist_Mono({ 
-  subsets: ["latin"],
-  variable: '--font-geist-mono'
-})
-
-// Gilroy — только Bold как основной
-const gilroy = localFont({
-  src: [
-    {
-      path: './fonts/Gilroy-Bold.woff2',
-      weight: '700',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-gilroy',
-  display: 'swap',
-})
-
-// Sangha — только для акцентных заголовков
-const sanghaKali = localFont({
-  src: './fonts/SanghaKali-Regular.woff2',
-  variable: '--font-sangha',
-  display: 'swap',
-})
-
-export const metadata: Metadata = {
-  title: 'Доступная Якутия - Инклюзивный навигатор',
-  description: 'Интерактивная карта медицинского и доступного туризма Республики Саха (Якутия)',
-  icons: {
-    // Основной фавикон — logo_homus (app/favicon.ico подключается автоматически).
-    apple: '/apple-icon.png',
-  },
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return (
-    <html
-      lang="ru"
-      className={`bg-background ${geistMono.variable} ${gilroy.variable} ${sanghaKali.variable}`}
-      suppressHydrationWarning
-    >
-      <body className={`${gilroy.className} antialiased`}>
-        {/* Применяем сохранённый режим контраста до первой отрисовки — без мигания */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "try{var p=sessionStorage.getItem('visionPreference');if(p==='partial'){document.documentElement.classList.add('high-contrast','large-font');}}catch(e){}",
-          }}
-        />
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
-    </html>
-  )
-}
-```
-
 ## File: app/place/[id]/PlaceDetailClient.tsx
 ```typescript
 'use client';
@@ -10572,11 +10879,21 @@ import {
   Palette,
   Ticket,
   GraduationCap,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ContrastToggle from '@/components/ContrastToggle';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  type CarouselApi,
+} from '@/components/ui/carousel';
 
 // Типы
 interface MapObject {
@@ -10620,7 +10937,7 @@ const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; co
   education: { name: 'Образование', icon: GraduationCap, color: '#0284c7' },
 };
 
-// Категории доступности: заголовок, иконка, цвет (ключи совпадают с id слоёв)
+// Категории доступности
 const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: string }[] = [
   { id: 'mobility', name: 'Передвижение', icon: Accessibility, color: '#457B9D' },
   { id: 'vision_impaired', name: 'Для незрячих и слабовидящих', icon: Eye, color: '#FF6B6B' },
@@ -10638,6 +10955,8 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: st
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [api, setApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
 
   useEffect(() => {
@@ -10656,6 +10975,15 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         setLoading(false);
       });
   }, [id, basePath]);
+
+  // Отслеживаем текущий слайд
+  useEffect(() => {
+    if (!api) return;
+    setCurrentSlide(api.selectedScrollSnap());
+    api.on('select', () => {
+      setCurrentSlide(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   if (loading) {
     return (
@@ -10685,9 +11013,11 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
   const categoryConfig = CATEGORY_CONFIG[place.category] || CATEGORY_CONFIG.museum;
   const CategoryIcon = categoryConfig.icon;
-
-  // Категории доступности, для которых есть текст (в порядке ACCESS_META)
   const accessSections = ACCESS_META.filter((m) => place.accessibility && place.accessibility[m.id]);
+
+  // Подготавливаем фото для галереи
+  const photos = place.photos && place.photos.length > 0 ? place.photos : [`${basePath}/img/placeholder.jpg`];
+  const hasMultiplePhotos = photos.length > 1;
 
   const phoneHref = place.contacts.phone ? place.contacts.phone.replace(/[^\d+]/g, '') : '';
   const routeUrl = place.coordinates
@@ -10704,9 +11034,11 @@ export default function PlaceDetailClient({ id }: { id: string }) {
               <span className="hidden sm:inline">На карту</span>
             </Button>
           </Link>
-          <h1 className="text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
+          
+          <h1 className="hidden sm:block text-lg md:text-xl text-foreground font-semibold flex-1 text-center px-4 line-clamp-1">
             {place.name}
           </h1>
+          
           <div className="flex items-center gap-1">
             <ContrastToggle />
             <Button
@@ -10725,32 +11057,76 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         </div>
       </header>
 
-      <div className="relative h-64 md:h-96">
-        <img
-          src={place.photos && place.photos.length > 0 ? place.photos[0] : `${basePath}/img/placeholder.jpg`}
-          alt={place.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4">
-          <Badge
-            className="mb-2 text-white border-white/30 px-3 py-1 text-sm"
-            style={{ backgroundColor: categoryConfig.color }}
-          >
-            <CategoryIcon className="size-3 mr-1" />
-            {categoryConfig.name}
-          </Badge>
-        </div>
+      {/* ГАЛЕРЕЯ - КАРУСЕЛЬ */}
+      <div className="relative w-full bg-black/5">
+        <Carousel setApi={setApi} className="w-full">
+          <CarouselContent>
+            {photos.map((photo, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-[300px] md:h-[450px] w-full">
+                  <img
+                    src={photo}
+                    alt={`${place.name} - фото ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+                    }}
+                  />
+                  {/* Градиент снизу для текста */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  
+                  {/* Индикатор количества фото */}
+                  {hasMultiplePhotos && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {photos.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => api?.scrollTo(idx)}
+                          className={`h-2 rounded-full transition-all ${
+                            currentSlide === idx
+                              ? 'w-8 bg-white'
+                              : 'w-2 bg-white/50 hover:bg-white/70'
+                          }`}
+                          aria-label={`Перейти к фото ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Количество фото */}
+                  {hasMultiplePhotos && (
+                    <div className="absolute top-4 right-4 bg-black/60 text-white text-sm px-3 py-1.5 rounded-full backdrop-blur-sm">
+                      {currentSlide + 1} / {photos.length}
+                    </div>
+                  )}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          
+          {/* Кнопки навигации - только если фото > 1 */}
+          {hasMultiplePhotos && (
+            <>
+              <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-black border-0 shadow-lg size-10 rounded-full flex items-center justify-center" />
+              <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-black border-0 shadow-lg size-10 rounded-full flex items-center justify-center" />
+            </>
+          )}
+        </Carousel>
       </div>
 
+      {/* КОНТЕНТ */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">
+          <Badge
+            className="mb-3 text-white border-0 px-3 py-1.5 text-sm"
+            style={{ backgroundColor: categoryConfig.color }}
+          >
+            <CategoryIcon className="size-3.5 mr-1.5" />
+            {categoryConfig.name}
+          </Badge>
+          
           <h1 className="text-3xl font-bold text-foreground mb-3">{place.name}</h1>
 
-          {/* Адрес и часы работы */}
           <div className="flex flex-col gap-2 mb-4">
             {place.address && (
               <div className="flex items-start gap-2 text-muted-foreground">
@@ -10771,7 +11147,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Доступность — текст по категориям */}
+        {/* Доступность */}
         <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Accessibility className="size-5 text-primary" />
@@ -10895,11 +11271,12 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
             {routeUrl && (
               <Button
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-6 gap-2 text-sm sm:text-base"
                 onClick={() => window.open(routeUrl, '_blank', 'noopener,noreferrer')}
               >
-                <Navigation className="size-5" />
-                Построить маршрут в Яндекс.Картах
+                <Navigation className="size-5 flex-shrink-0" />
+                <span className="whitespace-nowrap">Построить маршрут</span>
+                <span className="hidden sm:inline">в Яндекс.Картах</span>
               </Button>
             )}
           </div>
@@ -11152,15 +11529,32 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
 /* 1. Увеличиваем базовый размер шрифта (одинаково для всех устройств) */
 html.large-font {
-  font-size: 140%; 
+  font-size: 140%;
 }
 
-html.large-font header .flex.items-center.gap-4 {
-  flex-shrink: 0 !important;
-  width: auto !important;
-  min-width: 80px !important;
+@media (max-width: 640px) {
+  html.large-font {
+    font-size: 110% !important;
+  }
 }
 
+
+:root.high-contrast header button:first-child {
+  overflow: hidden !important;
+}
+
+:root.high-contrast header button:first-child span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Уменьшаем шрифт в high-contrast на мобильных */
+@media (max-width: 640px) {
+  :root.high-contrast html {
+    font-size: 120% !important;
+  }
+}
 html.large-font button[title="Версия для слабовидящих"] {
   flex-shrink: 0 !important;
   width: 36px !important;
@@ -11615,273 +12009,153 @@ html.large-font button[title="Версия для слабовидящих"] svg
 :root.high-contrast .dark\:border-amber-700 {
   border-color: #FFFFFF !important;
 }
-```
-
-## File: .github/workflows/deploy.yml
-```yaml
-# GitHub Actions workflow for deploying static Next.js site to GitHub Pages
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: ["main", "master"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9 # Автоматическая установка pnpm
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "pnpm" # Теперь кэш будет работать правильно через pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Build static site
-        run: |
-          if [ -f next.config.prod.mjs ]; then
-            cp next.config.prod.mjs next.config.mjs
-          fi
-          pnpm run build
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "./out"
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-```
-
-## File: components/AppHeader.tsx
-```typescript
-"use client";
-
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-interface HeaderProps {
-  onOpenFilters?: () => void; 
+/* Убираем жирность для всего текста */
+:root.high-contrast body * {
+  font-weight: normal !important;
 }
 
-export default function Header({ onOpenFilters }: HeaderProps) {
-    
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
-  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
+/* Заголовки делаем жирными и с простым шрифтом */
+:root.high-contrast h1,
+:root.high-contrast h2,
+:root.high-contrast h3,
+:root.high-contrast h4,
+:root.high-contrast .font-sangha,
+:root.high-contrast [class*="font-sangha"] {
+  font-family: var(--font-sans), system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+}
+
+/* Увеличиваем межстрочный интервал для основного текста */
+:root.high-contrast p,
+:root.high-contrast li,
+:root.high-contrast .text-muted-foreground {
+  line-height: 1.8 !important;
+  letter-spacing: 0.02em;
+}
+
+/* Улучшаем читаемость заголовков на странице "Практические советы" */
+:root.high-contrast .advice-title {
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - КНОПКИ В ПОПАПЕ (УСИЛЕННЫЕ)
+   ======================================================== */
+
+/* Все кнопки внутри попапа */
+:root.high-contrast .leaflet-popup-content-wrapper button {
+  background-color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button span {
+  color: #FFFFFF !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button:hover {
+  background-color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+:root.high-contrast .leaflet-popup-content-wrapper button:hover span {
+  color: #000000 !important;
+}
+/* ========================================================
+   АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ В ВЫСОКОКОНТРАСТНОМ РЕЖИМЕ
+   ======================================================== */
+
+/* Уменьшаем размер шрифта на мобильных в high-contrast */
+@media (max-width: 768px) {
+  :root.high-contrast html {
+    font-size: 110% !important;
+  }
   
-  useEffect(() => {
-    if (document.documentElement.classList.contains('high-contrast')) {
-      setHighContrast(true);
-    }
-  }, []);
+  :root.high-contrast .leaflet-popup-content-wrapper {
+    max-width: 90vw !important;
+    width: 90vw !important;
+  }
+  
+  :root.high-contrast .leaflet-popup {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  /* Уменьшаем отступы в попапе на мобильных */
+  :root.high-contrast .leaflet-popup-content-wrapper .p-3 {
+    padding: 0.5rem !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content-wrapper .p-4 {
+    padding: 0.75rem !important;
+  }
+}
 
-  const toggleAccessibility = () => {
-    const newState = !highContrast;
-    setHighContrast(newState);
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+  :root.high-contrast html {
+    font-size: 100% !important;
+  }
+  
+  :root.high-contrast .leaflet-popup-content-wrapper {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+}
+/* ========================================================
+   ВЫСОКОКОНТРАСТНЫЙ РЕЖИМ - ЖЕЛТЫЕ ФИЛЬТРЫ В ПОПАПЕ
+   ======================================================== */
 
-    if (newState) {
-      document.documentElement.classList.add('high-contrast', 'large-font');
-    } else {
-      document.documentElement.classList.remove('high-contrast', 'large-font');
-    }
-    // Сохраняем выбор на сессию, чтобы он не сбрасывался при перезагрузке
-    try {
-      sessionStorage.setItem('visionPreference', newState ? 'partial' : 'none');
-    } catch {
-      /* ignore */
-    }
-  };
+/* Фильтры "Дыхательная система" и "Сердечно-сосудистые" в высококонтрастном режиме */
+:root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] {
+  background-color: #FFD700 !important;
+  border-color: #FFD700 !important;
+  color: #000000 !important;
+}
 
-  const handleScrollToAbout = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsMobileMenuOpen(false);
-    
-    if (pathname === '/') {
-      const element = document.getElementById('about');
-      if (element) {
-        const headerHeight = 80;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
-        
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
-    } else {
-      sessionStorage.setItem('scrollToAbout', 'true');
-      router.push('/');
-    }
-  };
+:root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] span {
+  color: #000000 !important;
+}
 
-  const handleOpenFilters = () => {
-    if (onOpenFilters) {
-      onOpenFilters();
-    } else {
-      router.push('/'); 
-    }
-    setIsMobileMenuOpen(false);
-  };
+:root.high-contrast .leaflet-popup-content-wrapper button[style*="background-color: #FFD700"] svg {
+  color: #000000 !important;
+}
+/* Стили для карусели на странице деталей */
+.embla__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
 
-  const handleGoToMap = () => {
-    setIsMobileMenuOpen(false);
-    router.push('/map');
-  };
+/* Адаптация для высококонтрастного режима */
+:root.high-contrast .carousel-button {
+  background-color: #000 !important;
+  border: 2px solid #fff !important;
+  color: #fff !important;
+}
 
-  return (
-    <header className={`sticky top-0 z-50 transition-colors relative ${
-      highContrast 
-        ? 'bg-black' 
-        : 'bg-[var(--color-bg-primary)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-bg-primary)]/60'
-    }`}>
-      
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between relative z-10">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img 
-            src={`${basePath}/img/logo_homus.png`} 
-            alt="Логотип Доступная Якутия" 
-            className="h-10 w-auto object-contain"
-          />
-          <span 
-            className={`${highContrast ? 'text-white' : 'text-[var(--color-header-title)]'} font-sangha`}
-            style={{
-              fontSize: 'clamp(1.2rem, 2.5vw, 1.75rem)',
-              letterSpacing: '0.02em',
-            }}
-          >
-            Доступная Якутия
-          </span>
-        </Link>
+:root.high-contrast .carousel-button:hover {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
 
-        <nav className="hidden md:flex items-center gap-8">
-          <Link href="/advice" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
-            Практические советы
-          </Link>
-          <Link href="/yakutia" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
-            О Якутии
-          </Link>
-          <button 
-            onClick={handleScrollToAbout} 
-            className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)] cursor-pointer"
-          >
-            О проекте
-          </button>
-          
-          {/* ✅ "Перейти на карту" - как обычный текст, но темно-оранжевый */}
-          <button 
-            onClick={handleGoToMap}
-            className={`text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold text-[var(--color-accent-dark)] hover:text-[var(--color-accent-hover)] transition-colors cursor-pointer ${
-              highContrast ? 'text-white hover:text-gray-300' : ''
-            }`}
-          >
-            Перейти на карту
-          </button>
-        </nav>
-
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleAccessibility}
-            className={`w-auto px-2 ${highContrast ? 'text-white hover:bg-white/20' : ''}`}
-            title="Версия для слабовидящих"
-            aria-label="Версия для слабовидящих: высокий контраст и крупный шрифт"
-            aria-pressed={highContrast}
-          >
-            <img
-              src={`${basePath}/img/eye.png`}
-              alt=""
-              aria-hidden="true"
-              className="h-5 w-auto object-contain dark-contrast:brightness-0 dark-contrast:invert"
-            />
-          </Button>
-          
-          <button 
-            className="md:hidden p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-          </button>
-        </div>
-      </div>
-
-      <div className={`border-b ${highContrast ? 'border-white/30' : 'border-[var(--color-card-border)]'}`} />
-      
-      <div 
-        className="w-full bg-repeat-x"
-        style={{ 
-          backgroundImage: `url("${basePath}/img/uzor.svg")`,
-          backgroundSize: "auto 30px",
-          backgroundPosition: "bottom center",
-          height: "30px",
-          opacity: highContrast ? 0.3 : 0.7,
-          filter: highContrast ? 'invert(1)' : 'none',
-        }}
-      />
-
-      {/* Мобильное меню */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-[var(--color-bg-primary)] border-b border-[var(--color-card-border)] shadow-lg py-4 px-4 flex flex-col gap-4 z-20">
-          <Link href="/advice" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
-            Практические советы
-          </Link>
-          <Link href="/yakutia" className="py-2 text-lg font-bold text-[var(--color-text-primary)]" onClick={() => setIsMobileMenuOpen(false)}>
-            О Якутии
-          </Link>
-          <button 
-            onClick={handleScrollToAbout}
-            className="py-2 text-lg font-bold text-[var(--color-text-primary)] text-left"
-          >
-            О проекте
-          </button>
-          
-          {/* ✅ "Перейти на карту" в мобильном меню - темно-оранжевый */}
-          <button 
-            onClick={handleGoToMap}
-            className={`py-2 text-lg font-bold text-[var(--color-accent-dark)] text-left hover:text-[var(--color-accent-hover)] transition-colors ${
-              highContrast ? 'text-white hover:text-gray-300' : ''
-            }`}
-          >
-            Перейти на карту
-          </button>
-        </div>
-      )}
-    </header>
-  );
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
 }
 ```
 
@@ -11906,697 +12180,6 @@ const nextConfig = {
 }
 
 export default nextConfig
-```
-
-## File: components/accessible-yakutia-map.tsx
-```typescript
-"use client"
-
-import { useEffect, useState, useCallback, useRef } from "react"
-import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
-import L from "leaflet"
-import "leaflet/dist/leaflet.css"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import ContrastToggle from "@/components/ContrastToggle"
-import { useRouter } from "next/navigation";
-import {
-  Filter,
-  X,
-  RotateCcw,
-  Phone,
-  Globe,
-  MapPin,
-  Accessibility,
-  Eye,
-  Ear,
-  Utensils,
-  Heart,
-  Brain,
-  Wind,
-  Users,
-  Sparkles,
-  Hospital,
-  Clock,
-  Building2,
-  Hotel,
-  UtensilsCrossed,
-  Coffee,
-  TreePine,
-  Theater,
-  Stethoscope,
-  Flower2,
-  Landmark,
-  ShoppingBag,
-  Dumbbell,
-  Mountain,
-  Palette,
-  Ticket,
-  GraduationCap,
-  Menu,
-  Search,
-  List,
-  LocateFixed,
-} from "lucide-react"
-
-// Types
-interface MapObject {
-  id: string
-  name: string
-  category: string
-  layers: string[]
-  coordinates: [number, number] | null
-  address?: string
-  workingHours?: string
-  description: string
-  accessibility: Record<string, string>
-  contraindications?: string
-  tickets?: string
-  benefits?: string
-  notes?: string
-  photos: string[]
-  contacts: {
-    phone?: string
-    website?: string
-    yandexMap?: string
-  }
-}
-
-export interface AccessibleYakutiaMapProps {
-  onPlaceSelect?: (id: string) => void
-}
-
-// Configuration
-const CONFIG = {
-  mapCenter: [62.0355, 129.6755] as [number, number],
-  defaultZoom: 11,
-  minZoom: 5,
-  maxZoom: 18,
-}
-
-// Filter colors
-const FILTER_COLORS: Record<string, string> = {
-  inclusive: "#E38920",
-  vision_impaired: "#FF6B6B",
-  hearing_impaired: "#FFA07A",
-  deaf_mute: "#DDA15E",
-  dietary: "#95E1D3",
-  cardiovascular: "#E63946",
-  mobility: "#457B9D",
-  mental: "#A8DADC",
-  respiratory: "#1D3557",
-  family: "#FFB703",
-  ethnomedicine: "#8B5A3C",
-  health: "#52B788",
-}
-
-// Filter definitions
-const CATEGORY_FILTERS = [
-  { id: "inclusive", name: "Доступная среда", icon: Accessibility },
-  { id: "vision_impaired", name: "Нарушения зрения", icon: Eye },
-  { id: "hearing_impaired", name: "Нарушения слуха", icon: Ear },
-  { id: "deaf_mute", name: "Глухонемые", icon: Ear },
-  { id: "dietary", name: "Питание", icon: Utensils },
-  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart },
-  { id: "mobility", name: "Подвижность", icon: Accessibility },
-  { id: "mental", name: "Ментальные особенности", icon: Brain },
-  { id: "respiratory", name: "Респираторные", icon: Wind },
-  { id: "family", name: "Семьи с детьми", icon: Users },
-  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles },
-  { id: "health", name: "Здоровье", icon: Hospital },
-]
-
-const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2 }> = {
-  museum: { name: "Музей", icon: Building2 },
-  hotel: { name: "Гостиница", icon: Hotel },
-  restaurant: { name: "Ресторан", icon: UtensilsCrossed },
-  cafe: { name: "Кафе", icon: Coffee },
-  park: { name: "Парк", icon: TreePine },
-  theater: { name: "Театр", icon: Theater },
-  medical: { name: "Медицина", icon: Stethoscope },
-  spa: { name: "СПА/Оздоровление", icon: Flower2 },
-  monument: { name: "Памятник", icon: Landmark },
-  shopping: { name: "Торговый центр", icon: ShoppingBag },
-  sports: { name: "Спорт", icon: Dumbbell },
-  nature: { name: "Природа", icon: Mountain },
-  culture: { name: "Культура", icon: Palette },
-  entertainment: { name: "Развлечения", icon: Ticket },
-  education: { name: "Образование", icon: GraduationCap },
-}
-
-// Метаданные категорий доступности
-const ACCESS_META: { id: string; name: string; icon: typeof Building2 }[] = [
-  { id: "mobility", name: "Передвижение", icon: Accessibility },
-  { id: "vision_impaired", name: "Нарушения зрения", icon: Eye },
-  { id: "hearing_impaired", name: "Нарушения слуха", icon: Ear },
-  { id: "deaf_mute", name: "Глухонемые", icon: Ear },
-  { id: "dietary", name: "Питание", icon: Utensils },
-  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart },
-  { id: "respiratory", name: "Дыхательная система", icon: Wind },
-  { id: "mental", name: "Ментальные особенности", icon: Brain },
-  { id: "family", name: "Семьи с детьми", icon: Users },
-  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles },
-  { id: "health", name: "Отдых с пользой", icon: Hospital },
-]
-
-function getCategoryMarkerIcon(category: string) {
-  const iconPaths: Record<string, string> = {
-    museum: '<path d="M3 22V8l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M6 22V11h4v11"/><path d="M14 22V11h4v11"/>',
-    hotel: '<path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
-    restaurant: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
-    cafe: '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/>',
-    park: '<path d="M10 10v.2A3 3 0 0 1 8.9 16v0H5v0h0a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M19 10v.2A3 3 0 0 1 17.9 16v0H14v0h0a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M16 16v6"/>',
-    theater: '<path d="M2 10s3-3 3-8"/><path d="M22 10s-3-3-3-8"/><path d="M10 2c0 4.4-3.6 8-8 8"/><path d="M14 2c0 4.4 3.6 8 8 8"/><path d="M2 10s2 2 2 5"/><path d="M22 10s-2 2-2 5"/><path d="M8 15h8"/><path d="M2 22v-1a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1"/>',
-    medical: '<path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v18"/>',
-    spa: '<path d="M12 22c5.5-2.5 7-8.5 7-12a5 5 0 0 0-5-5c-2 0-3.5 1.5-4 3-.5-1.5-2-3-4-3a5 5 0 0 0-5 5c0 3.5 1.5 9.5 7 12l2-1 2 1z"/>',
-    monument: '<path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
-    shopping: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
-    sports: '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/><path d="M2 12h20"/>',
-    nature: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
-    culture: '<path d="M12 2v4"/><path d="m6.8 14-3.5 2"/><path d="m20.7 7-3.5 2"/><path d="M6.8 10 3.3 8"/><path d="m20.7 17-3.5-2"/><circle cx="12" cy="12" r="6"/>',
-    entertainment: '<rect width="20" height="12" x="2" y="6" rx="2"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/>',
-    education: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
-  }
-  const iconPath = iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
-  
-  const pinColor = "#B86A18";
-
-  return L.divIcon({
-    className: "custom-marker-wrapper",
-    html: `<div style="position: relative; width: 36px; height: 48px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.25));">
-      <svg width="36" height="48" viewBox="0 0 36 48" style="position: absolute; top: 0; left: 0;">
-        <path d="M 18 2 C 9.163 2 2 9.163 2 18 C 2 31 18 46 18 46 C 18 46 34 31 34 18 C 34 9.163 26.837 2 18 2 Z" fill="${pinColor}" stroke="white" stroke-width="2"/>
-      </svg>
-      <div style="position: absolute; top: 9px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          ${iconPath}
-        </svg>
-      </div>
-    </div>`,
-    iconSize: [36, 48],
-    iconAnchor: [18, 46], 
-    popupAnchor: [0, -46], 
-  })
-}
-
-function MapBoundsController({ objects }: { objects: MapObject[] }) {
-  const map = useMap()
-  useEffect(() => {
-    const coords = objects
-      .map((obj) => obj.coordinates)
-      .filter((c): c is [number, number] => Array.isArray(c))
-    if (coords.length > 0) {
-      const bounds = L.latLngBounds(coords)
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
-    }
-  }, [objects, map])
-  return null
-}
-
-// Отдаёт инстанс карты наружу (для кнопки центровки)
-function MapController({ onReady }: { onReady: (map: L.Map) => void }) {
-  const map = useMap()
-  useEffect(() => { onReady(map) }, [map, onReady])
-  return null
-}
-
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-})
-
-interface SidebarContentProps {
-  activeLayers: string[]
-  searchQuery: string
-  filteredObjectsCount: number
-  toggleLayer: (id: string) => void
-  resetFilters: () => void
-  setSearchQuery: (query: string) => void
-  onClose?: () => void
-  objects: MapObject[]
-  onPlaceSelect?: (id: string) => void
-  getBadgeColor: (obj: MapObject) => string
-}
-
-function SidebarContent({
-  activeLayers,
-  searchQuery,
-  filteredObjectsCount,
-  toggleLayer,
-  resetFilters,
-  setSearchQuery,
-  onClose,
-  objects,
-  onPlaceSelect,
-  getBadgeColor
-}: SidebarContentProps) {
-  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
-
-  return (
-    <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
-      {onClose && (
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-card-border)] lg:hidden bg-[var(--color-bg-white)] z-20">
-          <h2 className="font-sangha text-2xl text-[var(--color-green-dark)] leading-none pt-1">Списки и фильтры</h2>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-[var(--color-text-primary)]">
-            <X className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
-
-      <div className="flex flex-col px-5 py-4 border-b border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-sm z-10">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
-          <input
-            type="text"
-            placeholder="Поиск места..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
-        <div className="p-5 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)]">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-bold text-[var(--color-green-dark)]">Кому подходит:</span>
-            {activeLayers.length > 1 && (
-              <button onClick={resetFilters} className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1 font-medium">
-                <RotateCcw className="size-3" /> Сбросить
-              </button>
-            )}
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {CATEGORY_FILTERS.map((filter) => {
-              const IconComponent = filter.icon;
-              const isActive = activeLayers.includes(filter.id);
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => toggleLayer(filter.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
-                    isActive 
-                      ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
-                      : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
-                  }`}
-                >
-                  <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
-                  <span className="text-xs font-bold">{filter.name}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="p-4 space-y-3">
-          <div className="text-sm font-bold text-[var(--color-text-secondary)] px-1 mb-1">
-            Найдено мест: {filteredObjectsCount}
-          </div>
-          
-          {objects.length === 0 && (
-            <p className="p-6 text-center text-sm text-[var(--color-text-secondary)]">Ничего не найдено. Измените фильтры или поисковый запрос.</p>
-          )}
-          
-          {objects.map((obj) => {
-            const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
-            const color = getBadgeColor(obj)
-            const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
-            return (
-              <button
-                key={obj.id}
-                onClick={() => onPlaceSelect?.(obj.id)}
-                className="flex w-full items-start gap-4 border border-[var(--color-card-border)] rounded-xl bg-[var(--color-bg-white)] p-4 text-left transition-all hover:border-[var(--color-accent)]/50 hover:shadow-md"
-              >
-                <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
-                  <CatIcon className="size-5" style={{ color }} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[var(--color-text-primary)] leading-snug">{obj.name}</div>
-                  {obj.address && (
-                    <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
-                      <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0 text-[var(--color-accent)]" />
-                      <span className="line-clamp-1">{obj.address}</span>
-                    </div>
-                  )}
-                  {groups.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {groups.map((m) => {
-                        const Icon = m.icon
-                        return (
-                          <span
-                            key={m.id}
-                            title={m.name}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-[var(--color-card-border)]"
-                            style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
-                          >
-                            <Icon className="size-3.5" style={{ color: FILTER_COLORS[m.id] }} />
-                            <span className="text-xs font-bold text-[var(--color-text-primary)]">{m.name}</span>
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Компонент попапа с адаптивным дизайном
-function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
-  obj: MapObject;
-  onPlaceSelect?: (id: string) => void;
-  getBadgeColor: (obj: MapObject) => string;
-  basePath: string;
-}) {
-  const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id));
-  
-  return (
-    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
-      {/* Фото */}
-      <div className="relative h-32 w-full flex-shrink-0">
-        <img
-          src={obj.photos && obj.photos.length > 0 ? obj.photos[0] : `${basePath}/img/placeholder.jpg`}
-          alt={obj.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
-          }}
-        />
-      </div>
-
-      {/* Контент с прокруткой */}
-      <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
-        <div>
-          <Badge 
-            className="mb-2 text-white border-0 shadow-sm text-xs sm:text-sm" 
-            style={{ backgroundColor: getBadgeColor(obj) }}
-          >
-            {CATEGORY_CONFIG[obj.category]?.name || obj.category}
-          </Badge>
-          <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] leading-tight">
-            {obj.name}
-          </h3>
-        </div>
-
-        <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] space-y-1.5">
-          {obj.address && (
-            <div className="flex items-start gap-1.5">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-              <span className="line-clamp-2">{obj.address}</span>
-            </div>
-          )}
-          {obj.workingHours && (
-            <div className="flex items-start gap-1.5">
-              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
-              <span className="line-clamp-1 text-xs sm:text-sm">{obj.workingHours}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Значки доступности */}
-        {groups.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-1">
-            {groups.slice(0, 4).map((m) => {
-              const Icon = m.icon
-              return (
-                <span
-                  key={m.id}
-                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)]"
-                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
-                >
-                  <Icon className="size-2.5 sm:size-3" style={{ color: FILTER_COLORS[m.id] }} />
-                  <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] hidden xs:inline">
-                    {m.name}
-                  </span>
-                </span>
-              )
-            })}
-            {groups.length > 4 && (
-              <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-secondary)] px-1">
-                +{groups.length - 4}
-              </span>
-            )}
-          </div>
-        )}
-
-        {onPlaceSelect && (
-          <div className="pt-2 border-t border-[var(--color-card-border)]">
-            <Button 
-              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-2.5 sm:py-3 text-xs sm:text-sm"
-              onClick={() => onPlaceSelect(obj.id)}
-            >
-              Подробнее
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakutiaMapProps) {
-
-const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
-  const router = useRouter();
-  const [objects, setObjects] = useState<MapObject[]>([])
-  const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isHighContrast, setIsHighContrast] = useState(false);
-
-  // Отслеживаем высококонтрастный режим
-  useEffect(() => {
-    const checkHighContrast = () => {
-      const isHC = document.documentElement.classList.contains('high-contrast');
-      setIsHighContrast(isHC);
-    };
-    
-    checkHighContrast();
-    
-    const observer = new MutationObserver(checkHighContrast);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
-
-  // Инстанс карты (для кнопки центровки)
-  const mapRef = useRef<L.Map | null>(null)
-  const handleMapReady = useCallback((map: L.Map) => { mapRef.current = map }, [])
-
-  useEffect(() => {
-    const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
-    fetch(`${basePath}/data/objects.json`)
-      .then((res) => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
-      .then((data) => setObjects(data))
-      .catch((err) => console.error("Error loading data:", err))
-  }, [])
-
-  const toggleLayer = useCallback((id: string) => {
-    setActiveLayers((prev) => prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id])
-  }, [])
-
-  const resetFilters = useCallback(() => {
-    setActiveLayers(["inclusive"])
-    setSearchQuery("")
-  }, [])
-
-  const filteredObjects = objects.filter((obj) => {
-    if (!obj.coordinates) return false
-    const matchesSearch = searchQuery.trim() === "" ||
-      obj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      obj.description.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-    return obj.layers.some((layer) => activeLayers.includes(layer))
-  })
-
-  const getBadgeColor = useCallback((obj: MapObject) => {
-    for (const layer of obj.layers) {
-      if (activeLayers.includes(layer) && FILTER_COLORS[layer]) return FILTER_COLORS[layer]
-    }
-    return FILTER_COLORS.inclusive
-  }, [activeLayers])
-
-  // Возврат карты к текущим отфильтрованным местам (центровка)
-  const recenterMap = () => {
-    const map = mapRef.current
-    if (!map) return
-    const coords = filteredObjects
-      .map((o) => o.coordinates)
-      .filter((c): c is [number, number] => Array.isArray(c))
-    if (coords.length > 0) {
-      map.fitBounds(L.latLngBounds(coords), { padding: [50, 50], maxZoom: 13 })
-    } else {
-      map.setView(CONFIG.mapCenter, CONFIG.defaultZoom)
-    }
-  }
-
-  return (
-    <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
-      
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[1001] lg:hidden backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-      )}
-
-      <div
-        className={`fixed inset-y-0 left-0 w-full ${isHighContrast ? 'max-w-[440px]' : 'max-w-[360px]'} z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
-        style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
-      >
-        <SidebarContent
-          activeLayers={activeLayers}
-          searchQuery={searchQuery}
-          filteredObjectsCount={filteredObjects.length}
-          toggleLayer={toggleLayer}
-          resetFilters={resetFilters}
-          setSearchQuery={setSearchQuery}
-          onClose={() => setMobileMenuOpen(false)}
-          objects={filteredObjects}
-          onPlaceSelect={onPlaceSelect}
-          getBadgeColor={getBadgeColor}
-        />
-      </div>
-
-      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 md:px-4 gap-1 md:gap-2 justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity flex-shrink-0 min-w-0">
-          <img 
-            src={`${basePath}/img/logo_homus.png`} 
-            alt="Логотип Доступная Якутия" 
-            className="h-7 md:h-8 w-auto object-contain"
-          />
-          <span 
-            className={`font-sangha text-base md:text-xl leading-tight pt-1 ${
-              isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
-            }`}
-          >
-            Доступная Якутия
-          </span>
-        </button>
-        
-        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-          {/* Кнопка "глаз" — высокий контраст */}
-          <ContrastToggle />
-
-          <button
-            onClick={() => setMobileMenuOpen(true)} 
-            className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
-            aria-label="Меню"
-          >
-            <Menu className="size-3 md:size-4" />
-            <span className="hidden xs:inline">Списки</span>
-            <span className="xs:hidden">Фильтры</span>
-          </button>
-        </div>
-      </header>
-
-      <aside className={`hidden lg:flex h-full ${isHighContrast ? 'w-[500px]' : 'w-[400px]'} flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)] transition-[width] duration-300`}>
-        <div className="flex items-center justify-between gap-2 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm">
-          <button
-            onClick={() => router.push("/")}
-            className="flex items-center gap-4 min-w-0 text-left hover:opacity-80 transition-opacity"
-          >
-            <img
-              src={`${basePath}/img/logo_homus.png`}
-              alt="Логотип Доступная Якутия"
-              className="h-12 w-auto object-contain flex-shrink-0"
-            />
-            <div className="min-w-0">
-              <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
-                Доступная Якутия
-              </h1>
-              <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
-            </div>
-          </button>
-          <ContrastToggle className="flex-shrink-0" />
-        </div>
-
-        <SidebarContent
-          activeLayers={activeLayers}
-          searchQuery={searchQuery}
-          filteredObjectsCount={filteredObjects.length}
-          toggleLayer={toggleLayer}
-          resetFilters={resetFilters}
-          setSearchQuery={setSearchQuery}
-          objects={filteredObjects}
-          onPlaceSelect={onPlaceSelect}
-          getBadgeColor={getBadgeColor}
-        />
-      </aside>
-
-      <main className="relative flex-1 pt-[64px] lg:pt-0 bg-[var(--color-bg-primary)]">
-        <MapContainer 
-          attributionControl={false} 
-          center={CONFIG.mapCenter} 
-          zoom={CONFIG.defaultZoom} 
-          minZoom={CONFIG.minZoom} 
-          maxZoom={CONFIG.maxZoom} 
-          className="h-full w-full z-0" 
-          zoomControl={true}
-        >
-          <AttributionControl prefix={false} />
-          <TileLayer 
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
-          />
-          {filteredObjects.map((obj) => (
-            <Marker
-              key={obj.id}
-              position={obj.coordinates!}
-              icon={getCategoryMarkerIcon(obj.category)}
-              title={obj.name}
-              eventHandlers={{
-                add: (e) => {
-                  const el = (e.target as L.Marker).getElement()
-                  if (el) el.setAttribute("aria-label", obj.name)
-                },
-              }}
-            >
-              <Popup
-                maxWidth={400} 
-                minWidth={280} 
-                className="custom-popup"
-              >
-                <CustomPopupContent 
-                  obj={obj} 
-                  onPlaceSelect={onPlaceSelect} 
-                  getBadgeColor={getBadgeColor} 
-                  basePath={basePath} 
-                />
-              </Popup>
-            </Marker>
-          ))}
-          {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
-          <MapController onReady={handleMapReady} />
-        </MapContainer>
-
-        {/* Кнопка центровки — вернуть карту ко всем местам */}
-        <button
-          onClick={recenterMap}
-          title="Показать все места"
-          aria-label="Показать все места на карте"
-          className="absolute bottom-6 right-4 z-[400] flex items-center justify-center size-12 rounded-full bg-[var(--color-bg-white)] shadow-lg border border-[var(--color-card-border)] text-[var(--color-accent)] hover:bg-[var(--color-bg-primary)] transition-colors dark-contrast:text-white"
-        >
-          <LocateFixed className="size-5" />
-        </button>
-
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none z-[400]">
-          <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
-            <MapPin className="h-4 w-4 mr-2 text-[var(--color-accent)]" /> Найдено: {filteredObjects.length}
-          </Badge>
-        </div>
-      </main>
-    </div>
-  )
-}
 ```
 
 ## File: app/page.tsx
@@ -13025,5 +12608,908 @@ export default function HomePage() {
 
     </div>
   );
+}
+```
+
+## File: components/accessible-yakutia-map.tsx
+```typescript
+"use client"
+
+import { useEffect, useState, useCallback, useRef } from "react"
+import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
+import L from "leaflet"
+import "leaflet/dist/leaflet.css"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation";
+import {
+  X,
+  RotateCcw,
+  MapPin,
+  Accessibility,
+  Eye,
+  Ear,
+  Utensils,
+  Heart,
+  Brain,
+  Wind,
+  Users,
+  Sparkles,
+  Hospital,
+  Clock,
+  Building2,
+  Hotel,
+  UtensilsCrossed,
+  Coffee,
+  TreePine,
+  Theater,
+  Stethoscope,
+  Flower2,
+  Landmark,
+  ShoppingBag,
+  Dumbbell,
+  Mountain,
+  Palette,
+  Ticket,
+  GraduationCap,
+  Search,
+  List,
+  Map,
+  SlidersHorizontal,
+} from "lucide-react"
+
+// Types
+interface MapObject {
+  id: string
+  name: string
+  category: string
+  layers: string[]
+  coordinates: [number, number] | null
+  address?: string
+  workingHours?: string
+  description: string
+  accessibility: Record<string, string>
+  contraindications?: string
+  tickets?: string
+  benefits?: string
+  notes?: string
+  photos: string[]
+  contacts: {
+    phone?: string
+    website?: string
+    yandexMap?: string
+  }
+}
+
+export interface AccessibleYakutiaMapProps {
+  onPlaceSelect?: (id: string) => void
+}
+
+// Configuration
+const CONFIG = {
+  mapCenter: [62.0355, 129.6755] as [number, number],
+  defaultZoom: 11,
+  minZoom: 5,
+  maxZoom: 18,
+}
+
+// Filter colors
+const FILTER_COLORS: Record<string, string> = {
+  inclusive: "#E38920",
+  vision_impaired: "#FF6B6B",
+  hearing_impaired: "#FFA07A",
+  deaf_mute: "#DDA15E",
+  dietary: "#95E1D3",
+  cardiovascular: "#E63946",
+  mobility: "#457B9D",
+  mental: "#A8DADC",
+  respiratory: "#1D3557",
+  family: "#FFB703",
+  ethnomedicine: "#8B5A3C",
+  health: "#52B788",
+}
+
+// Filter definitions
+const CATEGORY_FILTERS = [
+  { id: "inclusive", name: "Доступная среда", icon: Accessibility },
+  { id: "vision_impaired", name: "Нарушения зрения", icon: Eye },
+  { id: "hearing_impaired", name: "Нарушения слуха", icon: Ear },
+  { id: "deaf_mute", name: "Глухонемые", icon: Ear },
+  { id: "dietary", name: "Питание", icon: Utensils },
+  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart },
+  { id: "mobility", name: "Подвижность", icon: Accessibility },
+  { id: "mental", name: "Ментальные особенности", icon: Brain },
+  { id: "respiratory", name: "Респираторные", icon: Wind },
+  { id: "family", name: "Семьи с детьми", icon: Users },
+  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles },
+  { id: "health", name: "Здоровье", icon: Hospital },
+]
+
+// Category configuration with colors
+const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; color: string }> = {
+  museum: { name: "Музей", icon: Building2, color: "#8b5cf6" },
+  hotel: { name: "Гостиница", icon: Hotel, color: "#3b82f6" },
+  restaurant: { name: "Ресторан", icon: UtensilsCrossed, color: "#22c55e" },
+  cafe: { name: "Кафе", icon: Coffee, color: "#f97316" },
+  park: { name: "Парк", icon: TreePine, color: "#14b8a6" },
+  theater: { name: "Театр", icon: Theater, color: "#ec4899" },
+  medical: { name: "Медицина", icon: Stethoscope, color: "#ef4444" },
+  spa: { name: "СПА/Оздоровление", icon: Flower2, color: "#06b6d4" },
+  monument: { name: "Памятник", icon: Landmark, color: "#6366f1" },
+  shopping: { name: "Торговый центр", icon: ShoppingBag, color: "#eab308" },
+  sports: { name: "Спорт", icon: Dumbbell, color: "#84cc16" },
+  nature: { name: "Природа", icon: Mountain, color: "#0ea5e9" },
+  culture: { name: "Культура", icon: Palette, color: "#f43f5e" },
+  entertainment: { name: "Развлечения", icon: Ticket, color: "#d946ef" },
+  education: { name: "Образование", icon: GraduationCap, color: "#0284c7" },
+}
+
+// Access metadata
+const ACCESS_META: { id: string; name: string; icon: typeof Building2 }[] = [
+  { id: "mobility", name: "Передвижение", icon: Accessibility },
+  { id: "vision_impaired", name: "Нарушения зрения", icon: Eye },
+  { id: "hearing_impaired", name: "Нарушения слуха", icon: Ear },
+  { id: "deaf_mute", name: "Глухонемые", icon: Ear },
+  { id: "dietary", name: "Питание", icon: Utensils },
+  { id: "cardiovascular", name: "Сердечно-сосудистые", icon: Heart },
+  { id: "respiratory", name: "Дыхательная система", icon: Wind },
+  { id: "mental", name: "Ментальные особенности", icon: Brain },
+  { id: "family", name: "Семьи с детьми", icon: Users },
+  { id: "ethnomedicine", name: "Народная медицина", icon: Sparkles },
+  { id: "health", name: "Отдых с пользой", icon: Hospital },
+]
+
+// Icon paths for categories
+function getCategoryIconPath(category: string): string {
+  const iconPaths: Record<string, string> = {
+    museum: '<path d="M3 22V8l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M6 22V11h4v11"/><path d="M14 22V11h4v11"/>',
+    hotel: '<path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
+    restaurant: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+    cafe: '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/>',
+    park: '<path d="M10 10v.2A3 3 0 0 1 8.9 16v0H5v0h0a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M19 10v.2A3 3 0 0 1 17.9 16v0H14v0h0a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M16 16v6"/>',
+    theater: '<path d="M2 10s3-3 3-8"/><path d="M22 10s-3-3-3-8"/><path d="M10 2c0 4.4-3.6 8-8 8"/><path d="M14 2c0 4.4 3.6 8 8 8"/><path d="M2 10s2 2 2 5"/><path d="M22 10s-2 2-2 5"/><path d="M8 15h8"/><path d="M2 22v-1a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1"/>',
+    medical: '<path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v18"/>',
+    spa: '<path d="M12 22c5.5-2.5 7-8.5 7-12a5 5 0 0 0-5-5c-2 0-3.5 1.5-4 3-.5-1.5-2-3-4-3a5 5 0 0 0-5 5c0 3.5 1.5 9.5 7 12l2-1 2 1z"/>',
+    monument: '<path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+    shopping: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+    sports: '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/><path d="M2 12h20"/>',
+    nature: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
+    culture: '<path d="M12 2v4"/><path d="m6.8 14-3.5 2"/><path d="m20.7 7-3.5 2"/><path d="M6.8 10 3.3 8"/><path d="m20.7 17-3.5-2"/><circle cx="12" cy="12" r="6"/>',
+    entertainment: '<rect width="20" height="12" x="2" y="6" rx="2"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/>',
+    education: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  }
+  return iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
+}
+
+// Function to create category marker icon
+function getCategoryMarkerIcon(category: string) {
+  const iconPath = getCategoryIconPath(category)
+  const pinColor = CATEGORY_CONFIG[category]?.color || "#B86A18"
+
+  return L.divIcon({
+    className: "custom-marker-wrapper",
+    html: `<div style="position: relative; width: 36px; height: 48px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.25));">
+      <svg width="36" height="48" viewBox="0 0 36 48" style="position: absolute; top: 0; left: 0;">
+        <path d="M 18 2 C 9.163 2 2 9.163 2 18 C 2 31 18 46 18 46 C 18 46 34 31 34 18 C 34 9.163 26.837 2 18 2 Z" fill="${pinColor}" stroke="white" stroke-width="2"/>
+      </svg>
+      <div style="position: absolute; top: 9px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          ${iconPath}
+        </svg>
+      </div>
+    </div>`,
+    iconSize: [36, 48],
+    iconAnchor: [18, 46],
+    popupAnchor: [0, -46],
+  })
+}
+
+// Function to create inactive (greyed out) marker icon
+function getInactiveMarkerIcon(category: string) {
+  const iconPath = getCategoryIconPath(category)
+
+  return L.divIcon({
+    className: "custom-marker-wrapper inactive",
+    html: `<div style="position: relative; width: 36px; height: 48px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.15)); opacity: 0.4;">
+      <svg width="36" height="48" viewBox="0 0 36 48" style="position: absolute; top: 0; left: 0;">
+        <path d="M 18 2 C 9.163 2 2 9.163 2 18 C 2 31 18 46 18 46 C 18 46 34 31 34 18 C 34 9.163 26.837 2 18 2 Z" fill="#94A3B8" stroke="white" stroke-width="2"/>
+      </svg>
+      <div style="position: absolute; top: 9px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          ${iconPath}
+        </svg>
+      </div>
+    </div>`,
+    iconSize: [36, 48],
+    iconAnchor: [18, 46],
+    popupAnchor: [0, -46],
+  })
+}
+
+function MapBoundsController({ objects }: { objects: MapObject[] }) {
+  const map = useMap()
+  useEffect(() => {
+    const coords = objects
+      .map((obj) => obj.coordinates)
+      .filter((c): c is [number, number] => Array.isArray(c) && c.length === 2)
+    if (coords.length > 0) {
+      const bounds = L.latLngBounds(coords)
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
+    }
+  }, [objects, map])
+  return null
+}
+
+// Fix default icon issue with Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+})
+
+// Custom Popup Content Component
+function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
+  obj: MapObject;
+  onPlaceSelect?: (id: string) => void;
+  getBadgeColor: (obj: MapObject) => string;
+  basePath: string;
+}) {
+  const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id));
+  const [showAllGroups, setShowAllGroups] = useState(false);
+  
+  const visibleGroups = showAllGroups ? groups : groups.slice(0, 4);
+  const hiddenCount = groups.length - 4;
+  
+  return (
+    <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
+      <div className="relative h-32 w-full flex-shrink-0">
+        <img
+          src={obj.photos && obj.photos.length > 0 ? obj.photos[0] : `${basePath}/img/placeholder.jpg`}
+          alt={obj.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = `${basePath}/img/placeholder.jpg`;
+          }}
+        />
+      </div>
+
+      <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
+        <div>
+          <Badge 
+            className="mb-2 text-white border-0 shadow-sm text-xs sm:text-sm" 
+            style={{ backgroundColor: getBadgeColor(obj) }}
+          >
+            {CATEGORY_CONFIG[obj.category]?.name || obj.category}
+          </Badge>
+          <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] leading-tight">
+            {obj.name}
+          </h3>
+        </div>
+
+        <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] space-y-1.5">
+          {obj.address && (
+            <div className="flex items-start gap-1.5">
+              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-2">{obj.address}</span>
+            </div>
+          )}
+          {obj.workingHours && (
+            <div className="flex items-start gap-1.5">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
+              <span className="line-clamp-1 text-xs sm:text-sm">{obj.workingHours}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Accessibility badges */}
+        {groups.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+            {visibleGroups.map((m) => {
+              const Icon = m.icon
+              return (
+                <span
+                  key={m.id}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                >
+                  <Icon className="size-2.5 sm:size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                  <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-primary)] hidden xs:inline">
+                    {m.name}
+                  </span>
+                </span>
+              )
+            })}
+            
+            {!showAllGroups && hiddenCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(true);
+                }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all"
+                style={{ backgroundColor: `${FILTER_COLORS.inclusive}15` }}
+              >
+                <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-accent)]">
+                  +{hiddenCount}
+                </span>
+              </button>
+            )}
+            
+            {showAllGroups && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(false);
+                }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all"
+              >
+                <span className="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-secondary)]">
+                  Скрыть
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {onPlaceSelect && (
+          <div className="pt-2 border-t border-[var(--color-card-border)]">
+            <Button 
+              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold py-2.5 sm:py-3 text-xs sm:text-sm"
+              onClick={() => onPlaceSelect(obj.id)}
+            >
+              Подробнее
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ⭐ Компонент для элемента списка с раскрывающимися фильтрами ⭐
+
+function ListItemCard({ obj, isSelected, onSelect, getBadgeColor }: {
+  obj: MapObject;
+  isSelected: boolean;
+  onSelect: () => void;
+  getBadgeColor: (obj: MapObject) => string;
+}) {
+  const [showAllGroups, setShowAllGroups] = useState(false);
+  const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
+  const color = getBadgeColor(obj)
+  const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+  
+  const visibleGroups = showAllGroups ? groups : groups.slice(0, 3);
+  const hiddenCount = groups.length - 3;
+  
+  return (
+    <div
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`flex w-full items-start gap-3 border rounded-xl bg-[var(--color-bg-white)] p-3 text-left transition-all cursor-pointer ${
+        isSelected 
+          ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 shadow-md' 
+          : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+      }`}
+    >
+      <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
+        <CatIcon className="size-5" style={{ color }} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="font-bold text-[var(--color-text-primary)] leading-snug text-sm">{obj.name}</div>
+          <div className="flex-shrink-0">
+            <MapPin className={`size-4 ${isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-secondary)]'}`} />
+          </div>
+        </div>
+        {obj.address && (
+          <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
+            <span className="line-clamp-1">{obj.address}</span>
+          </div>
+        )}
+        {groups.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {visibleGroups.map((m) => {
+              const Icon = m.icon
+              return (
+                <span
+                  key={m.id}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                >
+                  <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                  <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{m.name}</span>
+                </span>
+              )
+            })}
+            
+            {/* Кнопка "Показать ещё" */}
+            {!showAllGroups && hiddenCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(true);
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all bg-[var(--color-bg-primary)]"
+              >
+                <span className="text-[10px] font-bold text-[var(--color-accent)]">
+                  +{hiddenCount} ещё
+                </span>
+              </button>
+            )}
+            
+            {/* Кнопка "Скрыть" */}
+            {showAllGroups && hiddenCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(false);
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all bg-[var(--color-bg-primary)]"
+              >
+                <span className="text-[10px] font-bold text-[var(--color-text-secondary)]">
+                  Скрыть
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakutiaMapProps) {
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
+  const router = useRouter();
+  const [objects, setObjects] = useState<MapObject[]>([])
+  const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isHighContrast, setIsHighContrast] = useState(false);
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkHighContrast = () => {
+      const isHC = document.documentElement.classList.contains('high-contrast');
+      setIsHighContrast(isHC);
+    };
+    
+    checkHighContrast();
+    
+    const observer = new MutationObserver(checkHighContrast);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const toggleAccessibility = () => {
+    const newState = !isHighContrast;
+    setIsHighContrast(newState);
+    
+    if (newState) {
+      document.documentElement.classList.add('high-contrast', 'large-font');
+    } else {
+      document.documentElement.classList.remove('high-contrast', 'large-font');
+    }
+  };
+
+  useEffect(() => {
+    fetch(`${basePath}/data/objects.json`)
+      .then((res) => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
+      .then((data) => setObjects(data))
+      .catch((err) => console.error("Error loading data:", err))
+  }, [basePath])
+
+  const toggleLayer = useCallback((id: string) => {
+    setActiveLayers((prev) => prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id])
+  }, [])
+
+  const resetFilters = useCallback(() => {
+    setActiveLayers(["inclusive"])
+    setSearchQuery("")
+  }, [])
+
+  const filteredObjects = objects.filter((obj) => {
+    if (!obj.coordinates) return false
+    const matchesSearch = searchQuery.trim() === "" ||
+      obj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      obj.description.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    return obj.layers.some((layer) => activeLayers.includes(layer))
+  })
+
+  const allMappedObjects = objects.filter(obj => obj.coordinates);
+
+  const getBadgeColor = useCallback((obj: MapObject) => {
+    for (const layer of obj.layers) {
+      if (activeLayers.includes(layer) && FILTER_COLORS[layer]) return FILTER_COLORS[layer]
+    }
+    return FILTER_COLORS.inclusive
+  }, [activeLayers])
+
+  // Desktop sidebar content
+  const SidebarContent = (
+    <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
+      <div className="flex flex-col px-5 py-4 border-b border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-sm z-10">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
+          <input
+            type="text"
+            placeholder="Поиск места..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
+        <div className="p-5 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)]">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-bold text-[var(--color-green-dark)]">Кому подходит:</span>
+            {activeLayers.length > 1 && (
+              <button onClick={resetFilters} className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1 font-medium">
+                <RotateCcw className="size-3" /> Сбросить
+              </button>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_FILTERS.map((filter) => {
+              const IconComponent = filter.icon;
+              const isActive = activeLayers.includes(filter.id);
+              return (
+                <button
+                  key={filter.id}
+                  onClick={() => toggleLayer(filter.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
+                    isActive 
+                      ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
+                      : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
+                  }`}
+                >
+                  <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
+                  <span className="text-xs font-bold">{filter.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div className="text-sm font-bold text-[var(--color-text-secondary)] px-1 mb-1">
+            Найдено мест: {filteredObjects.length}
+          </div>
+          
+          {filteredObjects.length === 0 && (
+            <p className="p-6 text-center text-sm text-[var(--color-text-secondary)]">Ничего не найдено. Измените фильтры или поисковый запрос.</p>
+          )}
+          
+          {filteredObjects.map((obj) => {
+            const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
+            const color = getBadgeColor(obj)
+            const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+            return (
+              <button
+                key={obj.id}
+                onClick={() => onPlaceSelect?.(obj.id)}
+                className="flex w-full items-start gap-4 border border-[var(--color-card-border)] rounded-xl bg-[var(--color-bg-white)] p-4 text-left transition-all hover:border-[var(--color-accent)]/50 hover:shadow-md"
+              >
+                <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
+                  <CatIcon className="size-5" style={{ color }} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-[var(--color-text-primary)] leading-snug">{obj.name}</div>
+                  {obj.address && (
+                    <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
+                      <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0 text-[var(--color-accent)]" />
+                      <span className="line-clamp-1">{obj.address}</span>
+                    </div>
+                  )}
+                  {groups.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {groups.map((m) => {
+                        const Icon = m.icon
+                        return (
+                          <span
+                            key={m.id}
+                            title={m.name}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-[var(--color-card-border)]"
+                            style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                          >
+                            <Icon className="size-3.5" style={{ color: FILTER_COLORS[m.id] }} />
+                            <span className="text-xs font-bold text-[var(--color-text-primary)]">{m.name}</span>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
+      
+      {/* Mobile Version */}
+      <div className="lg:hidden flex flex-col h-full w-full">
+        <header className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm z-20">
+          <div className="px-3 py-2">
+            <div className="flex items-center justify-between mb-2">
+              <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0">
+                <img 
+                  src={`${basePath}/img/logo_homus.png`} 
+                  alt="Логотип Доступная Якутия" 
+                  className="h-7 w-auto object-contain flex-shrink-0"
+                />
+                <span className={`font-sangha text-sm leading-tight pt-1 truncate ${
+                  isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+                }`}>
+                  Доступная Якутия
+                </span>
+              </button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleAccessibility}
+                className={`flex-shrink-0 ${isHighContrast ? 'text-white hover:bg-white/20' : ''}`}
+                title="Версия для слабовидящих"
+              >
+                <Eye className="size-5" />
+              </Button>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Поиск места..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
+              />
+            </div>
+          </div>
+        </header>
+
+        {showFilters && (
+          <div className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm animate-slideDown">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-[var(--color-green-dark)]">Фильтры доступности</span>
+                <div className="flex items-center gap-2">
+                  {activeLayers.length > 1 && (
+                    <button onClick={resetFilters} className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1">
+                      <RotateCcw className="size-3" /> Сбросить
+                    </button>
+                  )}
+                  <button onClick={() => setShowFilters(false)} className="text-[var(--color-text-secondary)] p-1">
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_FILTERS.map((filter) => {
+                  const IconComponent = filter.icon;
+                  const isActive = activeLayers.includes(filter.id);
+                  return (
+                    <button
+                      key={filter.id}
+                      onClick={() => toggleLayer(filter.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all text-xs ${
+                        isActive 
+                          ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
+                          : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
+                      }`}
+                    >
+                      <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
+                      <span className="font-bold">{filter.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 relative overflow-hidden">
+          <div className={`h-full ${viewMode === 'list' ? 'hidden' : 'block'}`}>
+            <MapContainer 
+              attributionControl={false} 
+              center={CONFIG.mapCenter} 
+              zoom={CONFIG.defaultZoom} 
+              minZoom={CONFIG.minZoom} 
+              maxZoom={CONFIG.maxZoom} 
+              className="h-full w-full" 
+              zoomControl={false}
+            >
+              <AttributionControl prefix={false} />
+              <TileLayer 
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+              />
+              {allMappedObjects.map((obj) => {
+                const isActive = filteredObjects.some(f => f.id === obj.id);
+                return (
+                  <Marker 
+                    key={obj.id} 
+                    position={obj.coordinates!} 
+                    icon={isActive ? getCategoryMarkerIcon(obj.category) : getInactiveMarkerIcon(obj.category)}
+                  >
+                    <Popup maxWidth={350} minWidth={250} className="custom-popup">
+                      <CustomPopupContent 
+                        obj={obj} 
+                        onPlaceSelect={onPlaceSelect} 
+                        getBadgeColor={getBadgeColor} 
+                        basePath={basePath} 
+                      />
+                    </Popup>
+                  </Marker>
+                );
+              })}
+              {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+            </MapContainer>
+            
+            <div className="absolute top-3 left-3 bg-[var(--color-bg-white)]/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-[var(--color-card-border)]">
+              <span className="text-xs font-bold text-[var(--color-text-primary)]">
+                Найдено: {filteredObjects.length}
+              </span>
+            </div>
+          </div>
+
+          {/* ⭐ ИСПРАВЛЕННЫЙ СПИСОК ⭐ */}
+          <div className={`h-full overflow-y-auto bg-[var(--color-bg-primary)] ${viewMode === 'map' ? 'hidden' : 'block'}`}>
+            <div className="p-3 space-y-3">
+              {filteredObjects.map((obj) => {
+                const isSelected = selectedPlaceId === obj.id;
+                return (
+                  <ListItemCard
+                    key={obj.id}
+                    obj={obj}
+                    isSelected={isSelected}
+                    onSelect={() => {
+                      setSelectedPlaceId(obj.id);
+                      onPlaceSelect?.(obj.id);
+                    }}
+                    getBadgeColor={getBadgeColor}
+                  />
+                );
+              })}
+              {filteredObjects.length === 0 && (
+                <div className="text-center py-12">
+                  <MapPin className="size-12 mx-auto text-[var(--color-text-secondary)] mb-3" />
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Ничего не найдено. Измените фильтры или поисковый запрос.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-shrink-0 bg-[var(--color-bg-white)] border-t border-[var(--color-card-border)] shadow-lg z-20">
+          <div className="flex items-stretch gap-2 p-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                showFilters
+                  ? 'bg-[var(--color-accent)] text-white shadow-md'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+              }`}
+            >
+              <SlidersHorizontal className="size-4" />
+              Фильтры
+              {activeLayers.length > 1 && (
+                <span className="bg-white/20 rounded-full min-w-[20px] h-5 flex items-center justify-center text-xs px-1">
+                  {activeLayers.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-all"
+            >
+              {viewMode === 'map' ? (
+                <>
+                  <List className="size-4" />
+                  Списком
+                </>
+              ) : (
+                <>
+                  <Map className="size-4" />
+                  На карте
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
+        <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() => router.push("/")}>
+          <img 
+            src={`${basePath}/img/logo_homus.png`} 
+            alt="Логотип Доступная Якутия" 
+            className="h-12 w-auto object-contain"
+          />
+          <div>
+            <h1 className={`text-2xl font-sangha tracking-tight ${isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'}`}>
+              Доступная Якутия
+            </h1>
+            <p className="text-sm text-[var(--color-text-secondary)]">Вернуться на главную</p>
+          </div>
+        </div>
+        
+        {SidebarContent}
+      </aside>
+
+      {/* Desktop Map */}
+      <main className="hidden lg:block relative flex-1 bg-[var(--color-bg-primary)]">
+        <MapContainer 
+          attributionControl={false} 
+          center={CONFIG.mapCenter} 
+          zoom={CONFIG.defaultZoom} 
+          minZoom={CONFIG.minZoom} 
+          maxZoom={CONFIG.maxZoom} 
+          className="h-full w-full z-0" 
+          zoomControl={true}
+        >
+          <AttributionControl prefix={false} />
+          <TileLayer 
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+          />
+          {allMappedObjects.map((obj) => {
+            const isActive = filteredObjects.some(f => f.id === obj.id);
+            return (
+              <Marker 
+                key={obj.id} 
+                position={obj.coordinates!} 
+                icon={isActive ? getCategoryMarkerIcon(obj.category) : getInactiveMarkerIcon(obj.category)}
+              >
+                <Popup maxWidth={400} minWidth={280} className="custom-popup">
+                  <CustomPopupContent 
+                    obj={obj} 
+                    onPlaceSelect={onPlaceSelect} 
+                    getBadgeColor={getBadgeColor} 
+                    basePath={basePath} 
+                  />
+                </Popup>
+              </Marker>
+            );
+          })}
+          {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+        </MapContainer>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-[400]">
+          <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
+            <MapPin className="h-4 w-4 mr-2 text-[var(--color-accent)]" /> Найдено: {filteredObjects.length}
+          </Badge>
+        </div>
+      </main>
+    </div>
+  )
 }
 ```
