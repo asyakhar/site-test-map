@@ -829,3 +829,17 @@ html.large-font button[title="Версия для слабовидящих"] svg
   background-color: #fff !important;
   color: #000 !important;
 }
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}

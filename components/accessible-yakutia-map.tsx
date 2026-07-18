@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
@@ -8,11 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation";
 import {
-  Filter,
   X,
   RotateCcw,
-  Phone,
-  Globe,
   MapPin,
   Accessibility,
   Eye,
@@ -40,9 +37,10 @@ import {
   Palette,
   Ticket,
   GraduationCap,
-  Menu,
   Search,
   List,
+  Map,
+  SlidersHorizontal,
 } from "lucide-react"
 
 // Types
@@ -112,7 +110,7 @@ const CATEGORY_FILTERS = [
   { id: "health", name: "Здоровье", icon: Hospital },
 ]
 
-// ⭐ КАТЕГОРИИ С ЦВЕТАМИ ⭐
+// Category configuration with colors
 const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; color: string }> = {
   museum: { name: "Музей", icon: Building2, color: "#8b5cf6" },
   hotel: { name: "Гостиница", icon: Hotel, color: "#3b82f6" },
@@ -131,7 +129,7 @@ const CATEGORY_CONFIG: Record<string, { name: string; icon: typeof Building2; co
   education: { name: "Образование", icon: GraduationCap, color: "#0284c7" },
 }
 
-// Метаданные категорий доступности
+// Access metadata
 const ACCESS_META: { id: string; name: string; icon: typeof Building2 }[] = [
   { id: "mobility", name: "Передвижение", icon: Accessibility },
   { id: "vision_impaired", name: "Нарушения зрения", icon: Eye },
@@ -146,8 +144,8 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2 }[] = [
   { id: "health", name: "Отдых с пользой", icon: Hospital },
 ]
 
-// ⭐ ФУНКЦИЯ СОЗДАНИЯ ИКОНКИ С ЦВЕТОМ КАТЕГОРИИ ⭐
-function getCategoryMarkerIcon(category: string) {
+// Icon paths for categories
+function getCategoryIconPath(category: string): string {
   const iconPaths: Record<string, string> = {
     museum: '<path d="M3 22V8l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M6 22V11h4v11"/><path d="M14 22V11h4v11"/>',
     hotel: '<path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
@@ -165,10 +163,13 @@ function getCategoryMarkerIcon(category: string) {
     entertainment: '<rect width="20" height="12" x="2" y="6" rx="2"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/>',
     education: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
   }
-  const iconPath = iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
-  
-  // ⭐ БЕРЁМ ЦВЕТ ИЗ CATEGORY_CONFIG ⭐
-  const pinColor = CATEGORY_CONFIG[category]?.color || "#B86A18";
+  return iconPaths[category] || '<circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>'
+}
+
+// Function to create category marker icon
+function getCategoryMarkerIcon(category: string) {
+  const iconPath = getCategoryIconPath(category)
+  const pinColor = CATEGORY_CONFIG[category]?.color || "#B86A18"
 
   return L.divIcon({
     className: "custom-marker-wrapper",
@@ -183,8 +184,30 @@ function getCategoryMarkerIcon(category: string) {
       </div>
     </div>`,
     iconSize: [36, 48],
-    iconAnchor: [18, 46], 
-    popupAnchor: [0, -46], 
+    iconAnchor: [18, 46],
+    popupAnchor: [0, -46],
+  })
+}
+
+// Function to create inactive (greyed out) marker icon
+function getInactiveMarkerIcon(category: string) {
+  const iconPath = getCategoryIconPath(category)
+
+  return L.divIcon({
+    className: "custom-marker-wrapper inactive",
+    html: `<div style="position: relative; width: 36px; height: 48px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.15)); opacity: 0.4;">
+      <svg width="36" height="48" viewBox="0 0 36 48" style="position: absolute; top: 0; left: 0;">
+        <path d="M 18 2 C 9.163 2 2 9.163 2 18 C 2 31 18 46 18 46 C 18 46 34 31 34 18 C 34 9.163 26.837 2 18 2 Z" fill="#94A3B8" stroke="white" stroke-width="2"/>
+      </svg>
+      <div style="position: absolute; top: 9px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          ${iconPath}
+        </svg>
+      </div>
+    </div>`,
+    iconSize: [36, 48],
+    iconAnchor: [18, 46],
+    popupAnchor: [0, -46],
   })
 }
 
@@ -193,7 +216,7 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
   useEffect(() => {
     const coords = objects
       .map((obj) => obj.coordinates)
-      .filter((c): c is [number, number] => Array.isArray(c))
+      .filter((c): c is [number, number] => Array.isArray(c) && c.length === 2)
     if (coords.length > 0) {
       const bounds = L.latLngBounds(coords)
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
@@ -202,6 +225,7 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
   return null
 }
 
+// Fix default icon issue with Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -209,181 +233,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-interface SidebarContentProps {
-  activeLayers: string[]
-  searchQuery: string
-  filteredObjectsCount: number
-  toggleLayer: (id: string) => void
-  resetFilters: () => void
-  setSearchQuery: (query: string) => void
-  onClose?: () => void
-  objects: MapObject[]
-  onPlaceSelect?: (id: string) => void
-  getBadgeColor: (obj: MapObject) => string
-}
-
-function SidebarContent({
-  activeLayers,
-  searchQuery,
-  filteredObjectsCount,
-  toggleLayer,
-  resetFilters,
-  setSearchQuery,
-  onClose,
-  objects,
-  onPlaceSelect,
-  getBadgeColor
-}: SidebarContentProps) {
-  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
-  const [showAllFilters, setShowAllFilters] = useState(false);
-
-  return (
-    <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
-      {onClose && (
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-card-border)] lg:hidden bg-[var(--color-bg-white)] z-20">
-          <h2 className="font-sangha text-2xl text-[var(--color-green-dark)] leading-none pt-1">Списки и фильтры</h2>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-[var(--color-text-primary)]">
-            <X className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
-
-      <div className="flex flex-col px-5 py-4 border-b border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-sm z-10">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
-          <input
-            type="text"
-            placeholder="Поиск места..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
-        <div className="p-5 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)]">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-bold text-[var(--color-green-dark)]">Кому подходит:</span>
-            {activeLayers.length > 1 && (
-              <button onClick={resetFilters} className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1 font-medium">
-                <RotateCcw className="size-3" /> Сбросить
-              </button>
-            )}
-          </div>
-          
-          {/* Фильтры "Кому подходит" */}
-          <div className="flex flex-wrap gap-2">
-            {(() => {
-              const VISIBLE_FILTERS_COUNT = 4;
-              const visibleFilters = showAllFilters 
-                ? CATEGORY_FILTERS 
-                : CATEGORY_FILTERS.slice(0, VISIBLE_FILTERS_COUNT);
-              const hiddenCount = CATEGORY_FILTERS.length - VISIBLE_FILTERS_COUNT;
-              
-              return (
-                <>
-                  {visibleFilters.map((filter) => {
-                    const IconComponent = filter.icon;
-                    const isActive = activeLayers.includes(filter.id);
-                    return (
-                      <button
-                        key={filter.id}
-                        onClick={() => toggleLayer(filter.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
-                          isActive 
-                            ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
-                            : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
-                        }`}
-                      >
-                        <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
-                        <span className="text-xs font-bold">{filter.name}</span>
-                      </button>
-                    );
-                  })}
-                  
-                  {!showAllFilters && hiddenCount > 0 && (
-                    <button
-                      onClick={() => setShowAllFilters(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-accent)] hover:border-[var(--color-accent)]/50 transition-all"
-                    >
-                      <span className="text-xs font-bold">+{hiddenCount}</span>
-                    </button>
-                  )}
-                  
-                  {showAllFilters && (
-                    <button
-                      onClick={() => setShowAllFilters(false)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50 transition-all"
-                    >
-                      <span className="text-xs font-bold">Скрыть</span>
-                    </button>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        </div>
-
-        <div className="p-4 space-y-3">
-          <div className="text-sm font-bold text-[var(--color-text-secondary)] px-1 mb-1">
-            Найдено мест: {filteredObjectsCount}
-          </div>
-          
-          {objects.length === 0 && (
-            <p className="p-6 text-center text-sm text-[var(--color-text-secondary)]">Ничего не найдено. Измените фильтры или поисковый запрос.</p>
-          )}
-          
-          {objects.map((obj) => {
-            const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
-            const color = getBadgeColor(obj)
-            const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
-            return (
-              <button
-                key={obj.id}
-                onClick={() => onPlaceSelect?.(obj.id)}
-                className="flex w-full items-start gap-4 border border-[var(--color-card-border)] rounded-xl bg-[var(--color-bg-white)] p-4 text-left transition-all hover:border-[var(--color-accent)]/50 hover:shadow-md"
-              >
-                <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
-                  <CatIcon className="size-5" style={{ color }} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[var(--color-text-primary)] leading-snug">{obj.name}</div>
-                  {obj.address && (
-                    <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
-                      <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0 text-[var(--color-accent)]" />
-                      <span className="line-clamp-1">{obj.address}</span>
-                    </div>
-                  )}
-                  {groups.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {groups.map((m) => {
-                        const Icon = m.icon
-                        return (
-                          <span
-                            key={m.id}
-                            title={m.name}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-[var(--color-card-border)]"
-                            style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
-                          >
-                            <Icon className="size-3.5" style={{ color: FILTER_COLORS[m.id] }} />
-                            <span className="text-xs font-bold text-[var(--color-text-primary)]">{m.name}</span>
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Компонент попапа с адаптивным дизайном
+// Custom Popup Content Component
 function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
   obj: MapObject;
   onPlaceSelect?: (id: string) => void;
@@ -398,7 +248,6 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
   
   return (
     <div className="flex flex-col overflow-hidden rounded-xl bg-[var(--color-bg-white)] shadow-lg max-h-[80vh] w-[85vw] sm:w-[320px] md:w-[380px]">
-      {/* Фото */}
       <div className="relative h-32 w-full flex-shrink-0">
         <img
           src={obj.photos && obj.photos.length > 0 ? obj.photos[0] : `${basePath}/img/placeholder.jpg`}
@@ -410,7 +259,6 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
         />
       </div>
 
-      {/* Контент с прокруткой */}
       <div className="p-3 sm:p-4 space-y-2 overflow-y-auto max-h-[300px] sm:max-h-[400px]">
         <div>
           <Badge 
@@ -439,7 +287,6 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
           )}
         </div>
 
-        {/* Значки доступности */}
         {groups.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-1">
             {visibleGroups.map((m) => {
@@ -505,16 +352,17 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
 }
 
 export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakutiaMapProps) {
-
-const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
+  const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const router = useRouter();
   const [objects, setObjects] = useState<MapObject[]>([])
   const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isHighContrast, setIsHighContrast] = useState(false);
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Отслеживаем высококонтрастный режим
   useEffect(() => {
     const checkHighContrast = () => {
       const isHC = document.documentElement.classList.contains('high-contrast');
@@ -532,7 +380,6 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return () => observer.disconnect();
   }, []);
 
-  // Функция переключения высококонтрастного режима
   const toggleAccessibility = () => {
     const newState = !isHighContrast;
     setIsHighContrast(newState);
@@ -545,12 +392,11 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   };
 
   useEffect(() => {
-    const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     fetch(`${basePath}/data/objects.json`)
       .then((res) => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
       .then((data) => setObjects(data))
       .catch((err) => console.error("Error loading data:", err))
-  }, [])
+  }, [basePath])
 
   const toggleLayer = useCallback((id: string) => {
     setActiveLayers((prev) => prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id])
@@ -570,6 +416,8 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return obj.layers.some((layer) => activeLayers.includes(layer))
   })
 
+  const allMappedObjects = objects.filter(obj => obj.coordinates);
+
   const getBadgeColor = useCallback((obj: MapObject) => {
     for (const layer of obj.layers) {
       if (activeLayers.includes(layer) && FILTER_COLORS[layer]) return FILTER_COLORS[layer]
@@ -577,73 +425,358 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
     return FILTER_COLORS.inclusive
   }, [activeLayers])
 
+  // Desktop sidebar content
+  const SidebarContent = (
+    <div className="flex h-full flex-col bg-[var(--color-bg-white)] overflow-hidden">
+      <div className="flex flex-col px-5 py-4 border-b border-[var(--color-card-border)] bg-[var(--color-bg-white)] shadow-sm z-10">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
+          <input
+            type="text"
+            placeholder="Поиск места..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
+        <div className="p-5 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)]">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-bold text-[var(--color-green-dark)]">Кому подходит:</span>
+            {activeLayers.length > 1 && (
+              <button onClick={resetFilters} className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1 font-medium">
+                <RotateCcw className="size-3" /> Сбросить
+              </button>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_FILTERS.map((filter) => {
+              const IconComponent = filter.icon;
+              const isActive = activeLayers.includes(filter.id);
+              return (
+                <button
+                  key={filter.id}
+                  onClick={() => toggleLayer(filter.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
+                    isActive 
+                      ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
+                      : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
+                  }`}
+                >
+                  <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
+                  <span className="text-xs font-bold">{filter.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div className="text-sm font-bold text-[var(--color-text-secondary)] px-1 mb-1">
+            Найдено мест: {filteredObjects.length}
+          </div>
+          
+          {filteredObjects.length === 0 && (
+            <p className="p-6 text-center text-sm text-[var(--color-text-secondary)]">Ничего не найдено. Измените фильтры или поисковый запрос.</p>
+          )}
+          
+          {filteredObjects.map((obj) => {
+            const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
+            const color = getBadgeColor(obj)
+            const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+            return (
+              <button
+                key={obj.id}
+                onClick={() => onPlaceSelect?.(obj.id)}
+                className="flex w-full items-start gap-4 border border-[var(--color-card-border)] rounded-xl bg-[var(--color-bg-white)] p-4 text-left transition-all hover:border-[var(--color-accent)]/50 hover:shadow-md"
+              >
+                <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
+                  <CatIcon className="size-5" style={{ color }} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-[var(--color-text-primary)] leading-snug">{obj.name}</div>
+                  {obj.address && (
+                    <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
+                      <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0 text-[var(--color-accent)]" />
+                      <span className="line-clamp-1">{obj.address}</span>
+                    </div>
+                  )}
+                  {groups.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {groups.map((m) => {
+                        const Icon = m.icon
+                        return (
+                          <span
+                            key={m.id}
+                            title={m.name}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-[var(--color-card-border)]"
+                            style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                          >
+                            <Icon className="size-3.5" style={{ color: FILTER_COLORS[m.id] }} />
+                            <span className="text-xs font-bold text-[var(--color-text-primary)]">{m.name}</span>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-[var(--color-bg-primary)]">
       
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[1001] lg:hidden backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-      )}
+      {/* Mobile Version */}
+      <div className="lg:hidden flex flex-col h-full w-full">
+        <header className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm z-20">
+          <div className="px-3 py-2">
+            <div className="flex items-center justify-between mb-2">
+              <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0">
+                <img 
+                  src={`${basePath}/img/logo_homus.png`} 
+                  alt="Логотип Доступная Якутия" 
+                  className="h-7 w-auto object-contain flex-shrink-0"
+                />
+                <span className={`font-sangha text-sm leading-tight pt-1 truncate ${
+                  isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
+                }`}>
+                  Доступная Якутия
+                </span>
+              </button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleAccessibility}
+                className={`flex-shrink-0 ${isHighContrast ? 'text-white hover:bg-white/20' : ''}`}
+                title="Версия для слабовидящих"
+              >
+                <Eye className="size-5" />
+              </Button>
+            </div>
 
-<div
-  className={`fixed inset-y-0 left-0 w-full max-w-[85vw] z-[1002] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl`}
-  style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
->
-        <SidebarContent
-          activeLayers={activeLayers}
-          searchQuery={searchQuery}
-          filteredObjectsCount={filteredObjects.length}
-          toggleLayer={toggleLayer}
-          resetFilters={resetFilters}
-          setSearchQuery={setSearchQuery}
-          onClose={() => setMobileMenuOpen(false)}
-          objects={filteredObjects}
-          onPlaceSelect={onPlaceSelect}
-          getBadgeColor={getBadgeColor}
-        />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-secondary)]" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Поиск места..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-card-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-white)] transition-all"
+              />
+            </div>
+          </div>
+        </header>
+
+        {showFilters && (
+          <div className="flex-shrink-0 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm animate-slideDown">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-[var(--color-green-dark)]">Фильтры доступности</span>
+                <div className="flex items-center gap-2">
+                  {activeLayers.length > 1 && (
+                    <button onClick={resetFilters} className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1">
+                      <RotateCcw className="size-3" /> Сбросить
+                    </button>
+                  )}
+                  <button onClick={() => setShowFilters(false)} className="text-[var(--color-text-secondary)] p-1">
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_FILTERS.map((filter) => {
+                  const IconComponent = filter.icon;
+                  const isActive = activeLayers.includes(filter.id);
+                  return (
+                    <button
+                      key={filter.id}
+                      onClick={() => toggleLayer(filter.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all text-xs ${
+                        isActive 
+                          ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-sm" 
+                          : "bg-[var(--color-bg-white)] border-[var(--color-card-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50"
+                      }`}
+                    >
+                      <IconComponent className="size-3.5" style={{ color: isActive ? FILTER_COLORS[filter.id] : 'currentColor' }} />
+                      <span className="font-bold">{filter.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 relative overflow-hidden">
+          <div className={`h-full ${viewMode === 'list' ? 'hidden' : 'block'}`}>
+            <MapContainer 
+              attributionControl={false} 
+              center={CONFIG.mapCenter} 
+              zoom={CONFIG.defaultZoom} 
+              minZoom={CONFIG.minZoom} 
+              maxZoom={CONFIG.maxZoom} 
+              className="h-full w-full" 
+              zoomControl={false}
+            >
+              <AttributionControl prefix={false} />
+              <TileLayer 
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+              />
+              {allMappedObjects.map((obj) => {
+                const isActive = filteredObjects.some(f => f.id === obj.id);
+                return (
+                  <Marker 
+                    key={obj.id} 
+                    position={obj.coordinates!} 
+                    icon={isActive ? getCategoryMarkerIcon(obj.category) : getInactiveMarkerIcon(obj.category)}
+                  >
+                    <Popup maxWidth={350} minWidth={250} className="custom-popup">
+                      <CustomPopupContent 
+                        obj={obj} 
+                        onPlaceSelect={onPlaceSelect} 
+                        getBadgeColor={getBadgeColor} 
+                        basePath={basePath} 
+                      />
+                    </Popup>
+                  </Marker>
+                );
+              })}
+              {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+            </MapContainer>
+            
+            <div className="absolute top-3 left-3 bg-[var(--color-bg-white)]/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-[var(--color-card-border)]">
+              <span className="text-xs font-bold text-[var(--color-text-primary)]">
+                Найдено: {filteredObjects.length}
+              </span>
+            </div>
+          </div>
+
+          <div className={`h-full overflow-y-auto bg-[var(--color-bg-primary)] ${viewMode === 'map' ? 'hidden' : 'block'}`}>
+            <div className="p-3 space-y-3">
+              {filteredObjects.map((obj) => {
+                const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
+                const color = getBadgeColor(obj)
+                const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+                const isSelected = selectedPlaceId === obj.id;
+                
+                return (
+                  <button
+                    key={obj.id}
+                    onClick={() => {
+                      setSelectedPlaceId(obj.id);
+                      onPlaceSelect?.(obj.id);
+                    }}
+                    className={`flex w-full items-start gap-3 border rounded-xl bg-[var(--color-bg-white)] p-3 text-left transition-all ${
+                      isSelected 
+                        ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 shadow-md' 
+                        : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+                    }`}
+                  >
+                    <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
+                      <CatIcon className="size-5" style={{ color }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-bold text-[var(--color-text-primary)] leading-snug text-sm">{obj.name}</div>
+                        <div className="flex-shrink-0">
+                          <MapPin className={`size-4 ${isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-secondary)]'}`} />
+                        </div>
+                      </div>
+                      {obj.address && (
+                        <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
+                          <span className="line-clamp-1">{obj.address}</span>
+                        </div>
+                      )}
+                      {groups.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {groups.slice(0, 3).map((m) => {
+                            const Icon = m.icon
+                            return (
+                              <span
+                                key={m.id}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                                style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                              >
+                                <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                                <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{m.name}</span>
+                              </span>
+                            )
+                          })}
+                          {groups.length > 3 && (
+                            <span className="text-[10px] font-bold text-[var(--color-text-secondary)] px-1">
+                              +{groups.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+              {filteredObjects.length === 0 && (
+                <div className="text-center py-12">
+                  <MapPin className="size-12 mx-auto text-[var(--color-text-secondary)] mb-3" />
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Ничего не найдено. Измените фильтры или поисковый запрос.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-shrink-0 bg-[var(--color-bg-white)] border-t border-[var(--color-card-border)] shadow-lg z-20">
+          <div className="flex items-stretch gap-2 p-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${
+                showFilters
+                  ? 'bg-[var(--color-accent)] text-white shadow-md'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+              }`}
+            >
+              <SlidersHorizontal className="size-4" />
+              Фильтры
+              {activeLayers.length > 1 && (
+                <span className="bg-white/20 rounded-full min-w-[20px] h-5 flex items-center justify-center text-xs px-1">
+                  {activeLayers.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-all"
+            >
+              {viewMode === 'map' ? (
+                <>
+                  <List className="size-4" />
+                  Списком
+                </>
+              ) : (
+                <>
+                  <Map className="size-4" />
+                  На карте
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <header className="absolute left-0 right-0 top-0 z-[1000] lg:hidden h-16 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] shadow-sm flex items-center px-2 md:px-4 gap-1 md:gap-2 justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center gap-1 md:gap-2 hover:opacity-80 transition-opacity flex-shrink-0 min-w-0">
-          <img 
-            src={`${basePath}/img/logo_homus.png`} 
-            alt="Логотип Доступная Якутия" 
-            className="h-7 md:h-8 w-auto object-contain"
-          />
-          <span 
-            className={`font-sangha text-base md:text-xl leading-tight pt-1 ${
-              isHighContrast ? 'text-white' : 'text-[var(--color-green-dark)]'
-            }`}
-          >
-            Доступная Якутия
-          </span>
-        </button>
-        
-        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-          {/* Кнопка "глаз" для мобильной версии */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleAccessibility}
-            className={`${isHighContrast ? 'text-white hover:bg-white/20' : ''} w-8 h-8 md:w-10 md:h-10`}
-            title="Версия для слабовидящих"
-          >
-            <Eye className="size-4 md:size-5" />
-          </Button>
-          
-          <button 
-            onClick={() => setMobileMenuOpen(true)} 
-            className="px-2 md:px-4 py-2 rounded-full bg-[var(--color-accent)] text-white shadow-md hover:bg-[var(--color-accent-hover)] flex items-center gap-1 md:gap-2 font-bold text-xs md:text-sm flex-shrink-0"
-            aria-label="Меню"
-          >
-            <Menu className="size-3 md:size-4" />
-            <span className="hidden xs:inline">Списки</span>
-            <span className="xs:hidden">Фильтры</span>
-          </button>
-        </div>
-      </header>
-
+      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex h-full w-[400px] flex-shrink-0 flex-col border-r border-[var(--color-card-border)] shadow-xl z-10 bg-[var(--color-bg-white)]">
-        <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() =>router.push("/")}>
+        <div className="flex items-center gap-4 bg-[var(--color-bg-white)] border-b border-[var(--color-card-border)] px-6 py-6 text-[var(--color-text-primary)] shadow-sm cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors" onClick={() => router.push("/")}>
           <img 
             src={`${basePath}/img/logo_homus.png`} 
             alt="Логотип Доступная Якутия" 
@@ -657,20 +790,11 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
           </div>
         </div>
         
-        <SidebarContent
-          activeLayers={activeLayers}
-          searchQuery={searchQuery}
-          filteredObjectsCount={filteredObjects.length}
-          toggleLayer={toggleLayer}
-          resetFilters={resetFilters}
-          setSearchQuery={setSearchQuery}
-          objects={filteredObjects}
-          onPlaceSelect={onPlaceSelect}
-          getBadgeColor={getBadgeColor}
-        />
+        {SidebarContent}
       </aside>
 
-      <main className="relative flex-1 pt-[64px] lg:pt-0 bg-[var(--color-bg-primary)]">
+      {/* Desktop Map */}
+      <main className="hidden lg:block relative flex-1 bg-[var(--color-bg-primary)]">
         <MapContainer 
           attributionControl={false} 
           center={CONFIG.mapCenter} 
@@ -685,26 +809,29 @@ const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' 
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
           />
-          {filteredObjects.map((obj) => (
-            <Marker key={obj.id} position={obj.coordinates!} icon={getCategoryMarkerIcon(obj.category)}>
-              <Popup 
-                maxWidth={400} 
-                minWidth={280} 
-                className="custom-popup"
+          {allMappedObjects.map((obj) => {
+            const isActive = filteredObjects.some(f => f.id === obj.id);
+            return (
+              <Marker 
+                key={obj.id} 
+                position={obj.coordinates!} 
+                icon={isActive ? getCategoryMarkerIcon(obj.category) : getInactiveMarkerIcon(obj.category)}
               >
-                <CustomPopupContent 
-                  obj={obj} 
-                  onPlaceSelect={onPlaceSelect} 
-                  getBadgeColor={getBadgeColor} 
-                  basePath={basePath} 
-                />
-              </Popup>
-            </Marker>
-          ))}
+                <Popup maxWidth={400} minWidth={280} className="custom-popup">
+                  <CustomPopupContent 
+                    obj={obj} 
+                    onPlaceSelect={onPlaceSelect} 
+                    getBadgeColor={getBadgeColor} 
+                    basePath={basePath} 
+                  />
+                </Popup>
+              </Marker>
+            );
+          })}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
         </MapContainer>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:hidden pointer-events-none z-[400]">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-[400]">
           <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
             <MapPin className="h-4 w-4 mr-2 text-[var(--color-accent)]" /> Найдено: {filteredObjects.length}
           </Badge>
