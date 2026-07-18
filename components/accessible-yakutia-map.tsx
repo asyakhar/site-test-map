@@ -287,6 +287,7 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
           )}
         </div>
 
+        {/* Accessibility badges */}
         {groups.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-1">
             {visibleGroups.map((m) => {
@@ -344,6 +345,106 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
             >
               Подробнее
             </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ⭐ Компонент для элемента списка с раскрывающимися фильтрами ⭐
+
+function ListItemCard({ obj, isSelected, onSelect, getBadgeColor }: {
+  obj: MapObject;
+  isSelected: boolean;
+  onSelect: () => void;
+  getBadgeColor: (obj: MapObject) => string;
+}) {
+  const [showAllGroups, setShowAllGroups] = useState(false);
+  const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
+  const color = getBadgeColor(obj)
+  const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
+  
+  const visibleGroups = showAllGroups ? groups : groups.slice(0, 3);
+  const hiddenCount = groups.length - 3;
+  
+  return (
+    <div
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`flex w-full items-start gap-3 border rounded-xl bg-[var(--color-bg-white)] p-3 text-left transition-all cursor-pointer ${
+        isSelected 
+          ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 shadow-md' 
+          : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
+      }`}
+    >
+      <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
+        <CatIcon className="size-5" style={{ color }} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="font-bold text-[var(--color-text-primary)] leading-snug text-sm">{obj.name}</div>
+          <div className="flex-shrink-0">
+            <MapPin className={`size-4 ${isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-secondary)]'}`} />
+          </div>
+        </div>
+        {obj.address && (
+          <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
+            <span className="line-clamp-1">{obj.address}</span>
+          </div>
+        )}
+        {groups.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {visibleGroups.map((m) => {
+              const Icon = m.icon
+              return (
+                <span
+                  key={m.id}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)]"
+                  style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
+                >
+                  <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
+                  <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{m.name}</span>
+                </span>
+              )
+            })}
+            
+            {/* Кнопка "Показать ещё" */}
+            {!showAllGroups && hiddenCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(true);
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all bg-[var(--color-bg-primary)]"
+              >
+                <span className="text-[10px] font-bold text-[var(--color-accent)]">
+                  +{hiddenCount} ещё
+                </span>
+              </button>
+            )}
+            
+            {/* Кнопка "Скрыть" */}
+            {showAllGroups && hiddenCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAllGroups(false);
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)] hover:border-[var(--color-accent)] transition-all bg-[var(--color-bg-primary)]"
+              >
+                <span className="text-[10px] font-bold text-[var(--color-text-secondary)]">
+                  Скрыть
+                </span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -661,67 +762,23 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
             </div>
           </div>
 
+          {/* ⭐ ИСПРАВЛЕННЫЙ СПИСОК ⭐ */}
           <div className={`h-full overflow-y-auto bg-[var(--color-bg-primary)] ${viewMode === 'map' ? 'hidden' : 'block'}`}>
             <div className="p-3 space-y-3">
               {filteredObjects.map((obj) => {
-                const CatIcon = CATEGORY_CONFIG[obj.category]?.icon || MapPin
-                const color = getBadgeColor(obj)
-                const groups = ACCESS_META.filter((m) => obj.layers.includes(m.id))
                 const isSelected = selectedPlaceId === obj.id;
-                
                 return (
-                  <button
+                  <ListItemCard
                     key={obj.id}
-                    onClick={() => {
+                    obj={obj}
+                    isSelected={isSelected}
+                    onSelect={() => {
                       setSelectedPlaceId(obj.id);
                       onPlaceSelect?.(obj.id);
                     }}
-                    className={`flex w-full items-start gap-3 border rounded-xl bg-[var(--color-bg-white)] p-3 text-left transition-all ${
-                      isSelected 
-                        ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 shadow-md' 
-                        : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50'
-                    }`}
-                  >
-                    <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--color-card-border)]" style={{ backgroundColor: `${color}15` }}>
-                      <CatIcon className="size-5" style={{ color }} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-bold text-[var(--color-text-primary)] leading-snug text-sm">{obj.name}</div>
-                        <div className="flex-shrink-0">
-                          <MapPin className={`size-4 ${isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-secondary)]'}`} />
-                        </div>
-                      </div>
-                      {obj.address && (
-                        <div className="mt-1 flex items-start gap-1 text-xs text-[var(--color-text-secondary)]">
-                          <span className="line-clamp-1">{obj.address}</span>
-                        </div>
-                      )}
-                      {groups.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {groups.slice(0, 3).map((m) => {
-                            const Icon = m.icon
-                            return (
-                              <span
-                                key={m.id}
-                                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--color-card-border)]"
-                                style={{ backgroundColor: `${FILTER_COLORS[m.id]}15` }}
-                              >
-                                <Icon className="size-3" style={{ color: FILTER_COLORS[m.id] }} />
-                                <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{m.name}</span>
-                              </span>
-                            )
-                          })}
-                          {groups.length > 3 && (
-                            <span className="text-[10px] font-bold text-[var(--color-text-secondary)] px-1">
-                              +{groups.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )
+                    getBadgeColor={getBadgeColor}
+                  />
+                );
               })}
               {filteredObjects.length === 0 && (
                 <div className="text-center py-12">
