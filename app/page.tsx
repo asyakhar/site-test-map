@@ -14,10 +14,11 @@ import {
   ChevronRight,
   Heart,
   Brain,
-  Wind
+  Wind,
+  Check,
+  Utensils
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import {
@@ -28,7 +29,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/AppHeader";
 import PopularPlaces from "@/components/PopularPlaces";
 import UpcomingEvents from "@/components/UpcomingEvents";
@@ -56,12 +56,85 @@ const categories: Category[] = [
   { id: "health", icon: Hospital, label: "Здоровье", color: "#52B788" },
 ];
 
+// id категории на главной - id слоя на карте
+const toLayerId = (catId: string): string =>
+  catId === 'vision' ? 'vision_impaired' : catId === 'hearing' ? 'hearing_impaired' : catId;
+
+// Цвета карточек из шаблона Figma
+const CARD_HEX: Record<string, string> = {
+  green: '#384E41',
+  blue: '#6A86A7',
+  orange: '#FF9316',
+  darkred: '#802405',
+  taupe: '#7F715A',
+};
+
+type WhyCard = { label: string; icon: any; color: keyof typeof CARD_HEX; layer: string };
+// Секция "Зачем мы создали этот сервис?", 3 колонки
+const WHY_COLUMNS: { title: string; cards: WhyCard[] }[] = [
+  {
+    title: 'Чтобы стереть границы при',
+    cards: [
+      { label: 'проблемах с передвижением', icon: Accessibility, color: 'green', layer: 'mobility' },
+      { label: 'плохом зрении', icon: Eye, color: 'blue', layer: 'vision_impaired' },
+      { label: 'плохом слухе', icon: Ear, color: 'orange', layer: 'hearing_impaired' },
+      { label: 'особой диете', icon: Utensils, color: 'darkred', layer: 'dietary' },
+    ],
+  },
+  {
+    title: 'Чтобы сделать путешествие безопасным',
+    cards: [
+      { label: 'при слабом сердце', icon: Heart, color: 'darkred', layer: 'cardiovascular' },
+      { label: 'при респираторных проблемах', icon: Wind, color: 'taupe', layer: 'respiratory' },
+    ],
+  },
+  {
+    title: 'Чтобы вы смогли сосредоточиться на главном',
+    cards: [
+      { label: 'На здоровье', icon: Hospital, color: 'orange', layer: 'health' },
+      { label: 'На детях', icon: Users, color: 'green', layer: 'family' },
+      { label: 'На исследовании нового', icon: Sparkles, color: 'blue', layer: 'ethnomedicine' },
+    ],
+  },
+];
+
 export default function HomePage() {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
+  const [isHighContrast, setIsHighContrast] = useState(false);
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
 
-  // ✅ ДОБАВЛЯЕМ ЭТОТ useEffect ДЛЯ ОБРАБОТКИ ЯКОРЯ
+  // Следим за режимом высокого контраста (класс на <html>)
+  useEffect(() => {
+    const check = () => setIsHighContrast(document.documentElement.classList.contains('high-contrast'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const toggleNeed = (id: string) =>
+    setSelectedNeeds((prev) =>
+      prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]
+    );
+
+  // Сохранить выбранные слои и перейти на карту
+  const applyNeedsAndGoToMap = () => {
+    const layers =
+      selectedNeeds.length > 0
+        ? Array.from(new Set(selectedNeeds.map(toLayerId)))
+        : ['inclusive'];
+    try {
+      localStorage.setItem('preferredLayers', JSON.stringify(layers));
+    } catch {
+      /* ignore */
+    }
+    setShowFilters(false);
+    router.push('/map');
+  };
+
+  // ДОБАВЛЯЕМ ЭТОТ useEffect ДЛЯ ОБРАБОТКИ ЯКОРЯ
   useEffect(() => {
     // Проверяем флаг в sessionStorage (устанавливается в Header при клике на "О проекте")
     const shouldScrollToAbout = sessionStorage.getItem('scrollToAbout');
@@ -256,35 +329,72 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Блок 3. Популярные категории */}
-        <section className="py-16 lg:py-24 bg-[var(--color-bg-primary)]">
-          <div className="container mx-auto px-4">
-            <h2 className="font-bold text-center mb-12 text-[var(--color-text-primary)]"
-              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)' }}>
-              Для кого мы создали этот сервис
+        {/* Блок 3. Зачем мы создали этот сервис */}
+        <section className="relative py-16 lg:py-24 bg-[var(--color-bg-primary)] overflow-hidden">
+          <img
+            src={`${basePath}/img/events-pattern.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute -top-0 right-0 h-[650px] w-auto opacity-40 dark-contrast:hidden"
+          />
+          <img
+            src={`${basePath}/img/events-pattern.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute top-[650px] right-0 h-[550px] w-auto opacity-40 dark-contrast:hidden"
+          />
+          <img
+            src={`${basePath}/img/union.png`}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"
+          />
+          <div className="container relative mx-auto px-4">
+            <h2
+              className="font-sangha text-center mb-12 text-[var(--color-title-events)] dark-contrast:text-white"
+              style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+            >
+              Зачем мы создали этот сервис?
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {categories.map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <Card
-                    key={cat.id}
-                    className="p-6 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)] border-[var(--color-card-border)] dark-contrast:bg-gray-900 dark-contrast:border-gray-700"
-                    onClick={() => {
-                      localStorage.setItem("preferredLayers", JSON.stringify([cat.id === 'vision' ? 'vision_impaired' : cat.id === 'hearing' ? 'hearing_impaired' : cat.id]));
-                      router.push('/map');
-                    }}
-                  >
-                    <div
-                      className="size-12 rounded-full flex items-center justify-center text-[var(--color-text-white)] mb-2 dark-contrast:bg-white"
-                      style={{ backgroundColor: cat.color }}
-                    >
-                      <Icon className="size-6 dark-contrast:text-black" />
-                    </div>
-                    <span className="font-medium text-[clamp(0.875rem,1.5vw,1rem)] text-[var(--color-text-primary)] dark-contrast:text-white">{cat.label}</span>
-                  </Card>
-                );
-              })}
+
+            <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+              {WHY_COLUMNS.map((col) => (
+                <div key={col.title} className="flex flex-col">
+                  <h3 className="text-center font-bold text-[clamp(1.05rem,1.5vw,1.3rem)] text-[var(--color-green-dark)] dark-contrast:text-white mb-5 min-h-[4.5rem] flex items-center justify-center">
+                    {col.title}
+                  </h3>
+                  <div className="flex flex-col gap-4">
+                    {col.cards.map((card) => {
+                      const Icon = card.icon;
+                      return (
+                        <button
+                          key={card.label}
+                          type="button"
+                          onClick={() => {
+                            try {
+                              localStorage.setItem('preferredLayers', JSON.stringify([card.layer]));
+                            } catch {
+                              /* ignore */
+                            }
+                            router.push('/map');
+                          }}
+                          style={
+                            isHighContrast
+                              ? { backgroundColor: '#000000', border: '2px solid #FFFFFF' }
+                              : { backgroundColor: CARD_HEX[card.color] }
+                          }
+                          className="flex flex-col items-center justify-center gap-3 rounded-2xl px-4 py-7 text-center text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-xl min-h-[130px] opacity-85 hover:opacity-100"
+                        >
+                          <Icon className="size-10" strokeWidth={2} />
+                          <span className="font-bold text-[clamp(0.95rem,1.2vw,1.1rem)] leading-snug">
+                            {card.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -388,30 +498,42 @@ export default function HomePage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 mt-4">
-            {categories.slice(0, 6).map((need) => {
+            {categories.map((need) => {
               const Icon = need.icon;
+              const isSelected = selectedNeeds.includes(need.id);
               return (
-                <label
+                <button
+                  type="button"
                   key={need.id}
-                  className="flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 dark-contrast:border-gray-700 dark-contrast:hover:border-white"
+                  onClick={() => toggleNeed(need.id)}
+                  aria-pressed={isSelected}
+                  className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 text-left cursor-pointer transition-all bg-[var(--color-bg-white)] dark-contrast:bg-gray-900 dark-contrast:hover:border-white ${isSelected
+                    ? 'border-[var(--color-accent)]'
+                    : 'border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 dark-contrast:border-gray-700'
+                    }`}
                 >
-                  <Checkbox className="mt-1" />
+                  <span
+                    aria-hidden="true"
+                    className={`mt-1 flex size-5 flex-shrink-0 items-center justify-center rounded border-2 transition-colors ${isSelected
+                      ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
+                      : 'border-[var(--color-card-border)] dark-contrast:border-gray-500'
+                      }`}
+                  >
+                    {isSelected && <Check className="size-3.5 text-white" strokeWidth={3} />}
+                  </span>
                   <div className="size-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${need.color}20` }}>
                     <Icon className="size-5" style={{ color: need.color }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-lg text-[var(--color-text-primary)] dark-contrast:text-white">{need.label}</h3>
                   </div>
-                </label>
+                </button>
               );
             })}
           </div>
           <DialogFooter className="mt-6 flex-col sm:flex-row gap-3">
             <Button
-              onClick={() => {
-                setShowFilters(false);
-                router.push('/map');
-              }}
+              onClick={applyNeedsAndGoToMap}
               className="flex-1 bg-accent-custom hover:bg-[var(--color-accent-hover)] text-[var(--color-text-white)] py-6 text-lg rounded-lg font-bold"
             >
               Показать подходящие места
