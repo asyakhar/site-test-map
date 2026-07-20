@@ -86,9 +86,9 @@ const events = rows.map((r, idx) => {
 
 fs.writeFileSync(OUT_PATH, JSON.stringify(events, null, 2), 'utf8');
 
-console.log(`\n✅ Готово: ${events.length} событий -> ${path.relative(process.cwd(), OUT_PATH)}`);
+console.log(`\nГотово: ${events.length} событий -> ${path.relative(process.cwd(), OUT_PATH)}`);
 const noDate = events.filter((e) => !e.month || !e.day);
 if (noDate.length) {
-  console.log(`\n⚠️  Не удалось разобрать дату (${noDate.length}):`);
+  console.log(`\nНе удалось разобрать дату (${noDate.length}):`);
   noDate.forEach((e) => console.log(`  ${e.id}  "${e.name}"  ("${e.dateLabel}")`));
 }
