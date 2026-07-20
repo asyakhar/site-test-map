@@ -456,7 +456,19 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
   const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : ''
   const router = useRouter();
   const [objects, setObjects] = useState<MapObject[]>([])
-  const [activeLayers, setActiveLayers] = useState<string[]>(["inclusive"])
+  // Начальные слои: если на главной выбрали "Подобрать места" — берём их, иначе базовый "inclusive"
+  const [activeLayers, setActiveLayers] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("preferredLayers")
+      if (saved) {
+        const layers = JSON.parse(saved)
+        if (Array.isArray(layers) && layers.length > 0) return layers
+      }
+    } catch {
+      /* ignore */
+    }
+    return ["inclusive"]
+  })
   const [searchQuery, setSearchQuery] = useState("")
   const [isHighContrast, setIsHighContrast] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
@@ -499,11 +511,19 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
       .catch((err) => console.error("Error loading data:", err))
   }, [basePath])
 
+
+  // Пользователь сам меняет фильтры — "предпочтения с главной" больше не нужны
+  const clearPreferred = () => {
+    try { localStorage.removeItem("preferredLayers") } catch { /* ignore */ }
+  }
+
   const toggleLayer = useCallback((id: string) => {
+    clearPreferred()
     setActiveLayers((prev) => prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id])
   }, [])
 
   const resetFilters = useCallback(() => {
+    clearPreferred()
     setActiveLayers(["inclusive"])
     setSearchQuery("")
   }, [])
