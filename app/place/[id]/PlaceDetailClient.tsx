@@ -41,6 +41,7 @@ import {
   GraduationCap,
   ChevronLeft,
   ChevronRight,
+  Video, // ← добавлено для иконки видео
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -76,6 +77,10 @@ interface MapObject {
     website?: string;
     yandexMap?: string;
   };
+  videos?: {
+    url: string;
+    title?: string;
+  }[];
 }
 
 // Конфигурация категорий
@@ -111,6 +116,47 @@ const ACCESS_META: { id: string; name: string; icon: typeof Building2; color: st
   { id: 'ethnomedicine', name: 'Народная медицина', icon: Sparkles, color: '#8B5A3C' },
   { id: 'health', name: 'Отдых с пользой для здоровья', icon: Hospital, color: '#52B788' },
 ];
+
+// Функция для получения embed-ссылки (YouTube/Vimeo)
+function getEmbedUrl(url: string): string | null {
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  return null;
+}
+
+// Компонент для отображения одного видео
+function VideoPlayer({ video }: { video: { url: string; title?: string } }) {
+  const embedUrl = getEmbedUrl(video.url);
+  const isYouTubeVimeo = !!embedUrl;
+
+  return (
+    <div className="mb-6 last:mb-0">
+      <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+        {isYouTubeVimeo ? (
+          <iframe
+            src={embedUrl}
+            title={video.title || 'Видео'}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="w-full h-full"
+          />
+        ) : (
+          <video controls className="w-full h-full" preload="metadata">
+            <source src={video.url} type="video/mp4" />
+            Ваш браузер не поддерживает видео.
+          </video>
+        )}
+      </div>
+      {video.title && (
+        <p className="mt-2 text-sm text-muted-foreground">{video.title}</p>
+      )}
+    </div>
+  );
+}
 
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<MapObject | null>(null);
@@ -306,6 +352,21 @@ export default function PlaceDetailClient({ id }: { id: string }) {
             <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{place.description}</p>
           )}
         </div>
+
+        {/* ========== ВИДЕО ========== */}
+        {place.videos && place.videos.length > 0 && (
+          <Card className="mb-6 p-4 bg-card border-border shadow-md">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Video className="size-5 text-primary" />
+              Видео
+            </h2>
+            <div className="space-y-4">
+              {place.videos.map((video, index) => (
+                <VideoPlayer key={index} video={video} />
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Доступность */}
         <Card className="mb-6 p-6 gap-2 bg-card border-border shadow-md">

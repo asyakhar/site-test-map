@@ -10,7 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
    allowedDevOrigins: [
-    '192.168.0.101',     // IP вашего iPhone (замените на актуальный)
+    '172.20.10.8',     // IP вашего iPhone (замените на актуальный)
     '*.local',           // Для macOS .local адресов
     '*.local-ip.com',    // Альтернативный вариант для локальных IP
   ],

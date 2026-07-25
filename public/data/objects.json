@@ -273,6 +273,11 @@
     "photos": [
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/khomus-museum/main.jpg"
     ],
+    "videos": [
+      {
+        "url": "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/khomus_vid.MP4"
+      }
+    ],
     "contacts": {
       "phone": "8(4112)42-86-75",
       "website": "https://rus.ilkhomus.com/",
