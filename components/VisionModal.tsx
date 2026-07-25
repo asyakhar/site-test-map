@@ -23,12 +23,6 @@ function applyPreference(pref: VisionPreference) {
   }
 }
 
-/**
- * Входное окно про нарушения зрения. Показывается один раз за сессию
- * (sessionStorage) только на главной. Два шага:
- *  1. «Есть ли у вас нарушения зрения?» → Да / Нет
- *  2. При «Да»: Полная потеря (скринридер, вид не меняем) / Частичная (контраст+шрифт)
- */
 export default function VisionModal() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
@@ -62,7 +56,6 @@ export default function VisionModal() {
     setOpen(false);
   };
 
-  // Закрытие без явного выбора (Esc / клик вне окна) трактуем как «нет нарушений»
   const handleOpenChange = (next: boolean) => {
     if (!next) {
       let stored: string | null = null;
@@ -84,7 +77,6 @@ export default function VisionModal() {
 
   return (
     <>
-      {/* Живая область для озвучивания скринридером */}
       <div role="status" aria-live="polite" className="sr-only">
         {announcement}
       </div>
@@ -94,7 +86,7 @@ export default function VisionModal() {
           {step === 1 ? (
             <>
               <DialogHeader className="text-left">
-                <DialogTitle className="font-sangha text-2xl md:text-3xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight">
+                <DialogTitle className="text-2xl md:text-3xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight font-normal">
                   Есть ли у вас нарушения зрения?
                 </DialogTitle>
                 <DialogDescription className="text-base mt-2 text-[var(--color-text-secondary)] dark-contrast:text-gray-300">
@@ -136,7 +128,7 @@ export default function VisionModal() {
                 >
                   <ArrowLeft className="size-4" /> Назад
                 </button>
-                <DialogTitle className="font-sangha text-2xl md:text-3xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight">
+                <DialogTitle className="text-2xl md:text-3xl text-[var(--color-text-primary)] dark-contrast:text-white leading-tight font-normal">
                   Какой у вас тип нарушения?
                 </DialogTitle>
                 <DialogDescription className="text-base mt-2 text-[var(--color-text-secondary)] dark-contrast:text-gray-300">

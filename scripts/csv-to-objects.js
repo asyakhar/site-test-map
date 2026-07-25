@@ -1,6 +1,5 @@
 // scripts/csv-to-objects.js
-// Одноразовая конвертация таблицы "Таблица на карту - Лист1.csv" в public/data/objects.json.
-// Новая модель данных: текст-по-категориям доступности (а не булевы галочки).
+// Конвертация таблицы "Таблица на карту - Лист1.csv" в public/data/objects.json.
 
 const fs = require('fs');
 const path = require('path');
@@ -11,7 +10,7 @@ const CSV_PATH =
 const OUT_PATH = process.argv[3] || path.join(__dirname, '../public/data/objects.json');
 const OLD_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
 
-// --- Парсер CSV (RFC4180: кавычки, экранированные кавычки, переводы строк внутри ячеек) ---
+// --- Парсер CSV ---
 function parseCSV(text) {
   const rows = [];
   let row = [];
@@ -44,16 +43,18 @@ const COL = {
   family: 13, ethnomedicine: 14, health: 15,
   contraindications: 16, tickets: 17, benefits: 18,
   website: 19, phone: 20, yandexMap: 21, coordinates: 22, notes: 23,
+  // ↓↓↓ НОВЫЕ КОЛОНКИ ДЛЯ ВИДЕО ↓↓↓
+  videoUrls: 26
 };
 
-// Ключи доступности (совпадают с id слоёв/фильтров на карте)
+// Ключи доступности
 const ACCESS_KEYS = [
   'mobility', 'vision_impaired', 'hearing_impaired', 'deaf_mute',
   'dietary', 'cardiovascular', 'respiratory', 'mental',
   'family', 'ethnomedicine', 'health',
 ];
 
-// Категория ("Тип организации" -> слаг с иконкой). Порядок важен.
+// Категория ("Тип организации" -> слаг с иконкой)
 const CATEGORY_RULES = [
   [/театр|филармони|эстрад/i, 'theater'],
   [/цирк/i, 'entertainment'],
@@ -61,37 +62,32 @@ const CATEGORY_RULES = [
   [/ресторан/i, 'restaurant'],
   [/кофейн|кафе/i, 'cafe'],
   [/медицин|реабилитац|диспансер|больниц|оздоровительн|поликлиник/i, 'medical'],
-  // Музей проверяем раньше "образования": в типах вроде "Музей, культурно-образовательный..."
-  // и "музейный комплекс" ключевым является музейная функция.
   [/музей|сокровищниц|галере|выставочн|хомус/i, 'museum'],
   [/университет|образовательн|коррекционн|школ|институт/i, 'education'],
   [/туристическ|усадьба|база отдыха|старый город/i, 'entertainment'],
   [/дом дружбы|национальн|культурно|прикладн/i, 'culture'],
   [/историческ|этнографическ/i, 'culture'],
 ];
+
 function detectCategory(type) {
   const t = (type || '').toLowerCase();
   for (const [re, slug] of CATEGORY_RULES) if (re.test(t)) return slug;
   return 'culture';
 }
 
-// Очистка ячейки
 function clean(s) {
   return (s || '').replace(/\r/g, '').trim();
 }
 
-// Однострочная очистка (для названия/адреса — схлопываем переносы строк)
 function oneLine(s) {
   return clean(s).replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-// Пустая/незначимая ячейка?
 function isEmptyCell(s) {
   const v = clean(s).toLowerCase();
   return v === '' || v === '-' || v === '—' || v === 'ь' || v === 'нет' || v === 'н/д';
 }
 
-// Отрицательная (не является реальной "фичей" для фильтра, но текст можно показать)
 function isNonFeature(s) {
   const v = clean(s).toLowerCase();
   return (
@@ -104,25 +100,22 @@ function isNonFeature(s) {
   );
 }
 
-// Координаты: из ячейки координат, иначе из ссылки Яндекса (ll=lon,lat)
 function parseCoordinates(coordCell, yandexCell) {
   const m = clean(coordCell).match(/(-?\d{1,3}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/);
   if (m) return [parseFloat(m[1]), parseFloat(m[2])];
   const ll = clean(yandexCell).match(/ll=(-?\d{1,3}\.\d+)(?:%2C|,)(-?\d{1,3}\.\d+)/i);
-  if (ll) return [parseFloat(ll[2]), parseFloat(ll[1])]; // ll = lon,lat -> [lat, lon]
+  if (ll) return [parseFloat(ll[2]), parseFloat(ll[1])];
   return null;
 }
 
-// URL или пусто
 function asUrl(s) {
   const v = clean(s);
   if (!v) return undefined;
   if (/^https?:\/\//i.test(v)) return v;
   if (/^www\./i.test(v)) return 'https://' + v;
-  return undefined; // текстовое название без ссылки — не используем как href
+  return undefined;
 }
 
-// Телефон: берём первую строку, убираем ведущую подпись ("Телефон:", "тел.:" и т.п.)
 function asPhone(s) {
   const v = clean(s);
   if (!v) return undefined;
@@ -131,20 +124,36 @@ function asPhone(s) {
   return (stripped || first) || undefined;
 }
 
-// --- Перенос фото из старого objects.json по совпадению названий ---
+// --- Парсинг видео из CSV ---
+function parseVideos(urlsRaw) {
+  const urls = clean(urlsRaw);
+  if (!urls) return undefined;
+
+  const urlList = urls.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+  if (urlList.length === 0) return undefined;
+
+  return urlList.map((url) => ({
+    url: url,
+    // title не добавляем
+  }));
+}
+
+// --- Перенос фото из старого objects.json ---
 function normalizeName(s) {
   return clean(s).toLowerCase().replace(/[«»"'().,]/g, ' ').replace(/\s+/g, ' ').trim();
 }
-// Частые слова названий, по которым нельзя надёжно сопоставлять объекты
+
 const STOP = new Set([
   'республики', 'республиканский', 'саха', 'якутия', 'якутии', 'якутск', 'якутский',
   'государственный', 'государственное', 'государственная', 'национальный', 'национального',
   'национальная', 'центр', 'центра', 'музей', 'музея', 'имени', 'народов', 'народного',
   'культуры', 'россии', 'комплекс', 'учреждение', 'бюджетное', 'город', 'история', 'истории',
 ]);
+
 function tokens(s) {
   return normalizeName(s).split(' ').filter((w) => w.length >= 5 && !STOP.has(w));
 }
+
 function buildPhotoMatcher() {
   let old = [];
   try { old = JSON.parse(fs.readFileSync(OLD_JSON_PATH, 'utf8')); } catch { old = []; }
@@ -166,7 +175,7 @@ function buildPhotoMatcher() {
 // --- Основной прогон ---
 const raw = fs.readFileSync(CSV_PATH, 'utf8');
 const rows = parseCSV(raw).filter((r) => clean(r[COL.name]) !== '');
-const header = rows.shift(); // заголовок
+const header = rows.shift();
 const matchPhotos = buildPhotoMatcher();
 
 const objects = [];
@@ -183,7 +192,6 @@ rows.forEach((r, idx) => {
   for (const key of ACCESS_KEYS) {
     const cell = clean(r[COL[key]]);
     if (isEmptyCell(cell)) continue;
-    // Текст доступности — в одну строку (переносы из таблицы схлопываем)
     accessibility[key] = oneLine(cell);
     if (!isNonFeature(cell)) layers.push(key);
   }
@@ -194,6 +202,9 @@ rows.forEach((r, idx) => {
   const photoMatch = matchPhotos(name);
   const photos = photoMatch ? photoMatch.photos : [];
   if (photoMatch) photoReport.push(`${id}  "${name}"  <=  "${photoMatch.from}"`);
+
+  // --- ПАРСИМ ВИДЕО ---
+  const videos = parseVideos(r[COL.videoUrls]);
 
   const contacts = {};
   const phone = asPhone(r[COL.phone]);
@@ -221,6 +232,7 @@ rows.forEach((r, idx) => {
   if (benefits && !isEmptyCell(benefits)) obj.benefits = benefits;
   if (notes && !isEmptyCell(notes)) obj.notes = notes;
   obj.photos = photos;
+  if (videos && videos.length > 0) obj.videos = videos;
   obj.contacts = contacts;
 
   objects.push(obj);
@@ -228,8 +240,8 @@ rows.forEach((r, idx) => {
 
 fs.writeFileSync(OUT_PATH, JSON.stringify(objects, null, 2), 'utf8');
 
-console.log(`\nГотово: ${objects.length} объектов -> ${path.relative(process.cwd(), OUT_PATH)}`);
-console.log(`\nПеренос фото (${photoReport.length}):`);
+console.log(`\n✅ Готово: ${objects.length} объектов -> ${path.relative(process.cwd(), OUT_PATH)}`);
+console.log(`\n📸 Перенос фото (${photoReport.length}):`);
 photoReport.forEach((l) => console.log('  ' + l));
-console.log(`\n!Нет координат (${missingCoords.length}) — впишите вручную в objects.json:`);
+console.log(`\n⚠️ Нет координат (${missingCoords.length}) — впишите вручную в objects.json:`);
 missingCoords.forEach((l) => console.log('  ' + l));
