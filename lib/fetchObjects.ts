@@ -17,13 +17,14 @@ export interface MapObject {
   tickets?: string;
   benefits?: string;
   notes?: string;
+  comment?: string;
+  commentAuthor?: string;
   photos: string[];
   contacts: {
     phone?: string;
     website?: string;
     yandexMap?: string;
   };
-  // ↓↓↓ НОВОЕ ПОЛЕ ДЛЯ ВИДЕО ↓↓↓
   videos?: {
     url: string;
     title?: string;
