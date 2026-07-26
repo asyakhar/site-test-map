@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -16,7 +16,8 @@ import {
   Brain,
   Wind,
   Check,
-  Utensils
+  Utensils,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -502,9 +503,9 @@ export default function HomePage() {
               const Icon = need.icon;
               const isSelected = selectedNeeds.includes(need.id);
               return (
+                <Fragment key={need.id}>
                 <button
                   type="button"
-                  key={need.id}
                   onClick={() => toggleNeed(need.id)}
                   aria-pressed={isSelected}
                   className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 text-left cursor-pointer transition-all bg-[var(--color-bg-white)] dark-contrast:bg-gray-900 dark-contrast:hover:border-white ${isSelected
@@ -528,9 +529,29 @@ export default function HomePage() {
                     <h3 className="font-semibold text-lg text-[var(--color-text-primary)] dark-contrast:text-white">{need.label}</h3>
                   </div>
                 </button>
+
+                {/* Дисклеймер сразу под строкой «Нарушения зрения» */}
+                {need.id === 'vision' && isSelected && (
+                  <div
+                    role="note"
+                    className="flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900 dark-contrast:bg-gray-900 dark-contrast:border-white dark-contrast:text-white"
+                  >
+                    <AlertTriangle className="size-5 flex-shrink-0 mt-0.5 text-amber-600 dark-contrast:text-white" />
+                    <div className="space-y-2">
+                      <p>
+                        <strong>Внимание!</strong> На ряде пешеходных переходов Якутска установлены звуковые светофоры. Они подают специальные звуковые сигналы, помогая людям с ограничением здоровья безопасно определить момент для перехода дороги.
+                      </p>
+                      <p>
+                        В связи с природными и климатическими условиями дороги имеют неровности, учитывайте это при переходе дороги.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                </Fragment>
               );
             })}
           </div>
+
           <DialogFooter className="mt-6 flex-col sm:flex-row gap-3">
             <Button
               onClick={applyNeedsAndGoToMap}
