@@ -463,11 +463,11 @@ export default function HomePage() {
           const sponsors = [
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/ekvo.png",
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/igmu.png",
-            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/svfu.png",
-            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/volmed.png",
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/yarmiats.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/ministerstvo.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/svfu.png",
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/library.png",
-            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/ministerstvo.png"
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/volmed.png",
           ];
 
           return (
