@@ -355,39 +355,59 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           )}
         </div>
 
-        {/* ========== ОТЗЫВ ========== */}
-        {place.comment && (
-          <div
-            className="relative mb-6 overflow-hidden rounded-3xl p-6 md:p-8 shadow-md"
-            style={{ backgroundColor: '#985B3B' }}
-          >
-            {/* Фоновый узор-карта */}
-            <img
-              src={`${basePath}/img/union.png`}
-              alt=""
-              aria-hidden="true"
-              className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply"
-            />
-            {/* Кавычки */}
-            <div className="pointer-events-none absolute -top-3 right-6 flex select-none md:-top-4 md:right-10" aria-hidden="true">
-              <svg viewBox="0 0 24 40" className="h-16 w-10 md:h-20 md:w-12" fill="#E38920">
-                <path d="M13.5 3C7.7 3 3 7.7 3 13.5S7.7 24 13.5 24c.9 0 1.8-.1 2.6-.3-1.2 5-5.3 8.9-10.4 10.1l.7 3.2C14.9 38.4 21 30.9 21 21.5v-8C21 7.7 16.3 3 13.5 3z" />
-              </svg>
-              <svg viewBox="0 0 24 40" className="-ml-3 h-16 w-10 md:h-20 md:w-12" fill="#7F715A">
-                <path d="M13.5 3C7.7 3 3 7.7 3 13.5S7.7 24 13.5 24c.9 0 1.8-.1 2.6-.3-1.2 5-5.3 8.9-10.4 10.1l.7 3.2C14.9 38.4 21 30.9 21 21.5v-8C21 7.7 16.3 3 13.5 3z" />
-              </svg>
-            </div>
-            <p className="relative z-10 whitespace-pre-line pr-16 text-lg font-bold leading-relaxed text-white md:pr-24 md:text-xl">
-              {place.comment}
-            </p>
-            {place.commentAuthor && (
-              <p className="relative z-10 mt-5 text-right text-lg italic text-white/90">
-                {place.commentAuthor}
-              </p>
-            )}
-          </div>
-        )}
-
+{/* ========== ОТЗЫВ ========== */}
+{place.comment && (
+  <div className="relative mb-6 overflow-visible" style={{ zIndex: 0 }}>
+    {/* Коричневый блок с отзывом */}
+    <div
+      className="review-block relative overflow-hidden rounded-3xl p-6 md:p-8 shadow-md"
+      style={{ zIndex: 1 }}
+    >
+      {/* Фоновый узор-карта */}
+      <img
+        src={`${basePath}/img/union.png`}
+        alt=""
+        aria-hidden="true"
+        className="review-bg-pattern pointer-events-none select-none absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply"
+      />
+      
+      {/* Текст отзыва */}
+      <p className="review-text relative z-10 whitespace-pre-line pr-20 text-lg font-bold leading-relaxed text-white md:pr-32 md:text-xl lg:pr-44">
+        {place.comment}
+      </p>
+      
+      {/* Автор отзыва */}
+      {place.commentAuthor && (
+        <p className="review-author relative z-10 mt-5 text-right text-lg italic text-white/90">
+          {place.commentAuthor}
+        </p>
+      )}
+    </div>
+    
+    {/* Кавычки поверх блока */}
+    <div 
+      className="review-quotes pointer-events-none absolute right-4 select-none md:right-6" 
+      aria-hidden="true" 
+      style={{ top: '-10px', zIndex: 2 }}
+    >
+      {(() => {
+        const quoteFiles = [
+          'blue_brown_ap.svg',
+          'brown_orange_ap.svg',
+          'orang_blue_ap.svg'
+        ];
+        const randomFile = quoteFiles[Math.floor(Math.random() * quoteFiles.length)];
+        return (
+          <img
+            src={`${basePath}/img/${randomFile}`}
+            alt=""
+            className="h-12 w-auto md:h-16 lg:h-20"
+          />
+        );
+      })()}
+    </div>
+  </div>
+)}
         {/* ВИДЕО */}
         {place.videos && place.videos.length > 0 && (
           <Card className="mb-6 p-4 bg-card border-border shadow-md">

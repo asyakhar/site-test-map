@@ -843,3 +843,32 @@ html.large-font button[title="Версия для слабовидящих"] svg
 .animate-slideDown {
   animation: slideDown 0.3s ease-out;
 }
+/* Обычный фон блока отзыва */
+.review-block {
+  background-color: #985B3B;
+}
+
+/* Высококонтрастный режим */
+:root.high-contrast .review-block {
+  background-color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+:root.high-contrast .review-text {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+:root.high-contrast .review-author {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+:root.high-contrast .review-bg-pattern {
+  display: none !important;
+}
+
+:root.high-contrast .review-quotes img {
+  filter: brightness(0) invert(1) !important;
+}

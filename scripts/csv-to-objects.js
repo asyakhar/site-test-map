@@ -43,8 +43,10 @@ const COL = {
   family: 13, ethnomedicine: 14, health: 15,
   contraindications: 16, tickets: 17, benefits: 18,
   website: 19, phone: 20, yandexMap: 21, coordinates: 22, notes: 23,
-  // ↓↓↓ НОВЫЕ КОЛОНКИ ДЛЯ ВИДЕО ↓↓↓
-  videoUrls: 26
+  // ↓↓↓ НОВЫЕ КОЛОНКИ ↓↓↓
+  videoUrls: 26,
+  comment: 25,       // текст отзыва
+  commentAuthor: 27, // автор отзыва
 };
 
 // Ключи доступности
@@ -132,10 +134,7 @@ function parseVideos(urlsRaw) {
   const urlList = urls.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
   if (urlList.length === 0) return undefined;
 
-  return urlList.map((url) => ({
-    url: url,
-    // title не добавляем
-  }));
+  return urlList.map((url) => ({ url }));
 }
 
 // --- Перенос фото из старого objects.json ---
@@ -206,6 +205,10 @@ rows.forEach((r, idx) => {
   // --- ПАРСИМ ВИДЕО ---
   const videos = parseVideos(r[COL.videoUrls]);
 
+  // --- ПАРСИМ ОТЗЫВ ---
+  const comment = clean(r[COL.comment]);
+  const commentAuthor = clean(r[COL.commentAuthor]);
+
   const contacts = {};
   const phone = asPhone(r[COL.phone]);
   const website = asUrl(r[COL.website]);
@@ -233,6 +236,8 @@ rows.forEach((r, idx) => {
   if (notes && !isEmptyCell(notes)) obj.notes = notes;
   obj.photos = photos;
   if (videos && videos.length > 0) obj.videos = videos;
+  if (comment) obj.comment = comment;
+  if (commentAuthor) obj.commentAuthor = commentAuthor;
   obj.contacts = contacts;
 
   objects.push(obj);
