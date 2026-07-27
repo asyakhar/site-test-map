@@ -357,39 +357,22 @@ export default function PlaceDetailClient({ id }: { id: string }) {
 
 {/* ========== ОТЗЫВ ========== */}
 {place.comment && (
-  <div className="relative mb-6 overflow-visible" style={{ zIndex: 0 }}>
-    {/* Коричневый блок с отзывом */}
-    <div
-      className="review-block relative overflow-hidden rounded-3xl p-6 md:p-8 shadow-md"
-      style={{ zIndex: 1 }}
-    >
-      {/* Фоновый узор-карта */}
+  <div
+    className="relative mb-6 rounded-3xl p-6 md:p-8 shadow-md review-block"
+    style={{ backgroundColor: '#985B3B' }}
+  >
+    {/* Фоновый узор-карта — overflow-hidden только здесь */}
+    <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
       <img
         src={`${basePath}/img/union.png`}
         alt=""
         aria-hidden="true"
-        className="review-bg-pattern pointer-events-none select-none absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply"
+        className="pointer-events-none select-none absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply review-pattern"
       />
-      
-      {/* Текст отзыва */}
-      <p className="review-text relative z-10 whitespace-pre-line pr-20 text-lg font-bold leading-relaxed text-white md:pr-32 md:text-xl lg:pr-44">
-        {place.comment}
-      </p>
-      
-      {/* Автор отзыва */}
-      {place.commentAuthor && (
-        <p className="review-author relative z-10 mt-5 text-right text-lg italic text-white/90">
-          {place.commentAuthor}
-        </p>
-      )}
     </div>
     
-    {/* Кавычки поверх блока */}
-    <div 
-      className="review-quotes pointer-events-none absolute right-4 select-none md:right-6" 
-      aria-hidden="true" 
-      style={{ top: '-10px', zIndex: 2 }}
-    >
+    {/* Кавычки внутри блока — теперь они могут выходить за пределы */}
+    <div className="pointer-events-none absolute -top-2 right-4 z-0 select-none md:-top-3 md:right-6 review-quotes" aria-hidden="true">
       {(() => {
         const quoteFiles = [
           'blue_brown_ap.svg',
@@ -401,11 +384,23 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           <img
             src={`${basePath}/img/${randomFile}`}
             alt=""
-            className="h-12 w-auto md:h-16 lg:h-20"
+            className="h-10 w-auto md:h-14 lg:h-16"
           />
         );
       })()}
     </div>
+    
+    {/* Текст отзыва */}
+    <p className="relative z-10 whitespace-pre-line pr-20 text-base font-bold leading-relaxed text-white md:pr-32 md:text-base lg:pr-44">
+      {place.comment}
+    </p>
+    
+    {/* Автор отзыва */}
+    {place.commentAuthor && (
+      <p className="relative z-10 mt-5 text-right text-base font-bold text-white/90 review-author">
+        {place.commentAuthor}
+      </p>
+    )}
   </div>
 )}
         {/* ВИДЕО */}
