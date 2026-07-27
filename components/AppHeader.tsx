@@ -41,7 +41,16 @@ export default function Header({ onOpenFilters }: HeaderProps) {
     }
   };
 
-  const handleScrollToAbout = (e: React.MouseEvent) => {
+  const handleOpenFilters = () => {
+    if (onOpenFilters) {
+      onOpenFilters();
+    } else {
+      router.push('/'); 
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+    const handleScrollToAbout = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
     
@@ -62,16 +71,7 @@ export default function Header({ onOpenFilters }: HeaderProps) {
       router.push('/');
     }
   };
-
-  const handleOpenFilters = () => {
-    if (onOpenFilters) {
-      onOpenFilters();
-    } else {
-      router.push('/'); 
-    }
-    setIsMobileMenuOpen(false);
-  };
-
+  
   const handleGoToMap = () => {
     setIsMobileMenuOpen(false);
     router.push('/map');
@@ -109,14 +109,11 @@ export default function Header({ onOpenFilters }: HeaderProps) {
           <Link href="/yakutia" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
             О Якутии
           </Link>
-          <button 
-            onClick={handleScrollToAbout} 
-            className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)] cursor-pointer"
-          >
-            О проекте
-          </button>
+          <Link href="/aboutProject" className="text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold hover:text-[var(--color-accent)] transition-colors text-[var(--color-text-primary)]">
+            О нас
+          </Link>
           
-          {/* ✅ "Перейти на карту" - как обычный текст, но темно-оранжевый */}
+          {/* "Перейти на карту" - как обычный текст, но темно-оранжевый */}
           <button 
             onClick={handleGoToMap}
             className={`text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold text-[var(--color-accent-dark)] hover:text-[var(--color-accent-hover)] transition-colors cursor-pointer ${
@@ -181,10 +178,10 @@ export default function Header({ onOpenFilters }: HeaderProps) {
             onClick={handleScrollToAbout}
             className="py-2 text-lg font-bold text-[var(--color-text-primary)] text-left"
           >
-            О проекте
+            О нас
           </button>
           
-          {/* ✅ "Перейти на карту" в мобильном меню - темно-оранжевый */}
+          {/* "Перейти на карту" в мобильном меню - темно-оранжевый */}
           <button 
             onClick={handleGoToMap}
             className={`py-2 text-lg font-bold text-[var(--color-accent-dark)] text-left hover:text-[var(--color-accent-hover)] transition-colors ${

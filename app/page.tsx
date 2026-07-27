@@ -77,8 +77,8 @@ const WHY_COLUMNS: { title: string; cards: WhyCard[] }[] = [
     title: 'Чтобы стереть границы при',
     cards: [
       { label: 'проблемах с передвижением', icon: Accessibility, color: 'green', layer: 'mobility' },
-      { label: 'плохом зрении', icon: Eye, color: 'blue', layer: 'vision_impaired' },
-      { label: 'плохом слухе', icon: Ear, color: 'orange', layer: 'hearing_impaired' },
+      { label: 'нарушениях зрения', icon: Eye, color: 'blue', layer: 'vision_impaired' },
+      { label: 'нарущениях слуха', icon: Ear, color: 'orange', layer: 'hearing_impaired' },
       { label: 'особой диете', icon: Utensils, color: 'darkred', layer: 'dietary' },
     ],
   },
@@ -90,7 +90,7 @@ const WHY_COLUMNS: { title: string; cards: WhyCard[] }[] = [
     ],
   },
   {
-    title: 'Чтобы вы смогли сосредоточиться на главном',
+    title: 'Чтобы вы смогли сосредоточиться на главном:',
     cards: [
       { label: 'На здоровье', icon: Hospital, color: 'orange', layer: 'health' },
       { label: 'На детях', icon: Users, color: 'green', layer: 'family' },
@@ -459,6 +459,17 @@ export default function HomePage() {
           // Объявляем basePath прямо внутри компонента перед рендером
           const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
 
+          // Массив с ссылками на логотипы спонсоров
+          const sponsors = [
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/ekvo.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/igmu.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/svfu.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/volmed.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/yarmiats.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/library.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/ministerstvo.png"
+          ];
+
           return (
             <section
               id="about"
@@ -476,10 +487,29 @@ export default function HomePage() {
                   О проекте
                 </h2>
 
-                <p className="max-w-3xl mx-auto opacity-90 mb-8 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+                <p className="max-w-3xl mx-auto opacity-90 mb-12 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
                   «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
                 </p>
 
+                {/* Блок спонсоров */}
+                <div className="mt-12 md:mt-16 relative z-10">
+                  <h3 className="font-sangha mb-6 text-2xl md:text-3xl opacity-90">
+                    Наши спонсоры
+                  </h3>
+                  
+                  {/* Контейнер для картинок: flex для выстраивания в ряд, flex-wrap для адаптивности на телефонах */}
+                  <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+                    {sponsors.map((url, index) => (
+                      <img
+                        key={index}
+                        src={url}
+                        alt={`Спонсор ${index + 1}`}
+                        className="h-12 md:h-16 lg:h-20 w-auto object-contain hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                </div>
 
               </div>
             </section>
@@ -539,7 +569,7 @@ export default function HomePage() {
                     <AlertTriangle className="size-5 flex-shrink-0 mt-0.5 text-amber-600 dark-contrast:text-white" />
                     <div className="space-y-2">
                       <p>
-                        <strong>Внимание!</strong> На ряде пешеходных переходов Якутска установлены звуковые светофоры. Они подают специальные звуковые сигналы, помогая людям с ограничением здоровья безопасно определить момент для перехода дороги.
+                        <strong>Внимание!</strong> На ряде пешеходных переходов Якутска установлены звуковые светофоры. Они подают специальные звуковые сигналы, помогая людям с нарушением зрения безопасно определить момент для перехода дороги.
                       </p>
                       <p>
                         В связи с природными и климатическими условиями дороги имеют неровности, учитывайте это при переходе дороги.

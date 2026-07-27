@@ -397,7 +397,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
     
     {/* Автор отзыва */}
     {place.commentAuthor && (
-      <p className="relative z-10 mt-5 text-right text-base font-bold text-white/90 review-author">
+      <p className="relative z-10 mt-5 text-right text-base font-italic text-white/90 review-author">
         {place.commentAuthor}
       </p>
     )}

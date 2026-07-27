@@ -13,7 +13,7 @@ export default function YakutiaPage() {
         
         {/* Заголовок */}
         <h1 
-          className="font-sangha font-bold text-center mb-10 text-[var(--color-green-dark)]"
+          className="font-sangha font text-center mb-10 text-[var(--color-green-dark)]"
           style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
         >
           О Якутии

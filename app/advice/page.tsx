@@ -220,7 +220,7 @@ export default function AdvicePage() {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h1 
-            className="font-sangha font-bold text-[var(--color-green-dark)] mb-4"
+            className="font-sangha font text-[var(--color-green-dark)] mb-4"
             style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
           >
             Практические советы
