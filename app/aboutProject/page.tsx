@@ -3,42 +3,60 @@ import PageWrapper from "@/components/PageWrapper";
 // Путь к статике (на GitHub Pages добавляется префикс репозитория)
 const basePath = process.env.NODE_ENV === "production" ? "/site-test-map" : "";
 
-interface Participant {
-  name: string;
-  uni: string;
+// Группа участников: организация/роль + список людей
+interface TeamGroup {
+  org: string;
+  members: string[];
 }
 
-const participants: Participant[] = [
-  { name: "Имя Фамилия", uni: "ИГМУ" },
-  { name: "Имя Фамилия", uni: "ИГМУ" },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
-  { name: "Имя Фамилия", uni: " " },
+const igmuGroup: TeamGroup = {
+  org: "Студенты Иркутского государственного медицинского университета",
+  members: [
+    "Багирова Айнур Абидин кызы",
+    "Баянова Екатерина Анатольевна",
+    "Бельков Алексей Андреевич",
+    "Болдырева Полина Анатольевна",
+    "Буянов Андрей Вячеславович",
+    "Гусейнова Лейла Видали кызы",
+    "Кузнецова Диана Александровна",
+    "Крутикова Екатерина Евгеньевна",
+    "Розикова Умида Абдукаюмовна",
+    "Сырова Асия Исмаровна",
+    "Сырова Амина Исмаровна",
+    "Тихомиров Евгений Александрович",
+  ],
+};
+
+const otherGroups: TeamGroup[] = [
+  {
+    org: "Ординатор ИГМАПО МЗ РФ",
+    members: ["Лаутина Юлия Александровна"],
+  },
+  {
+    org: "Ординатор РНИМУ им. Н.И. Пирогова МЗ РФ",
+    members: ["Эльмуродова Нодира Баходуровна"],
+  },
+  {
+    org: "Студент УрФУ",
+    members: ["Жулаев Амир Салаватович"],
+  },
+  {
+    org: "Студент Хакасского государственного университета им. Н.Ф. Катанова",
+    members: ["Галантюк Артём Андреевич"],
+  },
+  {
+    org: "Специалист по молодёжной политике и воспитательной работе",
+    members: ["Гуменникова Мария Сергеевна"],
+  },
+  {
+    org: "Специалист по развитию государственных взаимоотношений",
+    members: ["Мицилеско Анастасия Евгеньевна"],
+  },
+  {
+    org: "Студентки ИТМО",
+    members: ["Колмогорова Александра Сергеевна", "Харитонова Анастасия Анатольевна"],
+  },
 ];
-
-function getInitials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 /* Декоративная полоса-узор (наш этно-орнамент).
    flip — отражает полосу по вертикали (для нижнего края рамки). */
@@ -96,8 +114,8 @@ export default function AboutProjectPage() {
             <div className="border-x-2 border-[var(--color-brown-light)] px-3">
               <div className="aspect-[16/10] w-full overflow-hidden bg-[var(--color-bg-secondary)]">
                 <img
-                  src={`${basePath}/img/placeholder.jpg`}
-                  alt="Фотография проекта"
+                  src={"https://raw.githubusercontent.com/asyakhar/yakutia-images/main/team/us-2.jpg"}
+                  alt="Фотография команды проекта"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -111,7 +129,7 @@ export default function AboutProjectPage() {
         </figure>
 
         {/* Разделитель */}
-        <div className="my-14 opacity-60">
+        <div className="my-6 opacity-60">
           <UzorBand />
         </div>
 
@@ -127,21 +145,47 @@ export default function AboutProjectPage() {
             Команда из 20 человек, благодаря которым проект стал возможным:
           </p>
 
-          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-            {participants.map((person, index) => (
-              <li
-                key={index}
-                className="group flex flex-col items-center rounded-xl border border-[var(--color-card-border)] bg-[var(--color-bg-white)] p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:border-[var(--color-accent)]/50"
+          {/* ИГМУ - карточка на всю ширину, имена в несколько колонок */}
+          <div className="rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-bg-white)] p-6 shadow-sm md:p-8">
+            <div className="mb-5 flex items-start gap-3">
+              <span aria-hidden="true" className="mt-1 h-7 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-accent)]" />
+              <h3 className="font-sangha text-xl text-[var(--color-green-dark)] md:text-2xl">
+                {igmuGroup.org}
+              </h3>
+            </div>
+            <ul className="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {igmuGroup.members.map((name) => (
+                <li key={name} className="flex items-start gap-2 text-[var(--color-text-primary)]">
+                  <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-brown-light)]" />
+                  <span className="leading-snug">{name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* сетка крточек остальных участников */}
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {otherGroups.map((group) => (
+              <div
+                key={group.org}
+                className="flex flex-col rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-bg-white)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--color-accent)]/50 hover:shadow-md"
               >
-                <h3 className="font-semibold text-[var(--color-text-primary)] leading-snug">
-                  {person.name}
-                </h3>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                  {person.uni}
-                </p>
-              </li>
+                <div className="mb-3 flex items-start gap-2.5">
+                  <span aria-hidden="true" className="mt-0.5 h-5 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-accent)]" />
+                  <h3 className="text-sm font-semibold leading-snug text-[var(--color-green-dark)]">
+                    {group.org}
+                  </h3>
+                </div>
+                <ul className="space-y-1.5 pl-4">
+                  {group.members.map((name) => (
+                    <li key={name} className="leading-snug text-[var(--color-text-primary)]">
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
       </article>
     </PageWrapper>
