@@ -41,6 +41,7 @@ import {
   List,
   Map,
   SlidersHorizontal,
+  LocateFixed,
 } from "lucide-react"
 
 // Types
@@ -222,6 +223,13 @@ function MapBoundsController({ objects }: { objects: MapObject[] }) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 })
     }
   }, [objects, map])
+  return null
+}
+
+// Отдаёт наружу инстанс карты (для кнопки центровки)
+function MapController({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => { onReady(map) }, [map, onReady])
   return null
 }
 
@@ -492,6 +500,25 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
     
     return () => observer.disconnect();
   }, []);
+
+  // Инстансы карт (мобильная и десктопная) для кнопки центровки
+  const mobileMapRef = useRef<L.Map | null>(null)
+  const desktopMapRef = useRef<L.Map | null>(null)
+  const handleMobileMapReady = useCallback((map: L.Map) => { mobileMapRef.current = map }, [])
+  const handleDesktopMapReady = useCallback((map: L.Map) => { desktopMapRef.current = map }, [])
+
+  // Вернуть карту ко всем отфильтрованным местам (центровка)
+  const recenterMap = (map: L.Map | null) => {
+    if (!map) return
+    const coords = filteredObjects
+      .map((o) => o.coordinates)
+      .filter((c): c is [number, number] => Array.isArray(c))
+    if (coords.length > 0) {
+      map.fitBounds(L.latLngBounds(coords), { padding: [50, 50], maxZoom: 13 })
+    } else {
+      map.setView(CONFIG.mapCenter, CONFIG.defaultZoom)
+    }
+  }
 
   const toggleAccessibility = () => {
     const newState = !isHighContrast;
@@ -790,7 +817,7 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
         )}
 
         <div className="flex-1 relative overflow-hidden">
-          <div className={`h-full ${viewMode === 'list' ? 'hidden' : 'block'}`}>
+          <div className={`h-full relative ${viewMode === 'list' ? 'hidden' : 'block'}`}>
             <MapContainer 
               attributionControl={false} 
               center={CONFIG.mapCenter} 
@@ -825,10 +852,21 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
                 );
               })}
               {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+              <MapController onReady={handleMobileMapReady} />
             </MapContainer>
-            
+
+            {/* Кнопка центровки — вернуть карту ко всем местам */}
+            <button
+              onClick={() => recenterMap(mobileMapRef.current)}
+              title="Показать все места"
+              aria-label="Показать все места на карте"
+              className="absolute bottom-6 right-4 z-[400] flex items-center justify-center size-12 rounded-full bg-[var(--color-bg-white)] shadow-lg border border-[var(--color-card-border)] text-[var(--color-accent)] hover:bg-[var(--color-bg-primary)] transition-colors dark-contrast:text-white dark-contrast:bg-black dark-contrast:border-white"
+            >
+              <LocateFixed className="size-5" />
+            </button>
+
             <div className="absolute top-3 left-3 bg-[var(--color-bg-white)]/90 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-[var(--color-card-border)]">
-             
+
             </div>
           </div>
 
@@ -920,7 +958,18 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
             );
           })}
           {filteredObjects.length > 0 && <MapBoundsController objects={filteredObjects} />}
+          <MapController onReady={handleDesktopMapReady} />
         </MapContainer>
+
+        {/* Кнопка центровки — вернуть карту ко всем местам */}
+        <button
+          onClick={() => recenterMap(desktopMapRef.current)}
+          title="Показать все места"
+          aria-label="Показать все места на карте"
+          className="absolute bottom-6 right-4 z-[400] flex items-center justify-center size-12 rounded-full bg-[var(--color-bg-white)] shadow-lg border border-[var(--color-card-border)] text-[var(--color-accent)] hover:bg-[var(--color-bg-primary)] transition-colors dark-contrast:text-white dark-contrast:bg-black dark-contrast:border-white"
+        >
+          <LocateFixed className="size-5" />
+        </button>
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-[400]">
           <Badge variant="secondary" className="px-5 py-3 text-sm font-bold shadow-lg bg-[var(--color-bg-white)]/90 backdrop-blur-md border border-[var(--color-card-border)] text-[var(--color-text-primary)] rounded-full">
