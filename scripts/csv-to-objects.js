@@ -6,7 +6,7 @@ const path = require('path');
 
 const CSV_PATH =
   process.argv[2] ||
-  path.join(process.env.USERPROFILE || process.env.HOME, 'Downloads', 'Таблица на карту - Лист1.csv');
+  path.join(process.env.USERPROFILE || process.env.HOME, 'Downloads', 'Таблица на карту.csv');
 const OUT_PATH = process.argv[3] || path.join(__dirname, '../public/data/objects.json');
 const OLD_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
 
