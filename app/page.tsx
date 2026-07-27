@@ -78,7 +78,7 @@ const WHY_COLUMNS: { title: string; cards: WhyCard[] }[] = [
     cards: [
       { label: 'проблемах с передвижением', icon: Accessibility, color: 'green', layer: 'mobility' },
       { label: 'нарушениях зрения', icon: Eye, color: 'blue', layer: 'vision_impaired' },
-      { label: 'нарущениях слуха', icon: Ear, color: 'orange', layer: 'hearing_impaired' },
+      { label: 'нарушениях слуха', icon: Ear, color: 'orange', layer: 'hearing_impaired' },
       { label: 'особой диете', icon: Utensils, color: 'darkred', layer: 'dietary' },
     ],
   },
@@ -361,10 +361,10 @@ export default function HomePage() {
             <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
               {WHY_COLUMNS.map((col) => (
                 <div key={col.title} className="flex flex-col">
-                  <h3 className="text-center font-bold text-[clamp(1.05rem,1.5vw,1.3rem)] text-[var(--color-green-dark)] dark-contrast:text-white mb-5 min-h-[4.5rem] flex items-center justify-center">
+                  <h3 className="text-center font-bold text-[clamp(1.05rem,1.5vw,1.3rem)] text-[var(--color-green-dark)] dark-contrast:text-white mb-4 md:mb-5 md:min-h-[4.5rem] flex items-center justify-center">
                     {col.title}
                   </h3>
-                  <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-3 md:flex md:flex-col md:gap-4">
                     {col.cards.map((card) => {
                       const Icon = card.icon;
                       return (
@@ -384,9 +384,9 @@ export default function HomePage() {
                               ? { backgroundColor: '#000000', border: '2px solid #FFFFFF' }
                               : { backgroundColor: CARD_HEX[card.color] }
                           }
-                          className="flex flex-col items-center justify-center gap-3 rounded-2xl px-4 py-7 text-center text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-xl min-h-[130px] opacity-85 hover:opacity-100"
+                          className="flex flex-col items-center justify-center gap-2.5 md:gap-3 rounded-2xl px-3 py-5 md:px-4 md:py-7 text-center text-white shadow-md transition-all hover:-translate-y-1 hover:shadow-xl min-h-[120px] md:min-h-[130px] opacity-85 hover:opacity-100"
                         >
-                          <Icon className="size-10" strokeWidth={2} />
+                          <Icon className="size-8 md:size-10" strokeWidth={2} />
                           <span className="font-bold text-[clamp(0.95rem,1.2vw,1.1rem)] leading-snug">
                             {card.label}
                           </span>
@@ -468,26 +468,37 @@ export default function HomePage() {
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/svfu.png",
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/library.png",
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/volmed.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/bchp.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/orz.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/russia_strana_vozm.png",
+            "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/hse_logo.png",
           ];
 
           return (
             <section
               id="about"
-              className="pt-20 pb-36 lg:pt-32 lg:pb-56 bg-[var(--color-green-dark)] text-white dark-contrast:bg-gray-900 relative"
-              style={{
-                backgroundImage: `url('${basePath}/img/o_proekte.png')`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'bottom center',
-                backgroundSize: 'contain'
-              }}
+              className="relative overflow-hidden bg-[var(--color-bg-secondary)] pt-20 lg:pt-28 dark-contrast:bg-black"
             >
-              <div className="container mx-auto px-4 text-center">
-                {/* Заголовок без font-bold с фирменным акцентным шрифтом */}
-                <h2 className="font-sangha mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>
-                  О проекте
+              {/* Фоновый контур карты — как в других секциях */}
+              <img
+                src={`${basePath}/img/union.png`}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"              />
+
+              <div className="container relative z-10 mx-auto px-4 text-center">
+                {/* Заголовок с фирменным акцентным шрифтом */}
+                <h2
+                  className="font-sangha mb-6 text-[var(--color-green-dark)] dark-contrast:text-white"
+                  style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+                >
+                  О ПРОЕКТЕ
                 </h2>
 
-                <p className="max-w-3xl mx-auto opacity-90 mb-12 leading-relaxed" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+                <p
+                  className="max-w-4xl mx-auto mb-12 leading-relaxed text-[var(--color-text-secondary)] dark-contrast:text-gray-200"
+                  style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+                >
                   «Доступная Якутия» — это некоммерческий проект, созданный для того, чтобы сделать туризм в регионе доступным для каждого. Мы собираем информацию об объектах, проверяем их доступность и помогаем планировать комфортные маршруты.
                 </p>
 
@@ -496,21 +507,34 @@ export default function HomePage() {
                   <h3 className="font-sangha mb-6 text-2xl md:text-3xl opacity-90">
                     Наши спонсоры
                   </h3>
-                  
-                  {/* Контейнер для картинок: flex для выстраивания в ряд, flex-wrap для адаптивности на телефонах */}
                   <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
                     {sponsors.map((url, index) => (
                       <img
                         key={index}
                         src={url}
                         alt={`Спонсор ${index + 1}`}
-                        className="h-12 md:h-16 lg:h-20 w-auto object-contain hover:scale-105 transition-transform duration-300"
+                        className="h-8 md:h-12 lg:h-16 w-auto object-contain hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
                     ))}
                   </div>
                 </div>
+              </div>
 
+              {/* Коричневый узор внизу блока */}
+              <div className="relative mt-16 w-full">
+                <img
+                  src={`${basePath}/img/about_brown.png`}
+                  alt="Коричневый футер, элемент дизайна"
+                  aria-hidden="true"
+                  className="block h-auto w-full select-none pointer-events-none"
+                />
+                <img
+                  src={`${basePath}/img/about_uzor.png`}
+                  alt="Якутский национальный узор"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 bottom-[0%] w-full select-none"                
+                />
               </div>
             </section>
           );
