@@ -1,4 +1,3 @@
-// scripts/update-photo.js
 const fs = require('fs');
 const path = require('path');
 
@@ -7,9 +6,7 @@ const GITHUB_USERNAME = 'asyakhar';
 const REPO_NAME = 'yakutia-images';
 const BRANCH = 'main';
 
-
 const LOCAL_IMAGES_PATH = path.join('/Users', 'nastaharitonova', 'Documents', 'yakutia-images');
-
 const OBJECTS_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
 
 // === СООТВЕТСТВИЕ ID → ПАПКИ ===
@@ -58,6 +55,8 @@ const ID_MAPPING = {
 
   // Природа
   "obj-31": "nature/orto-doydu-zoo",
+  "obj-34": "nature/lena_pillars",
+  "obj-35": "nature/tukulan",
 };
 
 function getGitHubRawUrl(folderPath, filename) {
@@ -76,7 +75,6 @@ function scanLocalFolder(folderPath) {
   
   try {
     const files = fs.readdirSync(fullPath);
-    // Фильтруем только изображения
     const imageFiles = files.filter(file => 
       /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file)
     );
@@ -86,7 +84,6 @@ function scanLocalFolder(folderPath) {
       return null;
     }
     
-    // Сортируем: main.* всегда первым, остальные по алфавиту
     imageFiles.sort((a, b) => {
       if (a.startsWith('main.')) return -1;
       if (b.startsWith('main.')) return 1;
@@ -109,12 +106,10 @@ async function main() {
   console.log(`📁 Используем локальную папку: ${LOCAL_IMAGES_PATH}`);
   console.log('');
   
-  // Проверяем существование корневой папки
   if (!fs.existsSync(LOCAL_IMAGES_PATH)) {
     console.error(`❌ Папка с фотографиями не найдена: ${LOCAL_IMAGES_PATH}`);
     console.log('💡 Убедитесь, что путь правильный:');
     console.log(`   Сейчас ищет: ${LOCAL_IMAGES_PATH}`);
-    console.log('   Создайте папку или укажите правильный путь в LOCAL_IMAGES_PATH');
     return;
   }
   
@@ -129,7 +124,6 @@ async function main() {
   
   let updatedCount = 0;
   let totalPhotos = 0;
-  const errors = [];
   const noPhotos = [];
   
   for (const obj of objects) {
@@ -158,10 +152,8 @@ async function main() {
     console.log(`   ✅ Обновлено (${newPhotos.length} фото)\n`);
   }
   
-  // Сохраняем обновленный objects.json
   fs.writeFileSync(OBJECTS_JSON_PATH, JSON.stringify(objects, null, 2), 'utf8');
   
-  // Итоговая статистика
   console.log('═══════════════════════════════════════════════');
   console.log(`🎉 Готово!`);
   console.log(`📊 Обновлено объектов: ${updatedCount} из ${objects.length}`);
@@ -176,5 +168,4 @@ async function main() {
   console.log(`\n📁 Файл сохранен: ${OBJECTS_JSON_PATH}`);
 }
 
-// Запускаем
 main().catch(console.error);
