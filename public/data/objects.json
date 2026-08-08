@@ -84,6 +84,11 @@
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/tourism/permafrost-kingdom/IMG_1092.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/tourism/permafrost-kingdom/IMG_1107.jpg"
     ],
+    "videos": [
+      {
+        "url": "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/kingdom_of_permafrost_vid.mp4"
+      }
+    ],
     "comment": "«Царство вечной мерзлоты» поистине восхищает. Это уникальный природный музей, где посетители буквально погружаются в толщу холма на 120 метров. Внутри завораживает не только ледяные скульптуры и тематические композиции, но и сама атмосфера первозданного холода, бережно сохранённого вечной мерзлотой. Особенно ценно, что это не искусственная инсталляция, а естественная ледяная пещера, позволяющая увидеть и прочувствовать уникальную природу Якутии.",
     "commentAuthor": "Катя К.",
     "contacts": {
@@ -222,6 +227,11 @@
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/yaroslavsky-museum/IMG_0799.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/yaroslavsky-museum/IMG_0857.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/museum/yaroslavsky-museum/IMG_0986.jpg"
+    ],
+    "videos": [
+      {
+        "url": "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/museum_narod_vid.mp4"
+      }
     ],
     "comment": "Музей подарил мне ощущение настоящего путешествия по всей Якутии. За одно посещение здесь словно проходишь путь от арктической пустыни до тундры, знакомясь с природой, историей и традициями разных уголков республики. Музей позволяет почувствовать, насколько удивительно разнообразна Якутия и как бережно здесь сохраняют наследие народов Севера.",
     "commentAuthor": "Амина С.",
@@ -437,6 +447,11 @@
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/tourism/atlasov-estate/IMG_1213.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/tourism/atlasov-estate/IMG_1265.jpg"
     ],
+    "videos": [
+      {
+        "url": "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/atlasov_vid.mp4"
+      }
+    ],
     "comment": "Усадьба Атласовых в Якутске — это отличное место, чтобы окунуться в атмосферу якутского колорита. Очень порадовали уличные инсталляции и скульптуры из природных материалов, которые делают территорию уникальной. Отдельное удовольствие — ресторан с вкуснейшей национальной кухней, где просто обязательно нужно попробовать настоящую строганину из чира, которую здесь готовят по всем правилам.",
     "commentAuthor": "Полина Б.",
     "contacts": {
@@ -517,7 +532,14 @@
       "phone": "7 (4112) 35-20-90",
       "website": "https://www.s-vfu.ru/sveden/common/",
       "yandexMap": "https://yandex.ru/maps/-/CTEIBY-A"
-    }
+    },
+    "podcasts": [
+      {
+        "title": "«Гормоны Севера: как Якутия влияет на организм»",
+        "description": "...",
+        "url": "..."
+      }
+    ]
   },
   {
     "id": "obj-13",
@@ -1366,6 +1388,11 @@
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/nature/lena_pillars/IMG_1434.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/nature/lena_pillars/IMG_1600.jpg"
     ],
+    "videos": [
+      {
+        "url": "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/lena_pillars_vid.mp4"
+      }
+    ],
     "comment": "Прекрасное место! Природа очень разнообразная, красивые пейзажи. При подъёме в гору, открываются виды на реку Лена. Воздух очень свежий.",
     "commentAuthor": "Артём Г.",
     "contacts": {
@@ -1405,6 +1432,11 @@
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/nature/tukulan/IMG_1857.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/nature/tukulan/IMG_1878.jpg",
       "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/nature/tukulan/main_1812.jpg"
+    ],
+    "videos": [
+      {
+        "url": "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/lena_pillars_vid.mp4"
+      }
     ],
     "comment": "Тукуланы — одно из самых необычных мест, которые мне довелось увидеть. Невероятно, что посреди густой якутской тайги находятся настоящие песчаные дюны. Подъём по песку оказался непростым, но виды на Лену и бескрайние пески полностью оправдали усилия. Это место особенно понравится тем, кто любит дикую природу и готов немного пройтись ради впечатлений.",
     "commentAuthor": "Алексей Б.",
