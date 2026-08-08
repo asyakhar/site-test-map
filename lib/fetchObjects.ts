@@ -29,6 +29,12 @@ export interface MapObject {
     url: string;
     title?: string;
   }[];
+  /** Подкасты: название, краткое описание и ссылка (только у части объектов) */
+  podcasts?: {
+    title: string;
+    description?: string;
+    url: string;
+  }[];
 }
 
 export async function fetchObjects(): Promise<MapObject[]> {

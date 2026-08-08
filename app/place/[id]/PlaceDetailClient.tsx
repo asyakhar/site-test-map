@@ -42,6 +42,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Video,
+  Podcast,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -82,6 +84,11 @@ interface MapObject {
   videos?: {
     url: string;
     title?: string;
+  }[];
+  podcasts?: {
+    title: string;
+    description?: string;
+    url: string;
   }[];
 }
 
@@ -413,6 +420,45 @@ export default function PlaceDetailClient({ id }: { id: string }) {
             <div className="space-y-4">
               {place.videos.map((video, index) => (
                 <VideoPlayer key={index} video={video} />
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* ПОДКАСТ */}
+        {place.podcasts && place.podcasts.length > 0 && (
+          <Card className="mb-6 p-4 bg-card border-border shadow-md">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Podcast className="size-5 text-primary" />
+              Подкаст
+            </h2>
+            <div className="space-y-3">
+              {place.podcasts.map((podcast, index) => (
+                <a
+                  key={index}
+                  href={podcast.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-start gap-4 rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary hover:bg-primary/5"
+                >
+                  <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Podcast className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary">
+                      {podcast.title}
+                    </h3>
+                    {podcast.description && (
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                        {podcast.description}
+                      </p>
+                    )}
+                    <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                      Слушать
+                      <ExternalLink className="size-4" />
+                    </span>
+                  </div>
+                </a>
               ))}
             </div>
           </Card>

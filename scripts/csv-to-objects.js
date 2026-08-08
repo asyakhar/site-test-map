@@ -47,6 +47,9 @@ const COL = {
   videoUrls: 26,
   comment: 25,       // текст отзыва
   commentAuthor: 27, // автор отзыва
+  podcastTitle: 28,  // название подкаста
+  podcastDesc: 29,   // краткое описание подкаста
+  podcastUrl: 30,    // ссылка на подкаст
 };
 
 // Ключи доступности
@@ -137,6 +140,17 @@ function parseVideos(urlsRaw) {
   return urlList.map((url) => ({ url }));
 }
 
+// --- Парсинг подкаста из CSV ---
+function parsePodcasts(titleRaw, descRaw, urlRaw) {
+  const url = asUrl(urlRaw);
+  if (!url) return undefined;
+
+  const podcast = { title: oneLine(titleRaw) || 'Подкаст', url };
+  const description = oneLine(descRaw);
+  if (description) podcast.description = description;
+  return [podcast];
+}
+
 // --- Перенос фото из старого objects.json ---
 function normalizeName(s) {
   return clean(s).toLowerCase().replace(/[«»"'().,]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -209,6 +223,9 @@ rows.forEach((r, idx) => {
   const comment = clean(r[COL.comment]);
   const commentAuthor = clean(r[COL.commentAuthor]);
 
+  // --- ПАРСИМ ПОДКАСТ ---
+  const podcasts = parsePodcasts(r[COL.podcastTitle], r[COL.podcastDesc], r[COL.podcastUrl]);
+
   const contacts = {};
   const phone = asPhone(r[COL.phone]);
   const website = asUrl(r[COL.website]);
@@ -238,6 +255,7 @@ rows.forEach((r, idx) => {
   if (videos && videos.length > 0) obj.videos = videos;
   if (comment) obj.comment = comment;
   if (commentAuthor) obj.commentAuthor = commentAuthor;
+  if (podcasts && podcasts.length > 0) obj.podcasts = podcasts;
   obj.contacts = contacts;
 
   objects.push(obj);
