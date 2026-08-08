@@ -9,7 +9,7 @@ const BRANCH = 'main';
 const LOCAL_IMAGES_PATH = path.join('/Users', 'nastaharitonova', 'Documents', 'yakutia-images');
 const OBJECTS_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
 
-// === СООТВЕТСТВИЕ ID → ПАПКИ ===
+// === СООТВЕТСТВИЕ ID И ПАПОК ===
 const ID_MAPPING = {
   // Музеи
   "obj-01": "museum/arheology-etno-museum",

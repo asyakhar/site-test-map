@@ -19,7 +19,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-// Интерфейс для наших советов
+// Интерфейс совета
 interface AdviceItem {
   id: string;
   title: string;
@@ -30,7 +30,7 @@ interface AdviceItem {
   content: React.ReactNode;
 }
 
-// Данные с твоим текстом, разбитые на удобные React-компоненты
+// Данные советов (текст разбит на React-компоненты)
 const adviceData: AdviceItem[] = [
   {
     id: "winter",

@@ -113,7 +113,7 @@ export default function Header({ onOpenFilters }: HeaderProps) {
             О нас
           </Link>
           
-          {/* "Перейти на карту" - как обычный текст, но темно-оранжевый */}
+          {/* «Перейти на карту» */}
           <button 
             onClick={handleGoToMap}
             className={`text-[clamp(0.875rem,1.5vw,1.125rem)] font-bold text-[var(--color-accent-dark)] hover:text-[var(--color-accent-hover)] transition-colors cursor-pointer ${
@@ -181,7 +181,7 @@ export default function Header({ onOpenFilters }: HeaderProps) {
             О нас
           </button>
           
-          {/* "Перейти на карту" в мобильном меню - темно-оранжевый */}
+          {/* «Перейти на карту» в мобильном меню */}
           <button 
             onClick={handleGoToMap}
             className={`py-2 text-lg font-bold text-[var(--color-accent-dark)] text-left hover:text-[var(--color-accent-hover)] transition-colors ${

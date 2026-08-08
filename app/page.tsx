@@ -135,9 +135,8 @@ export default function HomePage() {
     router.push('/map');
   };
 
-  // ДОБАВЛЯЕМ ЭТОТ useEffect ДЛЯ ОБРАБОТКИ ЯКОРЯ
+  // Прокрутка к блоку «О проекте» по флагу из sessionStorage (ставится в шапке)
   useEffect(() => {
-    // Проверяем флаг в sessionStorage (устанавливается в Header при клике на "О проекте")
     const shouldScrollToAbout = sessionStorage.getItem('scrollToAbout');
 
     if (shouldScrollToAbout === 'true') {
@@ -189,7 +188,7 @@ export default function HomePage() {
         };
       }
     }
-  }, []);// Пустой массив зависимостей — запускается только один раз при монтировании
+  }, []);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
@@ -205,7 +204,6 @@ export default function HomePage() {
       {/* Входное окно про нарушения зрения (раз за сессию, только на главной) */}
       <VisionModal />
 
-      {/* Вызываем нашу новую переиспользуемую шапку и передаем функцию открытия фильтров */}
       <Header onOpenFilters={() => setShowFilters(true)} />
 
       <main id="main-content">
@@ -458,7 +456,7 @@ export default function HomePage() {
         {(() => {
           // Объявляем basePath прямо внутри компонента перед рендером
           const basePath = process.env.NODE_ENV === 'production' ? '/site-test-map' : '';
-
+          
           // Массив с ссылками на логотипы спонсоров
           const sponsors = [
             "https://raw.githubusercontent.com/asyakhar/yakutia-images/main/sponsors/ekvo.png",
@@ -487,7 +485,6 @@ export default function HomePage() {
                 className="pointer-events-none select-none absolute left-0 bottom-0 w-[40%] max-w-[700px] opacity-25 dark-contrast:hidden"              />
 
               <div className="container relative z-10 mx-auto px-4 text-center">
-                {/* Заголовок с фирменным акцентным шрифтом */}
                 <h2
                   className="font-sangha mb-6 text-[var(--color-green-dark)] dark-contrast:text-white"
                   style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}

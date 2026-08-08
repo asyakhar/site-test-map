@@ -34,7 +34,7 @@ function scanVideoFolder() {
       console.log(`⚠️ В папке video нет видеофайлов`);
       return null;
     }
-    console.log(`📹 Найдено видеофайлов: ${videoFiles.length}`);
+    console.log(`Найдено видеофайлов: ${videoFiles.length}`);
     return videoFiles;
   } catch (error) {
     console.error(`❌ Ошибка чтения папки video:`, error.message);
@@ -44,14 +44,14 @@ function scanVideoFolder() {
 
 // === ОСНОВНАЯ ФУНКЦИЯ ===
 async function main() {
-  console.log('🚀 Начинаем обновление видео-ссылок...');
-  console.log(`📁 Используем локальную папку: ${LOCAL_IMAGES_PATH}`);
+  console.log('Начинаем обновление видео-ссылок...');
+  console.log(`Используем локальную папку: ${LOCAL_IMAGES_PATH}`);
   console.log('');
 
   // Проверяем существование корневой папки
   if (!fs.existsSync(LOCAL_IMAGES_PATH)) {
     console.error(`❌ Папка с медиа не найдена: ${LOCAL_IMAGES_PATH}`);
-    console.log('💡 Убедитесь, что путь правильный.');
+    console.log('Убедитесь, что путь правильный.');
     return;
   }
 
@@ -71,7 +71,7 @@ async function main() {
     return;
   }
 
-  // Создаём карту: имя файла (без расширения) → полное имя файла с расширением
+  // Создаём карту: имя файла (без расширения) -> полное имя файла с расширением
   // Будем искать файлы, начинающиеся с ID объекта (например, "obj-08.mp4")
   const fileMap = {};
   videoFiles.forEach(file => {
@@ -93,8 +93,7 @@ async function main() {
     const matchingFiles = fileMap[objId] || [];
 
     if (matchingFiles.length === 0) {
-      // Если нет видео – удаляем поле videos (или можно оставить как есть)
-      // Я рекомендую удалить, чтобы не было устаревших ссылок
+      // Если видео нет — удаляем поле videos, чтобы не оставалось устаревших ссылок
       if (obj.videos) {
         delete obj.videos;
         console.log(`🗑️ Удалены видео для ${objId} (${obj.name}) – файлы не найдены`);
@@ -125,14 +124,14 @@ async function main() {
 
   // Итоговая статистика
   console.log('═══════════════════════════════════════════════');
-  console.log(`🎉 Готово!`);
-  console.log(`📊 Обновлено объектов с видео: ${updatedCount} из ${objects.length}`);
-  console.log(`📹 Всего видеофайлов добавлено: ${totalVideos}`);
+  console.log(`Готово!`);
+  console.log(`Обновлено объектов с видео: ${updatedCount} из ${objects.length}`);
+  console.log(`Всего видеофайлов добавлено: ${totalVideos}`);
   if (noVideos.length > 0) {
-    console.log(`\n⚠️ Без видео (${noVideos.length}):`);
+    console.log(`\nБез видео (${noVideos.length}):`);
     noVideos.forEach(name => console.log(`  ${name}`));
   }
-  console.log(`\n📁 Файл сохранен: ${OBJECTS_JSON_PATH}`);
+  console.log(`\nФайл сохранен: ${OBJECTS_JSON_PATH}`);
 }
 
 // Запускаем

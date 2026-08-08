@@ -2,8 +2,6 @@
 
 import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
-// Удаляем импорт Header
-// import Header from "@/components/AppHeader"
 
 const AccessibleYakutiaMap = dynamic(
   () => import("@/components/accessible-yakutia-map"),
@@ -28,7 +26,6 @@ export default function MapPage() {
   }
 
   return (
-    // Убираем flex-col и Header, карта должна занимать весь экран
     <div className="h-dvh w-full overflow-hidden bg-[var(--color-bg-primary)]">
       <AccessibleYakutiaMap onPlaceSelect={handlePlaceSelect} />
     </div>

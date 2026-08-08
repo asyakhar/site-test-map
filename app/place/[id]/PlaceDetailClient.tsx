@@ -41,7 +41,7 @@ import {
   GraduationCap,
   ChevronLeft,
   ChevronRight,
-  Video, // ← добавлено для иконки видео
+  Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -361,7 +361,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
     className="relative mb-6 rounded-3xl p-6 md:p-8 shadow-md review-block"
     style={{ backgroundColor: '#985B3B' }}
   >
-    {/* Фоновый узор-карта — overflow-hidden только здесь */}
+    {/* Фоновый узор-карта */}
     <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
       <img
         src={`${basePath}/img/union.png`}
@@ -371,7 +371,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       />
     </div>
     
-    {/* Кавычки внутри блока — теперь они могут выходить за пределы */}
+    {/* Кавычки */}
     <div className="pointer-events-none absolute -top-2 right-4 z-0 select-none md:-top-3 md:right-6 review-quotes" aria-hidden="true">
       {(() => {
         const quoteFiles = [

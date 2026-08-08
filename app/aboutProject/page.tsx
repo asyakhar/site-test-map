@@ -162,7 +162,7 @@ export default function AboutProjectPage() {
             </ul>
           </div>
 
-          {/* сетка крточек остальных участников */}
+          {/* Сетка карточек остальных участников */}
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {otherGroups.map((group) => (
               <div

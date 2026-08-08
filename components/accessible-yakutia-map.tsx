@@ -360,7 +360,7 @@ function CustomPopupContent({ obj, onPlaceSelect, getBadgeColor, basePath }: {
   );
 }
 
-// ⭐ Компонент для элемента списка с раскрывающимися фильтрами ⭐
+// Компонент для элемента списка с раскрывающимися фильтрами
 
 function ListItemCard({ obj, isSelected, onSelect, getBadgeColor }: {
   obj: MapObject;
@@ -737,7 +737,7 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
     </button>
   )}
 </div>
-      {/* Кнопки "Фильтры" и "Списком" теперь здесь */}
+      {/* Кнопки «Фильтры» и «Списком» */}
       <div className="flex items-stretch gap-2 mt-2">
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -870,7 +870,7 @@ export default function AccessibleYakutiaMap({ onPlaceSelect }: AccessibleYakuti
             </div>
           </div>
 
-          {/* ⭐ ИСПРАВЛЕННЫЙ СПИСОК ⭐ */}
+          {/* Список мест */}
           <div className={`h-full overflow-y-auto bg-[var(--color-bg-primary)] ${viewMode === 'map' ? 'hidden' : 'block'}`}>
             <div className="p-3 space-y-3">
               {filteredObjects.map((obj) => {

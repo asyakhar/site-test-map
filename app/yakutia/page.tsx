@@ -19,7 +19,7 @@ export default function YakutiaPage() {
           О Якутии
         </h1>
 
-        {/* Твой текст (без изменений) */}
+        {/* Основной текст */}
         <div 
           className="space-y-6 text-[var(--color-text-secondary)] leading-relaxed text-justify" 
           style={{ fontSize: 'clamp(1rem, 1.5vw, 1.25rem)' }}
@@ -41,7 +41,7 @@ export default function YakutiaPage() {
           </p>
         </div>
 
-        {/* Сетка особенностей (обновленный дизайн) */}
+        {/* Сетка особенностей */}
         <div className="grid md:grid-cols-2 gap-6 mt-16 mb-12">
           <Card className="p-6 bg-[var(--color-bg-white)] border-[var(--color-card-border)] hover:border-[var(--color-accent)]/50 transition-shadow">
             <div className="flex items-center gap-4 mb-4">

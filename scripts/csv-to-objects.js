@@ -43,7 +43,7 @@ const COL = {
   family: 13, ethnomedicine: 14, health: 15,
   contraindications: 16, tickets: 17, benefits: 18,
   website: 19, phone: 20, yandexMap: 21, coordinates: 22, notes: 23,
-  // ↓↓↓ НОВЫЕ КОЛОНКИ ↓↓↓
+  // Новые колонки
   videoUrls: 26,
   comment: 25,       // текст отзыва
   commentAuthor: 27, // автор отзыва
