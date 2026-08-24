@@ -18,7 +18,27 @@ export default function YakutiaPage() {
         >
           О Якутии
         </h1>
-
+{/* Видео о Якутии   */}
+<div className="my-12">
+  <h2
+    className="font-sangha text-center mb-6 text-[var(--color-green-dark)]"
+    style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}
+  >
+    Посмотрите видео о Якутии
+  </h2>
+  <div className="aspect-video w-full max-w-3xl mx-auto rounded-xl overflow-hidden shadow-lg border border-[var(--color-card-border)]">
+    <video controls className="w-full h-full">
+      <source
+        src="https://raw.githubusercontent.com/asyakhar/yakutia-images/main/video/film_yakutia.mp4"
+        type="video/mp4"
+      />
+      Ваш браузер не поддерживает видео.
+    </video>
+  </div>
+  <p className="text-center text-sm text-[var(--color-text-secondary)] mt-3">
+    Документальный фильм "Республика Саха (Якутия) – земля, где живут традиции"
+  </p>
+</div>
         {/* Основной текст */}
         <div 
           className="space-y-6 text-[var(--color-text-secondary)] leading-relaxed text-justify" 
