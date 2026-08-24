@@ -20,12 +20,7 @@ export default function YakutiaPage() {
         </h1>
 {/* Видео о Якутии   */}
 <div className="my-12">
-  <h2
-    className="font-sangha text-center mb-6 text-[var(--color-green-dark)]"
-    style={{ fontSize: 'clamp(2rem, 4vw, 3rem)' }}
-  >
-    Посмотрите видео о Якутии
-  </h2>
+  
   <div className="aspect-video w-full max-w-3xl mx-auto rounded-xl overflow-hidden shadow-lg border border-[var(--color-card-border)]">
     <video controls className="w-full h-full">
       <source
