@@ -6,7 +6,7 @@ const GITHUB_USERNAME = 'asyakhar';
 const REPO_NAME = 'yakutia-images';
 const BRANCH = 'main';
 
-const LOCAL_IMAGES_PATH = path.join('/Users', 'nastaharitonova', 'Documents', 'yakutia-images');
+const LOCAL_IMAGES_PATH = path.join('/Users', 'anastasiakharitonova', 'Visual Studio Code', 'yakutia-images');
 const OBJECTS_JSON_PATH = path.join(__dirname, '../public/data/objects.json');
 
 // === СООТВЕТСТВИЕ ID И ПАПОК ===
@@ -47,6 +47,7 @@ const ID_MAPPING = {
   "obj-06": "education/permafrost-institute",
   "obj-12": "education/svfu",
   "obj-22": "education/adaptive-school",
+  "obj-32": "education/library", 
 
   // Рестораны и кафе
   "obj-25": "food/avrora-restaurant",
@@ -55,6 +56,7 @@ const ID_MAPPING = {
 
   // Природа
   "obj-31": "nature/orto-doydu-zoo",
+  
   "obj-34": "nature/lena_pillars",
   "obj-35": "nature/tukulan",
 };
